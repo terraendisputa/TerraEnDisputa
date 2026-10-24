@@ -1,0 +1,686 @@
+/* Final presentation layer: continent fills never encode player ownership. */
+.cards-panel .private-hand {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.seat-exit-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.seat-exit-bar button {
+  min-height: 2rem;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.45rem;
+}
+.phase-panel.action-dock {
+  background: color-mix(in srgb, var(--paper) 94%, white);
+  border-color: #a99d82;
+  color: var(--ink);
+}
+@media (min-width: 1251px) {
+  .phase-panel.action-dock .gameplay-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .phase-panel.action-dock > .turn-notice {
+    width: calc((100% - 0.5rem) / 2);
+    height: 100%;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    padding: 0.7rem;
+  }
+  .phase-panel.action-dock .phase-actions {
+    justify-self: stretch;
+    justify-content: center;
+    background: #f2e8ce;
+    border: 1px solid #b4a582;
+    border-radius: 0.4rem;
+  }
+}
+.phase-panel.action-dock .pending-action.conquest-transfer {
+  display: grid;
+  grid-template-columns: minmax(14rem, 1fr) auto auto;
+  gap: 0.4rem 0.7rem;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.action-dock :is(.conquest-transfer, .regroup-card) .amount-control {
+  width: auto;
+  margin: 0;
+}
+.action-dock :is(.conquest-transfer, .regroup-card) .amount-control > span,
+.action-dock :is(.conquest-transfer, .regroup-card) .amount-control > small,
+.action-dock
+  :is(.conquest-transfer, .regroup-card)
+  .amount-stepper
+  > button:last-child {
+  display: none;
+}
+.phase-panel.action-dock .conquest-transfer .confirm-transfer {
+  width: auto;
+  height: auto;
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.35rem;
+}
+.phase-panel.action-dock .regroup-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-content: center;
+}
+.action-dock .regroup-card h3 {
+  grid-column: 1 / -1;
+}
+@media (max-width: 1250px) {
+  .phase-panel.action-dock .regroup-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+@media (max-width: 600px) {
+  .phase-panel.action-dock .pending-action.conquest-transfer {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+@media (min-width: 601px) {
+  .board-main:has(.conquest-transfer) {
+    grid-template-rows: minmax(0, 1fr) 7.25rem;
+  }
+  .action-dock:has(.conquest-transfer) {
+    min-height: 0;
+  }
+}
+.phase-panel.action-dock {
+  position: relative;
+}
+.game-map .territory {
+  --land: #a78348;
+  --owner: #ece3c9;
+}
+.game-map .territory[data-continent='south_america'] {
+  --land: #667953;
+}
+.game-map .territory[data-continent='europe'] {
+  --land: #75886c;
+}
+.game-map .territory[data-continent='africa'] {
+  --land: #ad6629;
+}
+.game-map .territory[data-continent='asia'] {
+  --land: #94783f;
+}
+.game-map .territory[data-continent='oceania'] {
+  --land: #4d716e;
+}
+.game-map .territory.owner-blue {
+  --owner: #236dd5;
+}
+.game-map .territory.owner-red {
+  --owner: #bc2838;
+}
+.game-map .territory.owner-black {
+  --owner: #24242a;
+}
+.game-map .territory.owner-yellow {
+  --owner: #f6d34d;
+}
+.game-map .territory.owner-green {
+  --owner: #228647;
+}
+.game-map .territory.owner-magenta {
+  --owner: #ba3395;
+}
+.game-map .territory .territory-fill {
+  fill: var(--land);
+  stroke: #25231e;
+  stroke-width: 1.7;
+  opacity: 1;
+  filter: none;
+  vector-effect: none;
+}
+.game-map .territory.passive .territory-fill {
+  opacity: 1;
+}
+.game-map .territory.legal .territory-fill {
+  stroke: #f8edba;
+  stroke-width: 3;
+}
+.game-map
+  .territory:is(.selected, .selected-source, .pending-source)
+  .territory-fill {
+  stroke: #ffed94;
+  stroke-width: 4;
+}
+.game-map .territory:is(.selected-target, .pending-target) .territory-fill {
+  stroke: #ffaaaa;
+  stroke-width: 4;
+}
+.game-map .territory:is(:hover, :focus-visible, .inspected) .territory-fill {
+  stroke: #fff6d4;
+  stroke-width: 3;
+}
+.game-map .territory .army-marker {
+  fill: var(--owner);
+  stroke: #f9eed6;
+  stroke-width: 1.6;
+  pointer-events: all;
+}
+.game-map .territory .army-count {
+  fill: white;
+  stroke: none;
+  font:
+    700 14px system-ui,
+    sans-serif;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.game-map .territory:is(.owner-yellow, .unoccupied) .army-count {
+  fill: #242015;
+}
+.game-map .territory .territory-label {
+  fill: #fff8e5;
+  stroke: #322918;
+  stroke-width: 2.8;
+  paint-order: stroke fill;
+  font:
+    600 16px Georgia,
+    serif;
+  text-anchor: middle;
+  pointer-events: none;
+}
+.map-frame {
+  background: radial-gradient(ellipse at center, #e4d8b7, #c7bb97);
+  box-shadow: none;
+}
+.map-frame::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 2px solid #332f20;
+  border-radius: 30px;
+  outline: 1px solid #504832;
+  outline-offset: -8px;
+  pointer-events: none;
+}
+.map-frame .game-map {
+  height: 100%;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0.75rem;
+}
+.private-hand {
+  margin-top: 0.6rem;
+  border-top: 1px solid #b2a783;
+  padding-top: 0.65rem;
+}
+.private-hand summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.25rem 0;
+}
+.private-hand .hand-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 3.2rem;
+  width: 100%;
+  padding: 0.5rem;
+  background: #f1e6c9;
+  color: #302a20;
+  border: 1px solid #9c8c68;
+  border-radius: 0.35rem;
+}
+.private-hand .card-copy {
+  display: grid;
+  gap: 0.12rem;
+}
+.private-hand .card-symbol {
+  font-size: 1.35rem;
+}
+.private-hand p {
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+.pacts-panel .pact-proposal-form {
+  border: 1px dashed #9c8c68;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+}
+.pacts-panel .pact-summary {
+  display: grid;
+  gap: 0.3rem;
+}
+.pacts-panel select {
+  width: 100%;
+}
+.phase-panel.action-dock .finished-panel {
+  grid-template-columns: minmax(8rem, 1fr) minmax(0, 2fr);
+  width: min(100%, 40rem);
+  max-width: 40rem;
+  min-height: 0;
+  height: calc(100% - 1rem);
+  padding: 0.6rem 1rem;
+  box-sizing: border-box;
+}
+.phase-panel.action-dock .finished-panel .winning-objective {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  aspect-ratio: auto;
+  align-items: center;
+  gap: 0.7rem;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  min-height: 0;
+  height: auto;
+  padding: 0.6rem;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.phase-panel.action-dock .finished-panel .victory-crest {
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+}
+.action-dock .primary-action-card {
+  min-width: 0;
+}
+.action-dock .primary-action-card button {
+  max-width: 100%;
+  white-space: normal;
+}
+@media (min-width: 901px) and (max-width: 1250px) {
+  .board-main {
+    grid-template-rows: minmax(0, 1fr) 12rem;
+  }
+  .action-dock {
+    min-height: 12rem;
+    overflow-y: auto;
+  }
+  .phase-panel.action-dock .gameplay-actions {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 1fr);
+  }
+  .action-dock .primary-action-card,
+  .action-dock .pending-action {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .action-dock .phase-actions {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+/* Bounded menu cards: vacant dock space is not distributed among cards. */
+.board-layout {
+  --menu-width: 20rem;
+  grid-template-columns: minmax(0, 1fr) var(--menu-width);
+}
+@media (max-width: 1100px) {
+  .board-layout {
+    --menu-width: 16rem;
+  }
+}
+.phase-panel.action-dock {
+  overflow: auto;
+}
+.phase-panel.action-dock .gameplay-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 1rem 0 0;
+  position: relative;
+  height: 100%;
+  box-sizing: border-box;
+}
+.phase-panel.action-dock .phase-actions:empty {
+  display: none;
+}
+.phase-panel.action-dock .turn-notice {
+  display: block;
+  height: auto;
+  line-height: 1.5;
+}
+.phase-panel.action-dock .reinforcement-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.2rem 0.35rem;
+  align-items: center;
+}
+.action-dock .reinforcement-card .amount-control {
+  margin: 0;
+  width: auto;
+}
+.action-dock .reinforcement-card .amount-stepper > button:last-child {
+  display: inline-block;
+}
+.action-dock .reinforcement-card :is(button, input) {
+  min-height: 1.6rem;
+  height: 1.6rem;
+  padding: 0.1rem 0.3rem;
+  font-size: 0.7rem;
+}
+.action-dock .reinforcement-card .confirm-placement {
+  width: 1.6rem;
+  justify-self: end;
+}
+.phase-panel.action-dock .pending-action.conquest-transfer {
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: var(--menu-width);
+  max-width: var(--menu-width);
+}
+.phase-panel.action-dock .regroup-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.2rem;
+}
+.phase-panel.action-dock .finished-panel {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.2rem;
+  height: 100%;
+}
+.phase-panel.action-dock .finished-panel .winning-objective {
+  padding: 0.3rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+@media (max-width: 900px) {
+  .board-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Match the original two-territory dice-assignment note: approximately 105px. */
+.board-layout {
+  --menu-height: 6.5625rem;
+}
+.board-main,
+.board-main:has(.conquest-transfer),
+.board-main:has(.finished-panel) {
+  grid-template-rows: minmax(0, 1fr) 8.75rem;
+}
+.phase-panel.action-dock,
+.board-main:has(.finished-panel) .phase-panel.action-dock {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-height: 0;
+  max-height: none;
+}
+.phase-panel.action-dock .gameplay-actions {
+  flex: 0 0 auto;
+  align-items: flex-end;
+  height: calc(var(--menu-height) + 1rem);
+}
+.phase-panel.action-dock .pending-action.conquest-transfer {
+  height: var(--menu-height);
+  min-height: var(--menu-height);
+  max-height: var(--menu-height);
+  flex: 0 0 var(--menu-width);
+  width: var(--menu-width);
+  max-width: var(--menu-width);
+  box-sizing: border-box;
+  overflow: auto;
+  margin: 0;
+}
+.phase-panel.action-dock .finished-summary {
+  gap: 0;
+}
+.phase-panel.action-dock .finished-summary h1 {
+  font-size: 0.95rem;
+  line-height: 1.1;
+}
+.phase-panel.action-dock .finished-summary p {
+  margin: 0;
+  line-height: 1.1;
+}
+
+/* Compact commands keep every control visible inside the fixed-height cards. */
+.action-dock .amount-stepper {
+  gap: 0.15rem;
+  width: auto;
+}
+.action-dock .amount-stepper input {
+  appearance: textfield;
+  -moz-appearance: textfield;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--ink);
+  width: 1.8rem;
+  min-width: 0;
+  text-align: center;
+  padding: 0;
+}
+.action-dock input[type='number']::-webkit-inner-spin-button,
+.action-dock input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.phase-panel.action-dock .amount-stepper :is(button, input),
+.phase-panel.action-dock .conquest-transfer .confirm-transfer {
+  min-height: 1.5rem;
+  height: 1.5rem;
+  padding: 0.1rem 0.2rem;
+  font-size: 0.75rem;
+}
+.phase-panel.action-dock .conquest-transfer {
+  padding: 0.3rem 0.5rem;
+  gap: 0.2rem 0.35rem;
+}
+.phase-panel.action-dock .conquest-transfer .confirm-transfer {
+  width: 1.7rem;
+  justify-self: end;
+}
+.phase-panel.action-dock .reinforcement-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: start;
+  align-items: center;
+  gap: 0.25rem;
+}
+.action-dock .reinforcement-card .amount-control {
+  order: 1;
+}
+.action-dock .reinforcement-card .confirm-placement {
+  order: 4;
+}
+.action-dock .reinforcement-card .confirm-placement svg {
+  width: 1rem;
+  height: 1rem;
+}
+.phase-panel.action-dock > .action-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.2rem 0.4rem;
+}
+.action-dock > .action-card :is(h3, p) {
+  grid-column: 1 / -1;
+  font-size: 0.7rem;
+  margin: 0;
+}
+.action-dock > .action-card button {
+  min-height: 1.6rem;
+  padding: 0.2rem;
+  font-size: 0.7rem;
+}
+.phase-panel.action-dock .attack-card {
+  align-content: start;
+  gap: 0.3rem;
+}
+.cards-panel .exchange-card-selection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.35rem;
+  width: 100%;
+  max-width: none;
+}
+.cards-panel .exchange-card-selection .hand-card {
+  width: 100%;
+  min-width: 0;
+  min-height: 3.2rem;
+  text-align: left;
+}
+.cards-panel .hand-card.selected {
+  outline: 2px solid #826023;
+  background: #fff5d5;
+}
+.cards-panel .exchange-submit {
+  width: 100%;
+  height: 2rem;
+  min-height: 2rem;
+}
+.cards-panel .exchange-submit svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+.phase-panel.action-dock .amount-stepper .compact-button {
+  flex: 0 0 auto;
+  width: 1.4rem;
+  min-width: 1.4rem;
+}
+.phase-panel.action-dock .reinforcement-card .amount-stepper input {
+  flex: 0 0 1.4rem;
+  width: 1.4rem;
+  min-width: 1.4rem;
+  max-width: 1.4rem;
+}
+.phase-panel.action-dock
+  .reinforcement-card
+  .amount-stepper
+  .compact-button:last-child {
+  width: 1.7rem;
+}
+.phase-panel.action-dock .reinforcement-card .confirm-placement {
+  flex: 0 0 1.5rem;
+  height: 1.5rem;
+  min-height: 1.5rem;
+}
+
+.board-layout {
+  --menu-height: 5rem;
+}
+.board-main,
+.board-main:has(.conquest-transfer),
+.board-main:has(.finished-panel) {
+  grid-template-rows: minmax(0, 1fr) 7.125rem;
+}
+.phase-panel.action-dock {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.pacts-heading > div,
+.pacts-heading h2 {
+  display: inline;
+}
+.pacts-heading .count-badge {
+  float: right;
+}
+.private-panel .objective-box[hidden] {
+  display: none;
+}
+.phase-panel.action-dock .finished-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+.phase-panel.action-dock .finished-summary .eyebrow {
+  display: none;
+}
+.phase-panel.action-dock .finished-panel .winning-objective {
+  font-size: 0.7rem;
+  padding: 0.15rem;
+}
+.phase-panel.action-dock .pending-action.conquest-transfer {
+  grid-template-rows: 0.875rem 1.375rem 1.5rem;
+  gap: 0.125rem 0.35rem;
+  padding: 0.25rem 0.5rem;
+  align-content: start;
+}
+
+/* Final compact dock: narrower than the sidebar, below the map. */
+.board-layout {
+  --lower-menu-width: 16rem;
+}
+.phase-panel.action-dock .pending-action.conquest-transfer {
+  flex-basis: var(--lower-menu-width);
+  width: var(--lower-menu-width);
+  max-width: var(--lower-menu-width);
+  overflow: hidden;
+}
+.phase-panel.action-dock > .action-card button,
+.phase-panel.action-dock .gameplay-actions button {
+  min-height: 1.85rem;
+  font-size: 0.8rem;
+}
+.phase-panel.action-dock .confirm-distribution {
+  width: auto;
+  min-width: 4.5rem;
+  padding: 0.2rem 0.4rem;
+  background: #4d806b;
+  border-color: #4d806b;
+  color: white;
+  font-size: 0.8rem;
+}
+.phase-panel.action-dock .reinforcement-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: 1.85rem 1.85rem;
+}
+.phase-panel.action-dock .reinforcement-card .amount-control {
+  grid-column: 2 / 4;
+  grid-row: 1;
+}
+.phase-panel.action-dock .reinforcement-card .confirm-placement {
+  grid-column: 3;
+  grid-row: 2;
+}
+.phase-panel.action-dock .reinforcement-card .confirm-placement,
+.phase-panel.action-dock .conquest-transfer .confirm-transfer {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 4.5rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.4rem;
+}
+.private-panel .objective-heading {
+  cursor: pointer;
+  font-weight: 700;
+}
+.private-panel .objective-heading h2 {
+  display: inline;
+}
+.private-panel .objective-heading .privacy-badge {
+  float: right;
+}
+@media (min-width: 901px) {
+  .board-main,
+  .board-main:has(.conquest-transfer),
+  .board-main:has(.finished-panel) {
+    grid-template-rows: minmax(0, 1fr) calc(var(--menu-height) + 1.125rem);
+  }
+  .board-main > .map-frame,
+  .board-main > .phase-panel.action-dock {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .board-main > .phase-panel.action-dock {
+    grid-row: 2;
+    align-self: end;
+    height: calc(var(--menu-height) + 1.125rem);
+  }
+}
+@media (min-width: 901px) and (max-width: 1100px) {
+  .board-layout {
+    --lower-menu-width: 14rem;
+  }
+}

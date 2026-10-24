@@ -1,0 +1,1875 @@
+/* Fullscreen board: shared components first, one compact layout below. */
+.game-shell.playing-shell {
+  --ink: #302d25;
+  --muted: #716653;
+  --metal: #66502f;
+  --surface: #faf9f3;
+  --accent: #46513b;
+  --glass: color-mix(in srgb, var(--surface) 78%, transparent);
+  --panel-surface: color-mix(in srgb, var(--surface) 94%, transparent);
+  --edge: color-mix(in srgb, var(--metal) 24%, transparent);
+  --menu-text: 12px;
+  --menu-title: 13px;
+  --menu-label: 11px;
+  --control: 32px;
+  --icon-control: 36px;
+  --gap: 8px;
+  --inset: 12px;
+  --action-width: 280px;
+  --information-width: 344px;
+  padding: 0;
+  display: contents;
+  color: var(--ink);
+  font-size: var(--menu-text);
+}
+:root[data-theme='dark'] .game-shell.playing-shell {
+  --ink: #e8ddc5;
+  --muted: #b3a58c;
+  --metal: #c8aa70;
+  --surface: #202b29;
+  --accent: #738164;
+}
+.ui-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.game-shell.playing-shell :is(.gameplay-stage, .board-layout, .board-main) {
+  display: contents;
+}
+.game-shell.playing-shell .map-frame {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  display: block;
+  min-height: 0;
+}
+.game-shell.playing-shell .map-viewport {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  touch-action: none;
+}
+.game-shell.playing-shell .map-transform {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+.game-shell.playing-shell .game-map {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  max-width: none;
+}
+.game-shell.playing-shell :is(.map-instructions, .map-selection-bar) {
+  display: none;
+}
+.game-shell.playing-shell [hidden] {
+  display: none !important;
+}
+
+/* A single surface and type scale, also used by open content. */
+.game-shell.playing-shell
+  :is(
+    .topbar,
+    .player-roster,
+    .player-popover,
+    .floating-information,
+    .floating-dice,
+    .phase-row,
+    .action-dock,
+    .mobile-action-toggle,
+    .information-content
+  ) {
+  color: var(--ink);
+  background: var(--glass);
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  box-shadow: 0 3px 16px #0002;
+  backdrop-filter: blur(4px);
+  min-height: 0;
+  height: auto;
+  font:
+    500 var(--menu-text)/1.4 system-ui,
+    sans-serif;
+}
+.game-shell.playing-shell :is(button, select, input) {
+  font:
+    600 var(--menu-text)/1.3 system-ui,
+    sans-serif;
+  color: var(--ink);
+  border: 1px solid var(--edge);
+  border-radius: 7px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--control);
+  padding: 5px 8px;
+}
+.game-shell.playing-shell button {
+  width: auto;
+  background: color-mix(in srgb, var(--surface) 68%, transparent);
+  cursor: pointer;
+}
+.game-shell.playing-shell button:hover:not(:disabled) {
+  background: var(--panel-surface);
+}
+.game-shell.playing-shell button:disabled {
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: default;
+}
+.game-shell.playing-shell :is(button, select, input, a):focus-visible {
+  outline: 2px solid var(--metal);
+  outline-offset: 2px;
+}
+.game-shell.playing-shell :is(p, h1, h2, h3, ul) {
+  margin: 0;
+}
+.game-shell.playing-shell :is(h2, h3) {
+  font:
+    650 var(--menu-title)/1.3 system-ui,
+    sans-serif;
+  color: var(--metal);
+}
+.game-shell.playing-shell :is(small, .muted-copy) {
+  font-size: var(--menu-label);
+  color: var(--muted);
+}
+.game-shell.playing-shell .panel-notification {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  background: #9a4033;
+  color: #fff2dc;
+  border-radius: 50%;
+  font: 800 11px/1 system-ui;
+}
+
+/* Upper left: toolbar controls participate in normal flow, never spill out. */
+.game-shell.playing-shell .topbar {
+  position: fixed;
+  top: max(var(--inset), env(safe-area-inset-top));
+  left: max(var(--inset), env(safe-area-inset-left));
+  z-index: 10;
+  width: max-content;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: calc(100dvh - 2 * var(--inset));
+  overflow-y: auto;
+}
+.game-shell.playing-shell .topbar > .brand {
+  display: none;
+}
+.game-shell.playing-shell .seat-exit-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  order: 1;
+}
+.game-shell.playing-shell
+  :is(.topbar button, .turn-sound, .map-zoom-controls button) {
+  display: grid;
+  place-items: center;
+  width: var(--icon-control);
+  min-width: var(--icon-control);
+  height: var(--icon-control);
+  min-height: var(--icon-control);
+  padding: 4px;
+  background: var(--panel-surface);
+  color: var(--metal);
+}
+.game-shell.playing-shell .toolbar-toggle {
+  order: 0;
+}
+.game-shell.playing-shell .topbar.toolbar-collapsed > :not(.toolbar-toggle) {
+  display: none;
+}
+.game-shell.playing-shell .topbar .seat-exit-button {
+  background: #c8dfb8;
+  color: #25452d;
+  border-color: #70966a;
+}
+:root[data-theme='dark'] .game-shell.playing-shell .topbar .seat-exit-button {
+  background: #a8c498;
+  color: #203526;
+}
+.game-shell.playing-shell .turn-sound {
+  position: static;
+  order: 2;
+}
+.game-shell.playing-shell .map-zoom-controls {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  width: auto;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+  order: 3;
+}
+.game-shell.playing-shell .connection {
+  order: 4;
+  max-width: var(--icon-control);
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.game-shell.playing-shell .connection.connected {
+  display: none;
+}
+
+/* Upper right: stable brand, scrollable seats and one active indicator. */
+.game-shell.playing-shell .player-roster {
+  position: fixed;
+  top: max(var(--inset), env(safe-area-inset-top));
+  right: max(var(--inset), env(safe-area-inset-right));
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  width: max-content;
+  max-width: calc(100vw - 80px);
+}
+.game-shell.playing-shell .roster-brand {
+  font: 800 15px/1 system-ui;
+  color: var(--ink);
+  text-decoration: none;
+  flex: 0 0 auto;
+}
+.game-shell.playing-shell .roster-seats {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  min-width: 0;
+  padding: 4px;
+  scrollbar-width: thin;
+}
+.game-shell.playing-shell .roster-player {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  min-width: 40px;
+  max-width: 88px;
+  height: 38px;
+  min-height: 38px;
+  padding: 5px 7px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: var(--player-color);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 750;
+}
+.game-shell.playing-shell .roster-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.game-shell.playing-shell .color-blue {
+  --player-color: #357cca;
+}
+.game-shell.playing-shell .color-red {
+  --player-color: #cf6761;
+}
+.game-shell.playing-shell .color-black {
+  --player-color: #3d4652;
+}
+.game-shell.playing-shell .color-yellow {
+  --player-color: #e6be51;
+}
+.game-shell.playing-shell .color-green {
+  --player-color: #498054;
+}
+.game-shell.playing-shell .color-magenta {
+  --player-color: #a35490;
+}
+.game-shell.playing-shell .roster-player.color-yellow {
+  color: #302d20;
+}
+.game-shell.playing-shell .roster-player:hover:not(:disabled) {
+  background: var(--player-color);
+  filter: brightness(1.08);
+}
+.game-shell.playing-shell .roster-player[aria-current='true'] {
+  outline: 2px solid var(--metal);
+  outline-offset: 1px;
+}
+.game-shell.playing-shell .roster-player.is-self::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  width: 8px;
+  height: 2px;
+  background: currentColor;
+}
+.game-shell.playing-shell .turn-alert {
+  display: none;
+  position: absolute;
+  right: -3px;
+  top: -4px;
+  border-radius: 50%;
+  width: 15px;
+  height: 15px;
+  background: #9a4033;
+  color: #fff2dc;
+  font: 800 11px/15px system-ui;
+  text-align: center;
+}
+.game-shell.playing-shell .roster-player[aria-current='true'] .turn-alert {
+  display: block;
+}
+.game-shell.playing-shell .roster-player.is-eliminated {
+  opacity: 0.55;
+}
+.game-shell.playing-shell .player-popover {
+  position: fixed;
+  right: max(var(--inset), env(safe-area-inset-right));
+  top: 82px;
+  z-index: 12;
+  padding: 8px;
+  width: 230px;
+  max-width: calc(100vw - 76px);
+  background: var(--panel-surface);
+}
+.game-shell.playing-shell .player-popover header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.game-shell.playing-shell .player-popover header button {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  min-width: var(--control);
+}
+.game-shell.playing-shell .player-popover p {
+  margin-top: 6px;
+}
+.game-shell.playing-shell .player-stat strong {
+  font-size: 16px;
+}
+
+/* Lower left: same horizontal icon navigation at every viewport. */
+.game-shell.playing-shell .floating-information {
+  position: fixed;
+  bottom: max(var(--inset), env(safe-area-inset-bottom));
+  left: max(var(--inset), env(safe-area-inset-left));
+  right: auto;
+  top: auto;
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--inset));
+  padding: 4px;
+  z-index: 11;
+  overflow: visible;
+  transform: none;
+}
+.game-shell.playing-shell .information-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 36px);
+  gap: 3px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  width: max-content;
+}
+.game-shell.playing-shell .information-tabs button {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 36px;
+  min-width: 36px;
+  width: 36px;
+  height: 36px;
+  padding: 4px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--metal);
+}
+.game-shell.playing-shell .information-tabs button[aria-pressed='true'] {
+  border-color: var(--metal);
+  background: var(--panel-surface);
+}
+.game-shell.playing-shell .panel-tab-icon {
+  display: grid;
+  place-items: center;
+}
+.game-shell.playing-shell .panel-tab-icon .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+.game-shell.playing-shell .information-tabs .panel-notification {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+}
+.game-shell.playing-shell .information-content {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: auto;
+  top: auto;
+  width: min(var(--information-width), calc(100vw - 2 * var(--inset)));
+  max-height: calc(100dvh - 170px);
+  padding: 10px;
+  overflow: auto;
+  /* Same translucency as the other floating menus. */
+  background: var(--glass);
+  transform: none;
+}
+.game-shell.playing-shell .mobile-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--metal);
+  font-size: var(--menu-title);
+}
+.game-shell.playing-shell .mobile-panel-heading button {
+  display: grid;
+  place-items: center;
+  min-width: var(--control);
+  padding: 4px;
+  background: transparent;
+}
+.game-shell.playing-shell .information-content .panel {
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.game-shell.playing-shell .information-content :is(p, li, label) {
+  font-size: var(--menu-text);
+  line-height: 1.4;
+}
+.game-shell.playing-shell .information-content p + p {
+  margin-top: 6px;
+}
+.game-shell.playing-shell
+  .information-content
+  :is(summary, .privacy-badge, .objective-heading) {
+  font-size: var(--menu-title);
+}
+.game-shell.playing-shell
+  :is(
+    .privacy-badge,
+    .objective-heading,
+    .private-hand > summary,
+    .pacts-heading
+  ) {
+  display: none;
+}
+.game-shell.playing-shell .objective-box {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font-size: var(--menu-text);
+}
+.game-shell.playing-shell .hand-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  gap: 4px;
+  min-width: 0;
+  min-height: 0;
+  padding: 7px 5px;
+  border: 1px solid var(--edge);
+  border-radius: 7px;
+  background: color-mix(in srgb, #8aa966 48%, var(--surface));
+  box-shadow: none;
+}
+.game-shell.playing-shell .card-symbol {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  padding: 0;
+  background: transparent;
+}
+.game-shell.playing-shell .hand-card.bonus-used {
+  background: var(--panel-surface);
+}
+.game-shell.playing-shell .hand-card .card-copy {
+  min-width: 0;
+  flex: 1;
+}
+.game-shell.playing-shell .card-symbol .ui-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--metal);
+}
+.game-shell.playing-shell .hand-card.new-card {
+  border-color: var(--metal);
+  box-shadow: inset 0 0 0 1px var(--metal);
+}
+.game-shell.playing-shell .pact-participant {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.game-shell.playing-shell .pacts-panel .color-dot {
+  display: inline-block;
+  width: 8px;
+  min-width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent);
+  flex: 0 0 8px;
+}
+.game-shell.playing-shell .card-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.game-shell.playing-shell .card-copy strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.game-shell.playing-shell .card-copy small {
+  font-size: 10px;
+}
+.game-shell.playing-shell .card-badges {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+}
+.game-shell.playing-shell .card-badges > small {
+  display: none;
+}
+.game-shell.playing-shell .hand-card.selected {
+  border: 2px solid var(--metal);
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+  padding: 6px 4px;
+}
+.game-shell.playing-shell .selected-check {
+  color: var(--metal);
+  font-size: 13px;
+}
+.game-shell.playing-shell .exchange-submit {
+  width: 100%;
+}
+.game-shell.playing-shell .pact-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 0;
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid var(--edge);
+  background: transparent;
+}
+.game-shell.playing-shell .pact-copy {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+}
+.game-shell.playing-shell .pact-copy strong {
+  font-size: 12px;
+}
+.game-shell.playing-shell .pact-border-sides {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.game-shell.playing-shell .pact-border-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.game-shell.playing-shell .pact-proposal-form {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+}
+.game-shell.playing-shell .pact-proposal-form label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+}
+.game-shell.playing-shell .pact-proposal-form select {
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
+}
+.game-shell.playing-shell .pact-summary {
+  display: grid;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--edge);
+  border-radius: 7px;
+  background: transparent;
+  font-size: 12px;
+}
+
+/* Lower right: a flow stack, rather than independently fixed panels. */
+.game-shell.playing-shell .action-cluster {
+  position: fixed;
+  right: max(var(--inset), env(safe-area-inset-right));
+  bottom: max(var(--inset), env(safe-area-inset-bottom));
+  left: auto;
+  top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: min(var(--action-width), calc(100vw - 2 * var(--inset)));
+  max-height: calc(100dvh - 96px);
+  z-index: 9;
+}
+.game-shell.playing-shell :is(.phase-row, .action-dock, .floating-dice) {
+  position: static;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  max-height: none;
+  padding: 8px;
+}
+.game-shell.playing-shell .action-dock {
+  overflow: auto;
+  flex: 0 1 auto;
+  min-height: 0;
+}
+.game-shell.playing-shell .phase-row {
+  padding: 6px 8px;
+  flex-shrink: 0;
+}
+.game-shell.playing-shell
+  .action-dock:has(> .turn-notice):not(:has(.action-card)) {
+  display: none;
+}
+.game-shell.playing-shell .compact-action-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+.game-shell.playing-shell .compact-action-copy small:empty {
+  display: none;
+}
+.game-shell.playing-shell
+  .action-dock
+  :is(
+    .gameplay-actions,
+    .action-card,
+    .pending-action,
+    .turn-notice,
+    .finished-panel
+  ) {
+  position: static;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: start;
+  justify-content: flex-start;
+  flex: none;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  white-space: normal;
+}
+.game-shell.playing-shell .action-dock .gameplay-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+.game-shell.playing-shell .action-dock .action-title {
+  grid-column: auto;
+  grid-row: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-basis: 100%;
+  margin: 0;
+  padding: 0;
+}
+.game-shell.playing-shell .action-title .eyebrow {
+  display: none;
+}
+.game-shell.playing-shell .action-dock .action-title h3 {
+  font-size: var(--menu-title);
+}
+.game-shell.playing-shell .action-dock .action-title:has(.required-badge) {
+  color: var(--metal);
+}
+.game-shell.playing-shell .action-route-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 10px minmax(0, 1fr);
+  align-items: end;
+  gap: 5px;
+  width: 100%;
+  flex-basis: 100%;
+}
+.game-shell.playing-shell .action-route-fields label {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  min-width: 0;
+}
+.game-shell.playing-shell .action-route-fields small {
+  font-size: var(--menu-label);
+}
+.game-shell.playing-shell .action-route-fields > span {
+  align-self: center;
+  padding-top: 12px;
+  color: var(--metal);
+}
+.game-shell.playing-shell .action-route-fields :is(select, strong) {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control);
+  font-size: 13px;
+  font-weight: 650;
+  padding: 5px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  border: 1px solid var(--edge);
+  border-radius: 7px;
+}
+.game-shell.playing-shell .action-route-fields strong {
+  display: flex;
+  align-items: center;
+}
+.game-shell.playing-shell .action-dock .action-selection {
+  grid-column: auto;
+  grid-row: auto;
+  display: grid;
+  gap: 3px;
+  flex-basis: 100%;
+  min-width: 0;
+}
+.game-shell.playing-shell .action-selection strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.game-shell.playing-shell .action-selection small {
+  font-size: 11px;
+}
+.game-shell.playing-shell .action-dock .amount-control {
+  display: flex;
+  align-items: center;
+  width: auto;
+  flex: 0 0 auto;
+  grid-column: auto;
+  grid-row: auto;
+}
+.game-shell.playing-shell .amount-control > :is(span, small) {
+  display: none;
+}
+.game-shell.playing-shell .amount-stepper {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: auto;
+}
+.game-shell.playing-shell .action-dock .amount-stepper button {
+  flex: 0 0 var(--control);
+  width: var(--control);
+  min-width: var(--control);
+  min-height: var(--control);
+  padding: 0;
+  font-size: 17px;
+}
+.game-shell.playing-shell .action-dock .amount-stepper input {
+  flex: 0 0 36px;
+  min-width: 36px;
+  max-width: 36px;
+  width: 36px;
+  min-height: var(--control);
+  padding: 0;
+  font-size: 14px;
+  font-weight: 750;
+  text-align: center;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  appearance: textfield;
+}
+.game-shell.playing-shell input::-webkit-inner-spin-button,
+.game-shell.playing-shell input::-webkit-outer-spin-button {
+  appearance: none;
+}
+.game-shell.playing-shell .action-dock .action-card > button {
+  grid-column: auto;
+  grid-row: auto;
+  width: auto;
+  min-width: 0;
+  margin-left: auto;
+}
+.game-shell.playing-shell .action-dock .phase-actions {
+  position: static;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: none;
+  width: 100%;
+  padding: 6px 0 0;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--edge);
+}
+.game-shell.playing-shell .action-dock .phase-actions:empty {
+  display: none;
+}
+.game-shell.playing-shell .action-dock .phase-actions button {
+  font-size: var(--menu-text);
+  min-height: var(--control);
+  background: transparent;
+  color: var(--metal);
+  border-color: var(--edge);
+}
+.game-shell.playing-shell .action-dock .phase-actions button::before {
+  content: none;
+}
+.game-shell.playing-shell .reinforcement-pools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  width: 100%;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+}
+.game-shell.playing-shell .action-dock .action-footer:not(.phase-actions) {
+  display: block;
+  flex-basis: 100%;
+  width: 100%;
+  grid-column: auto;
+  grid-row: auto;
+  border: 0;
+  padding: 0;
+}
+.game-shell.playing-shell .finished-panel {
+  display: grid;
+  gap: 8px;
+}
+.game-shell.playing-shell .finished-panel h1 {
+  font-size: 17px;
+}
+.game-shell.playing-shell .winning-objective {
+  font-size: 12px;
+}
+.game-shell.playing-shell .victory-crest {
+  width: 40px;
+  height: 40px;
+}
+
+/* Dice remain mounted across every phase; their size follows their content. */
+.game-shell.playing-shell .floating-dice {
+  align-self: flex-end;
+  width: max-content;
+  max-width: 132px;
+  padding: 5px 7px;
+  flex-shrink: 0;
+}
+.game-shell.playing-shell .dice-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  min-height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: var(--metal);
+}
+.game-shell.playing-shell .dice-toggle > span:last-child {
+  margin-left: auto;
+}
+.game-shell.playing-shell .combat-result {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  box-shadow: none;
+  display: block;
+}
+.game-shell.playing-shell .combat-result .panel-heading-row {
+  display: none;
+}
+.game-shell.playing-shell .dice-results {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  margin: 4px 0 0;
+}
+.game-shell.playing-shell .dice-results > div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.game-shell.playing-shell .dice-results > div > span {
+  width: 16px;
+  color: var(--metal);
+}
+.game-shell.playing-shell .dice-results > div > div {
+  display: flex;
+  gap: 3px;
+}
+.game-shell.playing-shell .die {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  margin: 0;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px #0003;
+  background: #a54135;
+  color: #fff8e9;
+}
+.game-shell.playing-shell .defender-die {
+  background: #315d82;
+}
+.game-shell.playing-shell .pip-die {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 3px;
+  place-items: center;
+}
+.game-shell.playing-shell .pip {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+}
+.game-shell.playing-shell .pip.on,
+.game-shell.playing-shell .die-rolling .pip:nth-child(odd) {
+  opacity: 1;
+}
+.game-shell.playing-shell .floating-dice p {
+  font-size: 11px;
+  line-height: 1.3;
+}
+.game-shell.playing-shell .global-error {
+  position: static;
+  margin: 0;
+  padding: 8px;
+  width: 100%;
+  flex-shrink: 0;
+  font-size: 12px;
+  max-height: 72px;
+  overflow: auto;
+}
+.game-shell.playing-shell .action-cluster:has(.global-error) {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.game-shell.playing-shell .map-frame .territory.legal .territory-fill {
+  stroke: var(--chart-edge);
+  stroke-width: 1.65;
+}
+.game-shell.playing-shell .map-frame .territory .territory-fill {
+  filter: none;
+  transition: none;
+}
+.game-shell.playing-shell .map-frame .territory.selected .territory-fill {
+  stroke: #f4b828;
+  stroke-width: 6;
+}
+.game-shell.playing-shell
+  .map-frame
+  .territory:is(
+    .legal,
+    .selected,
+    .selected-source,
+    .selected-target,
+    .pending-source,
+    .pending-target
+  )
+  .territory-fill {
+  stroke-dasharray: none;
+  stroke-linejoin: round;
+}
+
+/* Compact mode retains the same anchors, typography and content components. */
+@media (max-width: 800px), (max-height: 520px) {
+  .game-shell.playing-shell {
+    --inset: 8px;
+    --control: 36px;
+    --icon-control: 32px;
+    --action-width: 280px;
+  }
+  .game-shell.playing-shell .player-roster {
+    gap: 3px;
+    padding: 4px;
+    max-width: calc(100vw - 64px);
+  }
+  .game-shell.playing-shell .roster-brand {
+    font-size: 12px;
+  }
+  .game-shell.playing-shell .roster-player {
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px;
+    font-size: 10px;
+    padding: 3px 5px;
+  }
+  .game-shell.playing-shell .roster-seats {
+    gap: 4px;
+  }
+  .game-shell.playing-shell .player-popover {
+    top: 72px;
+  }
+  .game-shell.playing-shell .floating-information {
+    padding: 3px;
+  }
+  .game-shell.playing-shell .information-tabs {
+    grid-template-columns: repeat(3, 44px);
+    gap: 1px;
+  }
+  .game-shell.playing-shell .information-tabs button {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 3px;
+  }
+  .game-shell.playing-shell .information-content {
+    left: 0;
+    width: min(var(--information-width), calc(100vw - 72px));
+    max-height: calc(100dvh - 148px);
+  }
+  .game-shell.playing-shell .information-content :is(select, input) {
+    font-size: 16px;
+  }
+  .game-shell.playing-shell .action-route-fields select {
+    font-size: 14px;
+  }
+  .game-shell.playing-shell .action-cluster {
+    width: var(--action-width);
+    max-width: calc(100vw - 72px);
+    max-height: calc(100dvh - 156px);
+  }
+  .game-shell.playing-shell .action-cluster:not(.mobile-actions-open) {
+    width: max-content;
+    max-width: min(142px, calc(100vw - 190px));
+  }
+  .game-shell.playing-shell
+    .action-cluster:not(.mobile-actions-open)
+    .mobile-action-toggle {
+    max-width: 100%;
+  }
+  .game-shell.playing-shell .compact-action-copy strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .game-shell.playing-shell .compact-action-copy small {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .game-shell.playing-shell .mobile-action-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 6px 8px;
+    min-height: 44px;
+    align-self: flex-end;
+    color: var(--metal);
+    flex-shrink: 0;
+  }
+  .game-shell.playing-shell
+    .action-cluster:not(.mobile-actions-open)
+    :is(.phase-row, .action-dock) {
+    display: none;
+  }
+  .game-shell.playing-shell .action-cluster.mobile-actions-open {
+    bottom: max(68px, calc(env(safe-area-inset-bottom) + 60px));
+  }
+  .game-shell.playing-shell .action-dock {
+    padding: 8px;
+  }
+  .game-shell.playing-shell
+    .action-cluster.mobile-actions-open
+    .mobile-action-toggle {
+    order: 4;
+    min-height: 36px;
+  }
+  .game-shell.playing-shell .topbar {
+    max-height: calc(100dvh - 76px);
+    width: calc(var(--icon-control) + 10px);
+    scrollbar-width: thin;
+  }
+}
+@media (max-width: 500px) {
+  .game-shell.playing-shell .information-content {
+    max-height: calc(100dvh - 310px);
+  }
+  .game-shell.playing-shell:has(.global-error) .information-content {
+    max-height: max(80px, calc(100dvh - 410px));
+  }
+}
+@media (max-height: 420px) {
+  .game-shell.playing-shell {
+    --control: 30px;
+    --icon-control: 28px;
+  }
+  .game-shell.playing-shell .topbar {
+    gap: 2px;
+  }
+  .game-shell.playing-shell :is(.seat-exit-bar, .map-zoom-controls) {
+    gap: 2px;
+  }
+  .game-shell.playing-shell .action-cluster.mobile-actions-open {
+    bottom: var(--inset);
+    max-height: calc(100dvh - 80px);
+    gap: 4px;
+  }
+  .game-shell.playing-shell .action-cluster:not(.mobile-actions-open) {
+    max-height: calc(100dvh - 80px);
+  }
+  .game-shell.playing-shell .floating-dice {
+    max-height: 112px;
+    overflow-y: auto;
+  }
+  .game-shell.playing-shell .information-content {
+    max-height: calc(100dvh - 142px);
+    max-width: calc(100vw - 220px);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .game-shell.playing-shell {
+    --glass: var(--surface);
+    --panel-surface: var(--surface);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-shell.playing-shell *,
+  .game-shell.playing-shell *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Contextual actions share the left-hand popup; the right stack is status only. */
+.game-shell.playing-shell .information-tabs {
+  grid-template-columns: repeat(6, 44px);
+}
+.game-shell.playing-shell .mobile-action-toggle {
+  display: none;
+}
+.game-shell.playing-shell .action-cluster,
+.game-shell.playing-shell .action-cluster:not(.mobile-actions-open) {
+  width: max-content;
+  max-width: 154px;
+  max-height: calc(100dvh - 80px);
+  bottom: max(var(--inset), env(safe-area-inset-bottom));
+}
+.game-shell.playing-shell .action-cluster .phase-row,
+.game-shell.playing-shell .action-cluster:not(.mobile-actions-open) .phase-row {
+  display: block;
+  padding: 5px 8px;
+}
+.game-shell.playing-shell .right-turn-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: center;
+  align-items: center;
+}
+.game-shell.playing-shell .right-turn-summary span {
+  color: var(--metal);
+}
+.game-shell.playing-shell .right-turn-summary > strong {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.game-shell.playing-shell .contextual-panel-host .action-dock {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.game-shell.playing-shell
+  .contextual-panel-host
+  :is(.action-card, .action-layout) {
+  gap: 5px;
+  padding: 0;
+  margin: 0;
+}
+.game-shell.playing-shell .contextual-panel-host .attack-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.game-shell.playing-shell .attack-card > button {
+  display: grid;
+  place-items: center;
+  min-height: 36px;
+  padding: 5px;
+}
+.game-shell.playing-shell .contextual-panel-host .phase-actions:empty {
+  display: none;
+}
+@media (max-width: 800px), (max-height: 520px) {
+  .game-shell.playing-shell .information-tabs {
+    grid-template-columns: repeat(6, var(--icon-control));
+    gap: 3px;
+  }
+  .game-shell.playing-shell .information-tabs button {
+    width: var(--icon-control);
+    height: var(--icon-control);
+    min-width: var(--icon-control);
+    min-height: var(--icon-control);
+  }
+}
+.game-shell.playing-shell .player-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: max-content;
+  max-width: calc(100vw - 16px);
+}
+.game-shell.playing-shell .player-popover header {
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px;
+}
+/* Close buttons in the top right corner of the popovers. */
+.game-shell.playing-shell .player-popover header button {
+  margin-left: auto;
+}
+.game-shell.playing-shell .player-popover :is(p, small) {
+  margin: 0;
+  font-size: 11px;
+}
+.game-shell.playing-shell .player-popover p:not(.player-stat) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+@media (min-width: 801px) and (min-height: 521px) {
+  .game-shell.playing-shell .player-popover {
+    min-width: 230px;
+    padding-inline: 12px;
+  }
+}
+.game-shell.playing-shell .hand-card {
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+}
+.game-shell.playing-shell .hand-card .card-copy {
+  order: -1;
+  flex: none;
+}
+.game-shell.playing-shell .hand-card .card-symbol,
+.game-shell.playing-shell .hand-card .card-symbol .ui-icon {
+  width: 30px;
+  height: 30px;
+}
+.game-shell.playing-shell .information-tabs button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.game-shell.playing-shell
+  .contextual-panel-host
+  :is(.regroup-card, .conquest-transfer) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  font-size: 12px;
+}
+.game-shell.playing-shell
+  :is(.regroup-card, .conquest-transfer)
+  > :is(.action-selection, .action-route-fields, .muted-copy) {
+  grid-column: 1 / -1;
+}
+.game-shell.playing-shell
+  :is(.regroup-card, .conquest-transfer)
+  .amount-control {
+  grid-column: 1;
+  width: auto;
+}
+.game-shell.playing-shell .conquest-transfer .action-selection strong {
+  font-size: 12px;
+}
+.game-shell.playing-shell .conquest-transfer .transfer-route {
+  grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: center;
+}
+.game-shell.playing-shell .transfer-route strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.game-shell.playing-shell .transfer-route-arrow {
+  text-align: center;
+  color: var(--metal);
+}
+.game-shell.playing-shell
+  :is(.regroup-card, .conquest-transfer)
+  :is(select, input, .amount-control button) {
+  font-size: 12px;
+}
+.game-shell.playing-shell .contextual-panel-host .regroup-card > button {
+  width: auto;
+  min-width: 36px;
+  font-size: 12px;
+  padding: 5px 8px;
+}
+@media (min-width: 1000px) and (min-height: 600px) {
+  .game-shell.playing-shell .right-turn-summary {
+    font-size: 13px;
+    gap: 4px;
+  }
+  .game-shell.playing-shell .action-cluster .phase-row {
+    padding: 8px 12px;
+  }
+  .game-shell.playing-shell .floating-dice {
+    max-width: 160px;
+    padding: 7px 9px;
+  }
+  .game-shell.playing-shell .dice-toggle {
+    font-size: 13px;
+  }
+  .game-shell.playing-shell .die {
+    width: 29px;
+    height: 29px;
+    min-width: 29px;
+    min-height: 29px;
+  }
+}
+@media (max-width: 500px) {
+  .game-shell.playing-shell:has(.floating-information.is-open) .action-cluster {
+    top: max(78px, calc(env(safe-area-inset-top) + 70px));
+    bottom: auto;
+  }
+}
+.game-shell.playing-shell .observed-combat {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 100px);
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--panel-surface);
+  color: var(--ink);
+  font-size: 12px;
+  pointer-events: none;
+}
+.observed-combat-outlines {
+  pointer-events: none;
+}
+.observed-combat-outlines path {
+  fill: none;
+  stroke-width: 4px;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.observed-combat-outlines .combat-attacker {
+  stroke: #d96538;
+}
+.observed-combat-outlines .combat-defender {
+  stroke: #4cafd5;
+}
+
+.game-shell.playing-shell .mode-logo {
+  display: block;
+  width: 34px;
+  height: 34px;
+}
+
+.admin-competitive-results {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.admin-competitive-results .competitive-results-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.admin-competitive-results table {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+}
+.admin-competitive-results th,
+.admin-competitive-results td {
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.admin-competitive-results tbody tr:nth-child(odd) {
+  background-color: #e3f0df;
+}
+.admin-competitive-results tbody tr:nth-child(even) {
+  background-color: #fffdf7;
+}
+
+.admin-layout .game-list > section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* As many columns as buttons: off turn the play buttons are hidden and the bar shrinks.
+   The end-turn flag adds one more, to the right of the panel buttons. */
+.game-shell.playing-shell .information-tabs {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 44px;
+}
+.game-shell.playing-shell .information-tabs .end-turn-tab {
+  margin-left: 6px;
+}
+.game-shell.playing-shell .information-tabs .end-turn-tab:not(:disabled) {
+  color: var(--ink);
+}
+@media (max-width: 800px), (max-height: 520px) {
+  .game-shell.playing-shell .information-tabs {
+    grid-auto-columns: var(--icon-control);
+  }
+}
+/* On phones the extra flag leaves no room beside the turn box, which moves above the panel bar. */
+@media (max-width: 520px) {
+  .game-shell.playing-shell:has(.end-turn-tab) .action-cluster {
+    bottom: calc(
+      max(var(--inset), env(safe-area-inset-bottom)) + var(--icon-control) +
+        14px
+    );
+  }
+}
+
+/* Classic's menus use Reconquista's icon buttons. */
+.game-shell.playing-shell :is(.attack-card, .regroup-card) > .action-title {
+  grid-column: 1 / -1;
+}
+.game-shell.playing-shell .contextual-panel-host .attack-card {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+.game-shell.playing-shell .attack-card > :is(.attack-button, .end-attack) {
+  min-width: 36px;
+  padding: 5px 8px;
+}
+.game-shell.playing-shell .contextual-panel-host .regroup-card {
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+.game-shell.playing-shell
+  :is(.attack-card, .regroup-card, .conquest-transfer)
+  > button
+  svg,
+.game-shell.playing-shell
+  .action-dock
+  .reinforcement-card
+  > .confirm-placement
+  svg {
+  width: 18px;
+  height: 18px;
+}
+.game-shell.playing-shell
+  .action-dock
+  .reinforcement-card
+  > .confirm-placement {
+  flex: 0 0 auto;
+  width: 36px;
+  min-width: 36px;
+  height: 32px;
+  min-height: 32px;
+  padding: 5px 8px;
+  border-radius: 7px;
+}
+.game-shell.playing-shell .end-turn-hint {
+  margin: 0;
+  font-size: 12px;
+}
+/* Cards: request on the left, exchange on the right, as icon buttons. */
+.game-shell.playing-shell .cards-panel .card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.game-shell.playing-shell .cards-panel .card-actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 32px;
+  padding: 0 8px;
+}
+.game-shell.playing-shell .cards-panel .card-actions .exchange-submit {
+  width: auto;
+  min-width: 36px;
+}
+/* +2 and +1 carry their number beside (or instead of) the icon. */
+.game-shell.playing-shell .cards-panel .card-actions .text-icon {
+  width: auto;
+  min-width: 2rem;
+  padding: 0 6px;
+  gap: 2px;
+  font-weight: 700;
+  font-size: 12px;
+}
+.game-shell.playing-shell .cards-panel .card-actions svg {
+  width: 18px;
+  height: 18px;
+}
+.game-shell.playing-shell .cards-panel .card-refusal {
+  margin: 4px 0 0;
+  font-size: 11px;
+}
+.game-shell.playing-shell .cards-panel .card-badge {
+  font-size: 11px;
+  color: var(--accent);
+}
+
+/* Same phone and translucency rules as Reconquista, for every mode.
+   Phones: menus shrink to their content with tighter controls, up to half the screen, and
+   scroll inside with their title fixed; Cartas keeps the full width for its cards. */
+@media (max-width: 600px) {
+  .game-shell.playing-shell .information-content {
+    --control: 30px;
+    width: fit-content;
+    min-width: min(264px, calc(100vw - 2 * var(--inset)));
+    max-width: calc(100vw - 2 * var(--inset));
+    max-height: 45dvh;
+    padding: 0 6px 6px;
+  }
+  .game-shell.playing-shell
+    .information-content:has(> div:not([hidden]) .cards-panel) {
+    width: calc(100vw - 2 * var(--inset));
+    max-height: 50dvh;
+  }
+  .game-shell.playing-shell .mobile-panel-heading {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0 -6px 4px;
+    padding: 4px 6px 2px;
+    background: var(--glass);
+    backdrop-filter: blur(4px);
+  }
+  .game-shell.playing-shell .mobile-panel-heading button {
+    min-width: 28px;
+    min-height: 28px;
+    padding: 2px;
+  }
+  .game-shell.playing-shell
+    .information-content
+    > div
+    > :not(.reconquista-cards-panel, .cards-panel)
+    :is(button, select, input) {
+    min-height: var(--control);
+    height: var(--control);
+    padding-block: 2px;
+  }
+  .game-shell.playing-shell .information-content :is(p, li) {
+    line-height: 1.3;
+  }
+  .game-shell.playing-shell .information-content p + p {
+    margin-top: 3px;
+  }
+}
+
+/* Light theme: the player and situation cards as translucent as the other floating menus. */
+html:not([data-theme='dark']) .game-shell.playing-shell .player-popover {
+  background: var(--glass);
+}
+
+/* With the translucent menus a faded card would let the map through: disabled
+   cards keep a solid face and only their text and drawing fade. */
+.game-shell.playing-shell .cards-panel .hand-card:disabled {
+  opacity: 1;
+  color: color-mix(in srgb, var(--ink) 50%, var(--surface));
+}
+.game-shell.playing-shell
+  .cards-panel
+  .hand-card:disabled
+  :is(.card-art, .card-symbol) {
+  opacity: 0.6;
+}
+
+/* Phones: Cartas fits its cards like the other menus, the
+   turn box and the route menus use smaller type. */
+@media (max-width: 600px) {
+  .game-shell.playing-shell
+    .information-content:has(> div:not([hidden]) .cards-panel) {
+    width: fit-content;
+  }
+  .game-shell.playing-shell .information-content .exchange-card-selection {
+    grid-template-columns: repeat(3, 76px);
+    gap: 6px;
+    margin: 6px 0;
+  }
+  .game-shell.playing-shell .cards-panel .hand-card {
+    padding: 14px 3px 5px;
+    gap: 2px;
+  }
+  .game-shell.playing-shell .cards-panel .hand-card .card-name {
+    font-size: 11px;
+    line-height: 1.15;
+  }
+  .game-shell.playing-shell .hand-card .card-symbol,
+  .game-shell.playing-shell .cards-panel .card-art {
+    width: 28px;
+    height: 28px;
+  }
+  .game-shell.playing-shell .cards-panel .card-badge {
+    font-size: 9px;
+  }
+  .game-shell.playing-shell .cards-panel .action-help {
+    max-width: 240px;
+    font-size: 11px;
+  }
+  .game-shell.playing-shell .cards-panel .card-actions {
+    margin-top: 4px;
+  }
+
+  .game-shell.playing-shell .right-turn-summary {
+    font-size: 10px;
+    line-height: 1.2;
+    gap: 1px;
+  }
+  .game-shell.playing-shell .action-cluster .phase-row {
+    padding: 4px 6px;
+  }
+  .game-shell.playing-shell .floating-dice {
+    padding: 3px 6px;
+  }
+  .game-shell.playing-shell .dice-toggle,
+  .game-shell.playing-shell .dice-toggle * {
+    min-height: 22px;
+    font-size: 10px;
+  }
+  .game-shell.playing-shell .dice-toggle .ui-icon {
+    width: 14px;
+    height: 14px;
+    min-height: 0;
+  }
+
+  .game-shell.playing-shell
+    .action-dock
+    :is(select, input, .amount-control button) {
+    font-size: 12px;
+  }
+  .game-shell.playing-shell .action-dock label {
+    font-size: 10px;
+  }
+  .game-shell.playing-shell .information-content {
+    --menu-label: 10px;
+  }
+  .game-shell.playing-shell
+    .information-content
+    .pacts-panel
+    :is(select, input, button, .muted-copy, .pact-summary, .pact-copy) {
+    font-size: 12px;
+  }
+  .game-shell.playing-shell .information-content .pacts-panel label {
+    font-size: 10px;
+  }
+  .game-shell.playing-shell .information-content .pact-proposal-form {
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .game-shell.playing-shell .mobile-panel-heading strong {
+    font-size: 12px;
+  }
+}
+@media (max-width: 600px) {
+  .game-shell.playing-shell .cards-panel .hand-card .card-copy strong {
+    font-size: 11px;
+    line-height: 1.15;
+  }
+}
+
+/* Classic card faces: engravings like the chart's vessel and compass rose. */
+.game-shell.playing-shell .hand-card .card-symbol:has(.classic-card-art) {
+  width: 38px;
+  height: 38px;
+  color: var(--ink);
+}
+.classic-card-art {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.classic-card-art :is(.art-line, .art-paper, .art-gold, .art-hatch) {
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.classic-card-art .art-line {
+  fill: none;
+}
+.classic-card-art .art-hatch {
+  fill: none;
+  stroke-width: 1.6;
+  opacity: 0.7;
+}
+.classic-card-art .art-paper {
+  fill: color-mix(in srgb, var(--surface) 65%, #efdfb8);
+}
+.classic-card-art .art-gold {
+  fill: color-mix(in srgb, #c49655 75%, var(--surface));
+}
+.classic-card-art .art-solid {
+  fill: currentColor;
+}
+.game-shell.playing-shell .hand-card:disabled .classic-card-art {
+  opacity: 0.75;
+}
+@media (max-width: 600px) {
+  .game-shell.playing-shell .hand-card .card-symbol:has(.classic-card-art) {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Contrast box inside Ataque, Traslado and the other action menus, and under
+   the objective, in every mode. It fills the menu
+   below its title. */
+.game-shell.playing-shell .contextual-panel-host .action-dock,
+.game-shell.playing-shell .information-content .objective-box {
+  margin: 2px 0 0;
+  padding: 8px;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--edge) 70%, transparent);
+  border-radius: 9px;
+  backdrop-filter: blur(4px);
+  box-shadow: none;
+}
+
+/* «+3» / «−3» on a country another player reinforced or moved armies from. */
+.game-shell.playing-shell .army-change rect {
+  fill: var(--player-color, var(--metal));
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.game-shell.playing-shell .army-change text {
+  fill: #fff;
+  font:
+    700 15px system-ui,
+    sans-serif;
+  text-anchor: middle;
+}
+.game-shell.playing-shell .army-change.color-yellow text {
+  fill: #302d20;
+}
+.game-shell.playing-shell .army-change {
+  animation: army-change-in 0.25s ease-out;
+}
+@keyframes army-change-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Smooth zoom: while a drag, pinch or wheel moves
+   the map, the picture moves as one layer. Nothing needs switching off: the
+   paper, the coasts and the army markers are drawn without filters. */
+.map-viewport.is-moving .map-transform {
+  will-change: transform;
+}
+
+/* Competitive clock: turn and game time in a highlighted box. */
+.game-shell.playing-shell .competitive-clock {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 8px;
+  margin: 2px 0;
+  padding: 2px 8px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+.game-shell.playing-shell .competitive-pause {
+  max-width: 100%;
+}
+.game-shell.playing-shell .competitive-pause > strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.game-shell.playing-shell .competitive-pause .pause-player {
+  min-width: 0;
+  max-width: 9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 600px) {
+  .game-shell.playing-shell .contextual-panel-host .action-dock,
+  .game-shell.playing-shell .information-content .objective-box {
+    padding: 5px;
+  }
+  .game-shell.playing-shell .action-route-fields select {
+    padding-inline: 4px 2px;
+  }
+}
+
+/* Cards: plain until selected; a selected card, and one whose bonus was used,
+   turns green and a used one stays green. */
+.game-shell.playing-shell .cards-panel .hand-card {
+  background: var(--surface);
+}
+.game-shell.playing-shell .cards-panel .hand-card:is(.selected, .bonus-used) {
+  background: color-mix(in srgb, #8aa966 62%, var(--surface));
+  border-color: color-mix(in srgb, #5f7f45 80%, var(--surface));
+}
+.game-shell.playing-shell .cards-panel .hand-card.selected {
+  box-shadow: 0 0 0 2px color-mix(in srgb, #5f7f45 70%, transparent);
+}

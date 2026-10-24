@@ -1,0 +1,1745 @@
+{
+  "kind": "reconquista-catalog",
+  "version": 1,
+  "readiness": "partial",
+  "sources": {
+    "manualSha256": "e6b3f6b021f86e577bc1c1c50f84ad39c99385cf4bfff737678c3715269a8047",
+    "photos": "S05:docs/RECONQUISTA_DATA.md#hashes-de-las-fotografías-s05",
+    "declarations": [
+      "S06:open_borders; single standalone wildcard; Mano",
+      "S07:bielorrusia/polonia=true; polonia/finlandia=false",
+      "S07: Bielorrusia no limita con Alemania; vecinos declarados Finlandia, Polonia y Ucrania",
+      "S07: Kamchatka-Corea y China-India sí; Egipto-Angola, Ucrania-Siberia y México-Tonga no; México en América Central, Ucrania Europa y Rusia Asia",
+      "S07: Francia-Croacia no son adyacentes",
+      "S09/usuario: adopción explícita de 16 islas, incluida Australia, decisión digital D09",
+      "S10/usuario, 2026-10-15: China-Vietnam no son adyacentes; Malasia e India los separan",
+      "S11/usuario, 2026-10-16 (D22): diez falsas fronteras retiradas y ocho confirmadas añadidas; Finlandia-Polonia sigue sin frontera; dibujo claro/oscuro se corrige solo en esa zona"
+    ]
+  },
+  "continents": [
+    {
+      "id": "north_america",
+      "territoryCount": 12,
+      "evidence": "S05/tablero.jpg + Continentes.jpg"
+    },
+    {
+      "id": "central_america",
+      "territoryCount": 6,
+      "evidence": "S05/tablero.jpg + Continentes.jpg"
+    },
+    {
+      "id": "south_america",
+      "territoryCount": 8,
+      "evidence": "S05/tablero.jpg + Continentes.jpg"
+    },
+    {
+      "id": "europe",
+      "territoryCount": 16,
+      "evidence": "S05/tablero.jpg + Continentes.jpg"
+    },
+    {
+      "id": "asia",
+      "territoryCount": 16,
+      "evidence": "S05/tablero.jpg + Continentes.jpg"
+    },
+    {
+      "id": "africa",
+      "territoryCount": 8,
+      "evidence": "S05/tablero.jpg + Continentes.jpg"
+    },
+    {
+      "id": "oceania",
+      "territoryCount": 6,
+      "evidence": "S05/tablero.jpg + Continentes.jpg"
+    }
+  ],
+  "territories": [
+    {
+      "id": "sudafrica",
+      "name": "Sudáfrica",
+      "continentId": "africa",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila superior:1",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "uruguay",
+      "name": "Uruguay",
+      "continentId": "south_america",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila superior:2",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "nigeria",
+      "name": "Nigeria",
+      "continentId": "africa",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila superior:3",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "turquia",
+      "name": "Turquía",
+      "continentId": "asia",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila superior:4",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "nueva_zelanda",
+      "name": "Nueva Zelanda",
+      "continentId": "oceania",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila superior:5",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "terranova",
+      "name": "Terranova",
+      "continentId": "north_america",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila superior:6",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "sumatra",
+      "name": "Sumatra",
+      "continentId": "oceania",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila superior:7",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "sahara",
+      "name": "Sahara",
+      "continentId": "africa",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila superior:8",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "noruega",
+      "name": "Noruega",
+      "continentId": "europe",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila superior:9",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "portugal",
+      "name": "Portugal",
+      "continentId": "europe",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila superior:10",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "nueva_york",
+      "name": "Nueva York",
+      "continentId": "north_america",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:11",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "vietnam",
+      "name": "Vietnam",
+      "continentId": "asia",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:12",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "rusia",
+      "name": "Rusia",
+      "continentId": "asia",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:13",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "venezuela",
+      "name": "Venezuela",
+      "continentId": "south_america",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:14",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "siberia",
+      "name": "Siberia",
+      "continentId": "asia",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:15",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "polonia",
+      "name": "Polonia",
+      "continentId": "europe",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:16",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "paraguay",
+      "name": "Paraguay",
+      "continentId": "south_america",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:17",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "tasmania",
+      "name": "Tasmania",
+      "continentId": "oceania",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:18",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "oregon",
+      "name": "Oregón",
+      "continentId": "north_america",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:19",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "serbia",
+      "name": "Serbia",
+      "continentId": "europe",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:20",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "tonga",
+      "name": "Tonga",
+      "continentId": "oceania",
+      "printedSymbols": "plane",
+      "cardEvidence": "S05/Aviones.jpg:fila inferior o tarjeta lateral:21",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "india",
+      "name": "India",
+      "continentId": "asia",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila superior:1",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "jamaica",
+      "name": "Jamaica",
+      "continentId": "central_america",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila superior:2",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "kamchatka",
+      "name": "Kamchatka",
+      "continentId": "asia",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila superior:3",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "iran",
+      "name": "Irán",
+      "continentId": "asia",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila superior:4",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "labrador",
+      "name": "Labrador",
+      "continentId": "north_america",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila superior:5",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "florida",
+      "name": "Florida",
+      "continentId": "north_america",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila superior:6",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "nicaragua",
+      "name": "Nicaragua",
+      "continentId": "central_america",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila superior:7",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "israel",
+      "name": "Israel",
+      "continentId": "asia",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila superior:8",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "irak",
+      "name": "Irak",
+      "continentId": "asia",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila superior:9",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "isla_victoria",
+      "name": "Isla Victoria",
+      "continentId": "north_america",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila superior:10",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "honduras",
+      "name": "Honduras",
+      "continentId": "central_america",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:11",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "finlandia",
+      "name": "Finlandia",
+      "continentId": "europe",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:12",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "japon",
+      "name": "Japón",
+      "continentId": "asia",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:13",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "malasia",
+      "name": "Malasia",
+      "continentId": "asia",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:14",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "francia",
+      "name": "Francia",
+      "continentId": "europe",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:15",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "mexico",
+      "name": "México",
+      "continentId": "central_america",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:16",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "madagascar",
+      "name": "Madagascar",
+      "continentId": "africa",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:17",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "gran_bretana",
+      "name": "Gran Bretaña",
+      "continentId": "europe",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:18",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "islandia",
+      "name": "Islandia",
+      "continentId": "europe",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:19",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "italia",
+      "name": "Italia",
+      "continentId": "europe",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:20",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "groenlandia",
+      "name": "Groenlandia",
+      "continentId": "north_america",
+      "printedSymbols": "ship",
+      "cardEvidence": "S05/Barcos.jpg:fila inferior o tarjeta lateral:21",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "egipto",
+      "name": "Egipto",
+      "continentId": "africa",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila superior:1",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "canada",
+      "name": "Canadá",
+      "continentId": "north_america",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila superior:2",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "australia",
+      "name": "Australia",
+      "continentId": "oceania",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila superior:3",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "california",
+      "name": "California",
+      "continentId": "north_america",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila superior:4",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "bielorrusia",
+      "name": "Bielorrusia",
+      "continentId": "europe",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila superior:5",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "espana",
+      "name": "España",
+      "continentId": "europe",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila superior:6",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "corea",
+      "name": "Corea",
+      "continentId": "asia",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila superior:7",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "cuba",
+      "name": "Cuba",
+      "continentId": "central_america",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila superior:8",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "brasil",
+      "name": "Brasil",
+      "continentId": "south_america",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila superior:9",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "chukchi",
+      "name": "Chukchi",
+      "continentId": "asia",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila superior:10",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "china",
+      "name": "China",
+      "continentId": "asia",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:11",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "chile",
+      "name": "Chile",
+      "continentId": "south_america",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:12",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "chicago",
+      "name": "Chicago",
+      "continentId": "north_america",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:13",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "bolivia",
+      "name": "Bolivia",
+      "continentId": "south_america",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:14",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "el_salvador",
+      "name": "El Salvador",
+      "continentId": "central_america",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:15",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "etiopia",
+      "name": "Etiopía",
+      "continentId": "africa",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:16",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "filipinas",
+      "name": "Filipinas",
+      "continentId": "oceania",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:17",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "arabia",
+      "name": "Arabia",
+      "continentId": "asia",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:18",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "croacia",
+      "name": "Croacia",
+      "continentId": "europe",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:19",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "irlanda",
+      "name": "Irlanda",
+      "continentId": "europe",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:20",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": true
+    },
+    {
+      "id": "colombia",
+      "name": "Colombia",
+      "continentId": "south_america",
+      "printedSymbols": "tank_grenade",
+      "cardEvidence": "S05/Tanques_Granadas.jpg:fila inferior o tarjeta lateral:21",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "alaska",
+      "name": "Alaska",
+      "continentId": "north_america",
+      "printedSymbols": "soldier",
+      "cardEvidence": "S05/Soldados.jpg:fila superior:1",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "albania",
+      "name": "Albania",
+      "continentId": "europe",
+      "printedSymbols": "soldier",
+      "cardEvidence": "S05/Soldados.jpg:fila superior:2",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "angola",
+      "name": "Angola",
+      "continentId": "africa",
+      "printedSymbols": "soldier",
+      "cardEvidence": "S05/Soldados.jpg:fila superior:3",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "alemania",
+      "name": "Alemania",
+      "continentId": "europe",
+      "printedSymbols": "soldier",
+      "cardEvidence": "S05/Soldados.jpg:fila superior:4",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "las_vegas",
+      "name": "Las Vegas",
+      "continentId": "north_america",
+      "printedSymbols": "triple",
+      "cardEvidence": "S05/Comodines.jpg:fila superior:1",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "mauritania",
+      "name": "Mauritania",
+      "continentId": "africa",
+      "printedSymbols": "triple",
+      "cardEvidence": "S05/Comodines.jpg:fila superior:2",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "ucrania",
+      "name": "Ucrania",
+      "continentId": "europe",
+      "printedSymbols": "triple",
+      "cardEvidence": "S05/Comodines.jpg:fila superior:3",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "chechenia",
+      "name": "Chechenia",
+      "continentId": "asia",
+      "printedSymbols": "triple",
+      "cardEvidence": "S05/Comodines.jpg:fila superior:4",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    },
+    {
+      "id": "argentina",
+      "name": "Argentina",
+      "continentId": "south_america",
+      "printedSymbols": "triple",
+      "cardEvidence": "S05/Comodines.jpg:fila superior:5",
+      "boardEvidence": "S05/tablero.jpg",
+      "island": false
+    }
+  ],
+  "connections": [
+    {
+      "endpoints": ["alaska", "canada"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["canada", "oregon"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["oregon", "las_vegas"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["las_vegas", "california"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["california", "mexico"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["mexico", "honduras"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["honduras", "el_salvador"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["el_salvador", "nicaragua"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["nicaragua", "colombia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["venezuela", "brasil"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["bolivia", "paraguay"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["paraguay", "brasil"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["argentina", "uruguay"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["chile", "argentina"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["espana", "portugal"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["espana", "francia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["francia", "italia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["alemania", "polonia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["alemania", "serbia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["serbia", "croacia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["croacia", "italia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["noruega", "finlandia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["bielorrusia", "finlandia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["polonia", "ucrania"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["ucrania", "albania"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["siberia", "chechenia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["chukchi", "kamchatka"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["kamchatka", "china"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["china", "corea"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["china", "malasia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["malasia", "vietnam"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["malasia", "india"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["india", "vietnam"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["arabia", "israel"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["irak", "israel"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["egipto", "etiopia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["etiopia", "angola"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["angola", "mauritania"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["nigeria", "sahara"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["nigeria", "mauritania"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["mauritania", "sudafrica"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["alaska", "chukchi"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["alaska", "kamchatka"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["canada", "isla_victoria"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["isla_victoria", "groenlandia"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["groenlandia", "nueva_york"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["groenlandia", "islandia"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["florida", "cuba"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["mexico", "cuba"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["cuba", "honduras"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["cuba", "jamaica"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["jamaica", "nicaragua"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["islandia", "noruega"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["islandia", "irlanda"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["irlanda", "gran_bretana"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["gran_bretana", "portugal"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["espana", "sahara"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["brasil", "sahara"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["uruguay", "nigeria"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["japon", "kamchatka"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["japon", "corea"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["sudafrica", "madagascar"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["egipto", "madagascar"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["filipinas", "tonga"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["tonga", "california"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["tonga", "australia"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["australia", "chile"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["australia", "tasmania"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["tasmania", "nueva_zelanda"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg"
+    },
+    {
+      "endpoints": ["bielorrusia", "polonia"],
+      "kind": "border",
+      "evidence": "S07/usuario: adyacentes"
+    },
+    {
+      "endpoints": ["canada", "terranova"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["oregon", "terranova"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["oregon", "chicago"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["las_vegas", "chicago"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["las_vegas", "florida"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["california", "florida"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["terranova", "chicago"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["chicago", "nueva_york"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["chicago", "florida"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["colombia", "venezuela"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["colombia", "brasil"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["colombia", "chile"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["brasil", "chile"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["brasil", "bolivia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["brasil", "argentina"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["brasil", "uruguay"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["bolivia", "chile"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["bolivia", "argentina"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["paraguay", "argentina"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["alemania", "francia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["alemania", "croacia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["serbia", "polonia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["polonia", "albania"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["bielorrusia", "ucrania"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["albania", "iran"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["albania", "irak"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["ucrania", "iran"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["ucrania", "rusia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["rusia", "siberia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["rusia", "chechenia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["rusia", "china"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["rusia", "iran"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["iran", "irak"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["china", "turquia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["turquia", "israel"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["turquia", "india"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["sahara", "egipto"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["sahara", "etiopia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["etiopia", "nigeria"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["angola", "nigeria"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["nigeria", "sudafrica"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["labrador", "terranova"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["labrador", "groenlandia"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["gran_bretana", "alemania"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["polonia", "egipto"],
+      "kind": "bridge",
+      "evidence": "S11/usuario 2026-10-22 (D79): rutas por mar del tablero v8"
+    },
+    {
+      "endpoints": ["irak", "egipto"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["india", "sumatra"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["sumatra", "australia"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["vietnam", "filipinas"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["filipinas", "australia"],
+      "kind": "bridge",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["corea", "malasia"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["corea", "vietnam"],
+      "kind": "border",
+      "evidence": "S05/tablero.jpg: revisión a resolución original"
+    },
+    {
+      "endpoints": ["kamchatka", "corea"],
+      "kind": "border",
+      "evidence": "S07/usuario: adyacentes confirmados"
+    },
+    {
+      "endpoints": ["china", "india"],
+      "kind": "border",
+      "evidence": "S07/usuario: adyacentes confirmados"
+    },
+    {
+      "endpoints": ["alemania", "italia"],
+      "kind": "border",
+      "evidence": "S11/usuario, 2026-10-16: frontera confirmada en el dibujo autoritativo; corrige transcripción S05 (D22)"
+    },
+    {
+      "endpoints": ["croacia", "polonia"],
+      "kind": "border",
+      "evidence": "S11/usuario, 2026-10-16: frontera confirmada en el dibujo autoritativo; corrige transcripción S05 (D22)"
+    },
+    {
+      "endpoints": ["chechenia", "china"],
+      "kind": "border",
+      "evidence": "S11/usuario, 2026-10-16: frontera confirmada en el dibujo autoritativo; corrige transcripción S05 (D22)"
+    },
+    {
+      "endpoints": ["china", "chukchi"],
+      "kind": "border",
+      "evidence": "S11/usuario, 2026-10-16: frontera confirmada en el dibujo autoritativo; corrige transcripción S05 (D22)"
+    },
+    {
+      "endpoints": ["china", "siberia"],
+      "kind": "border",
+      "evidence": "S11/usuario, 2026-10-16: frontera confirmada en el dibujo autoritativo; corrige transcripción S05 (D22)"
+    },
+    {
+      "endpoints": ["irak", "turquia"],
+      "kind": "border",
+      "evidence": "S11/usuario, 2026-10-16: frontera confirmada en el dibujo autoritativo; corrige transcripción S05 (D22)"
+    },
+    {
+      "endpoints": ["iran", "turquia"],
+      "kind": "border",
+      "evidence": "S11/usuario, 2026-10-16: frontera confirmada en el dibujo autoritativo; corrige transcripción S05 (D22)"
+    },
+    {
+      "endpoints": ["rusia", "turquia"],
+      "kind": "border",
+      "evidence": "S11/usuario, 2026-10-16: frontera confirmada en el dibujo autoritativo; corrige transcripción S05 (D22)"
+    },
+    {
+      "endpoints": ["egipto", "israel"],
+      "kind": "bridge",
+      "evidence": "S11/usuario 2026-10-22 (D79): rutas por mar del tablero v8"
+    },
+    {
+      "endpoints": ["mauritania", "madagascar"],
+      "kind": "bridge",
+      "evidence": "S11/usuario 2026-10-22 (D79): rutas por mar del tablero v8"
+    }
+  ],
+  "nonConnections": [
+    {
+      "endpoints": ["polonia", "finlandia"],
+      "evidence": "S07/usuario: no adyacentes; S11/usuario 2026-10-16: confirma no adyacencia y aporta corrección del dibujo (D22)"
+    },
+    {
+      "endpoints": ["bielorrusia", "alemania"],
+      "evidence": "S07/usuario: Bielorrusia tiene vecinos Finlandia, Polonia y Ucrania; franja aparente es mar"
+    },
+    {
+      "endpoints": ["bielorrusia", "rusia"],
+      "evidence": "S07/usuario: Bielorrusia tiene vecinos Finlandia, Polonia y Ucrania; franja aparente es mar"
+    },
+    {
+      "endpoints": ["egipto", "angola"],
+      "evidence": "S07/usuario: no adyacentes; Ucrania separada de Siberia por Rusia; puente izquierdo sale de California"
+    },
+    {
+      "endpoints": ["ucrania", "siberia"],
+      "evidence": "S07/usuario: no adyacentes; Ucrania separada de Siberia por Rusia; puente izquierdo sale de California"
+    },
+    {
+      "endpoints": ["mexico", "tonga"],
+      "evidence": "S07/usuario: no adyacentes; Ucrania separada de Siberia por Rusia; puente izquierdo sale de California"
+    },
+    {
+      "endpoints": ["francia", "croacia"],
+      "evidence": "S07/usuario: no comparten frontera"
+    },
+    {
+      "endpoints": ["china", "vietnam"],
+      "evidence": "S10/usuario, 2026-10-15: Malasia e India los separan; no comparten frontera"
+    },
+    {
+      "endpoints": ["albania", "croacia"],
+      "evidence": "S11/usuario, 2026-10-16: par incorrecto del catálogo; no comparten frontera en el dibujo autoritativo (D22)"
+    },
+    {
+      "endpoints": ["albania", "serbia"],
+      "evidence": "S11/usuario, 2026-10-16: par incorrecto del catálogo; no comparten frontera en el dibujo autoritativo (D22)"
+    },
+    {
+      "endpoints": ["arabia", "irak"],
+      "evidence": "S11/usuario, 2026-10-16: par incorrecto del catálogo; no comparten frontera en el dibujo autoritativo (D22)"
+    },
+    {
+      "endpoints": ["chechenia", "chukchi"],
+      "evidence": "S11/usuario, 2026-10-16: par incorrecto del catálogo; no comparten frontera en el dibujo autoritativo (D22)"
+    },
+    {
+      "endpoints": ["china", "irak"],
+      "evidence": "S11/usuario, 2026-10-16: par incorrecto del catálogo; no comparten frontera en el dibujo autoritativo (D22)"
+    },
+    {
+      "endpoints": ["china", "iran"],
+      "evidence": "S11/usuario, 2026-10-16: par incorrecto del catálogo; no comparten frontera en el dibujo autoritativo (D22)"
+    },
+    {
+      "endpoints": ["china", "israel"],
+      "evidence": "S11/usuario, 2026-10-16: par incorrecto del catálogo; no comparten frontera en el dibujo autoritativo (D22)"
+    },
+    {
+      "endpoints": ["chukchi", "rusia"],
+      "evidence": "S11/usuario, 2026-10-16: par incorrecto del catálogo; no comparten frontera en el dibujo autoritativo (D22)"
+    },
+    {
+      "endpoints": ["chukchi", "siberia"],
+      "evidence": "S11/usuario, 2026-10-16: par incorrecto del catálogo; no comparten frontera en el dibujo autoritativo (D22)"
+    },
+    {
+      "endpoints": ["kamchatka", "rusia"],
+      "evidence": "S11/usuario, 2026-10-16: par incorrecto del catálogo; no comparten frontera en el dibujo autoritativo (D22)"
+    }
+  ],
+  "graphReview": "transcribed",
+  "islandReview": "adopted",
+  "objectives": [
+    {
+      "id": "occupation_01",
+      "kind": "occupation",
+      "requirements": {
+        "north_america": 4,
+        "europe": 4,
+        "asia": 4,
+        "south_america": 3,
+        "central_america": 3,
+        "africa": 3,
+        "oceania": 3
+      },
+      "evidence": "S05/Objetivos.jpg:fila1,columna3;S01/37-38"
+    },
+    {
+      "id": "occupation_02",
+      "kind": "occupation",
+      "requirements": {
+        "europe": "all",
+        "south_america": "all"
+      },
+      "evidence": "S05/Objetivos.jpg:fila1,columna1;S01/37-38"
+    },
+    {
+      "id": "occupation_03",
+      "kind": "occupation",
+      "requirements": {
+        "north_america": "all",
+        "oceania": "all",
+        "africa": 5
+      },
+      "evidence": "S05/Objetivos.jpg:fila2,columna4;S01/37-38"
+    },
+    {
+      "id": "occupation_04",
+      "kind": "occupation",
+      "requirements": {
+        "asia": "all",
+        "central_america": "all"
+      },
+      "evidence": "S05/Objetivos.jpg:fila2,columna3;S01/37-38"
+    },
+    {
+      "id": "occupation_05",
+      "kind": "occupation",
+      "requirements": {
+        "north_america": "all",
+        "asia": 8,
+        "europe": 4
+      },
+      "evidence": "S05/Objetivos.jpg:fila4,columna1;S01/37-38"
+    },
+    {
+      "id": "occupation_06",
+      "kind": "occupation",
+      "requirements": {
+        "oceania": "all",
+        "asia": 6,
+        "africa": 6,
+        "north_america": 6
+      },
+      "evidence": "S05/Objetivos.jpg:fila2,columna5;S01/37-38"
+    },
+    {
+      "id": "occupation_07",
+      "kind": "occupation",
+      "requirements": {
+        "central_america": "all",
+        "south_america": 6,
+        "europe": 6,
+        "asia": 6
+      },
+      "evidence": "S05/Objetivos.jpg:fila4,columna5;S01/37-38"
+    },
+    {
+      "id": "occupation_08",
+      "kind": "occupation",
+      "requirements": {
+        "south_america": "all",
+        "africa": "all",
+        "asia": 8
+      },
+      "evidence": "S05/Objetivos.jpg:fila3,columna5;S01/37-38"
+    },
+    {
+      "id": "occupation_09",
+      "kind": "occupation",
+      "requirements": {
+        "oceania": "all",
+        "africa": "all",
+        "central_america": 4,
+        "asia": 4
+      },
+      "evidence": "S05/Objetivos.jpg:fila3,columna3;S01/37-38"
+    },
+    {
+      "id": "occupation_10",
+      "kind": "occupation",
+      "requirements": {
+        "europe": "all",
+        "asia": 4,
+        "south_america": 4
+      },
+      "evidence": "S05/Objetivos.jpg:fila3,columna4;S01/37-38"
+    },
+    {
+      "id": "occupation_11",
+      "kind": "occupation",
+      "requirements": {
+        "africa": "all",
+        "europe": 4,
+        "asia": 4
+      },
+      "islands": {
+        "count": 6,
+        "minContinents": 3
+      },
+      "evidence": "S05/Objetivos.jpg:fila2,columna1;S01/37-38"
+    },
+    {
+      "id": "occupation_12",
+      "kind": "occupation",
+      "requirements": {},
+      "minTerritories": 35,
+      "evidence": "S05/Objetivos.jpg:fila1,columna4;S01/37-38"
+    },
+    {
+      "id": "destroy_red",
+      "kind": "destruction",
+      "target": "red",
+      "initialImpossibleFallback": "right_neighbor",
+      "evidence": "S05/Objetivos.jpg:fila2,columna2;S01/38"
+    },
+    {
+      "id": "destroy_white",
+      "kind": "destruction",
+      "target": "white",
+      "initialImpossibleFallback": "right_neighbor",
+      "evidence": "S05/Objetivos.jpg:fila3,columna1;S01/38"
+    },
+    {
+      "id": "destroy_blue",
+      "kind": "destruction",
+      "target": "blue",
+      "initialImpossibleFallback": "right_neighbor",
+      "evidence": "S05/Objetivos.jpg:fila3,columna2;S01/38"
+    },
+    {
+      "id": "destroy_black",
+      "kind": "destruction",
+      "target": "black",
+      "initialImpossibleFallback": "right_neighbor",
+      "evidence": "S05/Objetivos.jpg:fila4,columna2;S01/38"
+    },
+    {
+      "id": "destroy_green",
+      "kind": "destruction",
+      "target": "green",
+      "initialImpossibleFallback": "right_neighbor",
+      "evidence": "S05/Objetivos.jpg:fila4,columna3;S01/38"
+    },
+    {
+      "id": "destroy_yellow",
+      "kind": "destruction",
+      "target": "yellow",
+      "initialImpossibleFallback": "right_neighbor",
+      "evidence": "S05/Objetivos.jpg:fila4,columna4;S01/38"
+    },
+    {
+      "id": "destroy_left_neighbor",
+      "kind": "destruction",
+      "target": "left_neighbor",
+      "evidence": "S05/Objetivos.jpg:fila1,columna5;S01/38"
+    }
+  ],
+  "reserveObjective": {
+    "playable": false,
+    "evidence": "S05/Objetivos.jpg:fila1,columna2"
+  },
+  "situationTypes": [
+    {
+      "id": "classic_combat",
+      "effect": "classic_combat",
+      "manualCopies": 20,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "snow",
+      "effect": "snow",
+      "manualCopies": 4,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "tailwind",
+      "effect": "tailwind",
+      "manualCopies": 4,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "crisis",
+      "effect": "crisis",
+      "manualCopies": 4,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "extra_reinforcements",
+      "effect": "extra_reinforcements",
+      "manualCopies": 4,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "open_borders",
+      "effect": "open_borders",
+      "manualCopies": 4,
+      "evidence": "S06/usuario + S01/9-10"
+    },
+    {
+      "id": "closed_borders",
+      "effect": "closed_borders",
+      "manualCopies": 4,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "rest_white",
+      "effect": "rest",
+      "color": "white",
+      "manualCopies": 1,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "rest_black",
+      "effect": "rest",
+      "color": "black",
+      "manualCopies": 1,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "rest_red",
+      "effect": "rest",
+      "color": "red",
+      "manualCopies": 1,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "rest_blue",
+      "effect": "rest",
+      "color": "blue",
+      "manualCopies": 1,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "rest_yellow",
+      "effect": "rest",
+      "color": "yellow",
+      "manualCopies": 1,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    },
+    {
+      "id": "rest_green",
+      "effect": "rest",
+      "color": "green",
+      "manualCopies": 1,
+      "evidence": "S05/Situaciones.jpg + S01/9-10"
+    }
+  ],
+  "situationCopiesSource": "S01-only",
+  "standaloneWildcardCount": 1,
+  "pendingConnections": [],
+  "islandDecision": {
+    "id": "D09",
+    "evidence": "S09/usuario, 2026-10-08: Sí, adoptar las 16, incluida Australia",
+    "countryIds": [
+      "cuba",
+      "jamaica",
+      "japon",
+      "madagascar",
+      "isla_victoria",
+      "labrador",
+      "groenlandia",
+      "islandia",
+      "irlanda",
+      "gran_bretana",
+      "sumatra",
+      "filipinas",
+      "tonga",
+      "australia",
+      "tasmania",
+      "nueva_zelanda"
+    ]
+  }
+}

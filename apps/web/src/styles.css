@@ -1,0 +1,2083 @@
+:root {
+  color: #29261f;
+  background: #d9d0b7;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  --ink: #29261f;
+  --paper: #f4eedc;
+  --green: #315e4c;
+  --gold: #b78b3d;
+  --danger: #8b302d;
+  --blue-focus: #1d6fc2;
+  --soft-green: #e1ecdf;
+  --soft-gold: #f4e7bb;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 30% 15%, #eee7d2 0, transparent 38%),
+    linear-gradient(135deg, #d3c7aa, #b9ad91);
+}
+.transport-warning {
+  background: #6f5525;
+  color: #fff4d2;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.45rem 1rem;
+  text-align: center;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button,
+.button-link {
+  border: 0;
+  border-radius: 0.45rem;
+  background: var(--green);
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  min-height: 2.7rem;
+  padding: 0.65rem 1rem;
+  text-decoration: none;
+}
+button:hover,
+.button-link:hover {
+  filter: brightness(1.08);
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[role='button']:focus-visible {
+  outline: 3px solid #1d6fc2;
+  outline-offset: 3px;
+}
+button.secondary,
+.button-link.secondary {
+  background: #ded5bd;
+  color: var(--ink);
+  border: 1px solid #9d9278;
+}
+button.danger {
+  background: var(--danger);
+}
+button.danger-quiet {
+  color: var(--danger);
+  background: transparent;
+  border: 1px solid #b77b72;
+}
+input,
+select {
+  width: 100%;
+  border: 1px solid #988e77;
+  border-radius: 0.4rem;
+  background: #fffdf5;
+  color: var(--ink);
+  padding: 0.7rem 0.75rem;
+}
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+form {
+  display: grid;
+  gap: 1rem;
+}
+h1,
+h2,
+h3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  margin-top: 0;
+  line-height: 1.08;
+}
+p {
+  line-height: 1.55;
+}
+code {
+  overflow-wrap: anywhere;
+}
+.panel {
+  background: color-mix(in srgb, var(--paper) 94%, white);
+  border: 1px solid #a99d82;
+  border-radius: 0.7rem;
+  box-shadow: 0 10px 30px rgb(47 38 20 / 14%);
+}
+.eyebrow {
+  color: #735c32;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+}
+.warning {
+  border-left: 4px solid var(--gold);
+  background: #fff4cd;
+  padding: 0.65rem 0.8rem;
+}
+.error-banner {
+  background: #f9ded8;
+  border: 1px solid #b96a5e;
+  border-radius: 0.4rem;
+  color: #6d211f;
+  padding: 0.7rem 0.8rem;
+}
+.global-error {
+  margin: 0.75rem auto;
+  max-width: 70rem;
+}
+.text-link {
+  color: #315747;
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+.button-row,
+.row-actions,
+.copy-line {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.entry-layout {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+.entry-panel {
+  max-width: 38rem;
+  padding: 2rem;
+  width: 100%;
+}
+.landing {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(19rem, 0.65fr);
+  gap: 4rem;
+  align-items: center;
+  padding: clamp(2rem, 8vw, 8rem);
+  position: relative;
+  overflow: hidden;
+}
+.landing::before {
+  content: '';
+  position: absolute;
+  inset: 5% 45% 0 -10%;
+  border: 1px solid rgb(78 68 45 / 18%);
+  border-radius: 48% 52% 38% 62%;
+  transform: rotate(-8deg);
+}
+.landing-hero {
+  position: relative;
+  max-width: 52rem;
+}
+.landing-hero h1 {
+  font-size: clamp(3rem, 7vw, 6.8rem);
+  letter-spacing: -0.045em;
+  margin-bottom: 1.5rem;
+}
+.landing-hero > p:last-child {
+  font-size: 1.15rem;
+  max-width: 38rem;
+}
+.landing-card {
+  padding: 2rem;
+  position: relative;
+}
+.landing-card hr {
+  border: 0;
+  border-top: 1px solid #c2b79d;
+  margin: 1.5rem 0;
+}
+.topbar {
+  min-height: 4rem;
+  padding: 0.7rem 1.25rem;
+  background: #252a22;
+  color: #f6efd9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.topbar .brand {
+  color: #f7e7b5;
+  font-family: Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.topbar > div {
+  display: grid;
+  text-align: center;
+}
+.topbar > div span {
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+.connection {
+  align-items: center;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 800;
+  gap: 0.4rem;
+  margin: 0;
+  text-transform: uppercase;
+}
+.connection::before {
+  background: #888;
+  border-radius: 50%;
+  content: '';
+  height: 0.6rem;
+  width: 0.6rem;
+}
+.connection.connected::before,
+.connection.ready::before {
+  background: #65c38a;
+}
+.connection.reconnecting::before,
+.connection.connecting::before,
+.connection.checking::before {
+  background: #e7bb55;
+}
+.connection.unauthorized::before,
+.connection.unavailable::before,
+.connection.incompatible::before {
+  background: #e66c5e;
+}
+.admin-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template: auto 1fr / minmax(18rem, 25rem) 1fr;
+}
+.admin-layout .topbar {
+  grid-column: 1 / -1;
+}
+.admin-sidebar,
+.admin-detail {
+  border-radius: 0;
+  box-shadow: none;
+  padding: 1.5rem;
+}
+.admin-sidebar {
+  background: #ded4bb;
+}
+.admin-detail {
+  margin: 1.5rem;
+  max-width: 70rem;
+}
+.game-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+.game-list button {
+  align-items: flex-start;
+  display: grid;
+  text-align: left;
+}
+.game-list small,
+.player-list small {
+  display: block;
+  opacity: 0.72;
+}
+.selected-game {
+  box-shadow: inset 4px 0 var(--green);
+}
+.empty-state {
+  min-height: 40vh;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+.copy-line code {
+  background: #e6dcc3;
+  flex: 1;
+  padding: 0.75rem;
+}
+.inline-control {
+  max-width: 15rem;
+  margin: 1rem 0;
+}
+.player-list {
+  display: grid;
+  gap: 0.6rem;
+  list-style: none;
+  margin: 1.5rem 0;
+  padding: 0;
+}
+.player-list li {
+  align-items: center;
+  background: rgb(255 255 255 / 45%);
+  border: 1px solid #c7bda5;
+  border-radius: 0.45rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: auto 1fr auto;
+  padding: 0.75rem;
+}
+.self-player {
+  box-shadow: inset 4px 0 var(--gold);
+}
+.color-dot {
+  border: 2px solid rgb(255 255 255 / 70%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #5c5648;
+  display: inline-block;
+  height: 1rem;
+  width: 1rem;
+}
+.color-blue {
+  background: #3975bd;
+}
+.color-red {
+  background: #b84b43;
+}
+.color-black {
+  background: #292b2c;
+}
+.color-yellow {
+  background: #e1b93f;
+}
+.color-green {
+  background: #3d8b5e;
+}
+.color-magenta {
+  background: #a4468f;
+}
+.ready {
+  color: #236843;
+  font-weight: 800;
+}
+.waiting {
+  color: #776b55;
+}
+.lobby-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
+  gap: 1.25rem;
+  margin: 1.25rem auto;
+  max-width: 80rem;
+  padding: 0 1rem;
+}
+.lobby-main,
+.lobby-actions {
+  padding: 1.5rem;
+}
+.lobby-actions dl {
+  font-size: 0.8rem;
+  margin-top: 1.5rem;
+}
+.board-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 24rem);
+  gap: 1rem;
+  height: calc(100vh - 10rem);
+  min-height: 34rem;
+  padding: 1rem;
+}
+.gameplay-stage {
+  min-height: calc(100vh - 4rem);
+}
+.map-frame {
+  background: #c5b891;
+  border: 1px solid #80765f;
+  border-radius: 0.65rem;
+  box-shadow:
+    inset 0 0 80px rgb(76 58 25 / 20%),
+    0 8px 22px rgb(42 34 19 / 20%);
+  min-height: 34rem;
+  overflow: auto;
+  position: relative;
+}
+.map-frame::before {
+  background-image: radial-gradient(
+    rgb(58 48 27 / 10%) 0.7px,
+    transparent 0.7px
+  );
+  background-size: 5px 5px;
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+.game-map {
+  display: block;
+  height: calc(100% - 8rem);
+  min-height: 27rem;
+  min-width: 680px;
+  width: 100%;
+}
+.territory path {
+  fill: #e9dfc6;
+  stroke: #645d4d;
+  stroke-width: 1.5;
+  transition:
+    filter 0.15s,
+    stroke-width 0.15s;
+}
+.territory-label {
+  fill: #25231e;
+  font-size: 9.5px;
+  font-weight: 750;
+  pointer-events: none;
+  text-anchor: middle;
+}
+.army-count {
+  fill: #25231e;
+  font-size: 13px;
+  font-weight: 900;
+  pointer-events: none;
+  text-anchor: middle;
+}
+.territory.owner-blue path {
+  fill: #8fb5dc;
+}
+.territory.owner-red path {
+  fill: #d89487;
+}
+.territory.owner-black path {
+  fill: #777775;
+}
+.territory.owner-yellow path {
+  fill: #ead176;
+}
+.territory.owner-green path {
+  fill: #8fc49f;
+}
+.territory.owner-magenta path {
+  fill: #cb8cbd;
+}
+.territory.legal {
+  cursor: pointer;
+}
+.territory.legal path {
+  stroke: #17663f;
+  stroke-width: 3;
+}
+.territory.legal-source path {
+  stroke-dasharray: 4 2;
+}
+.territory.legal-target path {
+  stroke: #9c3e31;
+  stroke-dasharray: 2 2;
+}
+.territory.legal:hover path,
+.territory.legal:focus-visible path {
+  filter: brightness(1.12);
+  stroke-width: 4;
+}
+.territory.selected-source path,
+.territory.pending-source path {
+  filter: drop-shadow(0 0 5px rgb(35 95 157 / 75%));
+  stroke: #235f9d;
+  stroke-width: 5;
+}
+.territory.selected-target path,
+.territory.pending-target path {
+  filter: drop-shadow(0 0 5px rgb(156 62 49 / 75%));
+  stroke: #9c3e31;
+  stroke-width: 5;
+}
+.territory.selected:not(.selected-source, .selected-target) path,
+.territory.inspected path {
+  filter: drop-shadow(0 0 4px #ffed8e);
+  stroke: #6f591c;
+  stroke-width: 4;
+}
+.territory.passive {
+  opacity: 0.9;
+}
+.territory.bonus-available path {
+  stroke-dasharray: 1 2;
+}
+.turn-notice,
+.action-card {
+  background: #e8dec5;
+  border-radius: 0.45rem;
+  padding: 0.8rem;
+}
+.turn-notice {
+  border-left: 3px solid #86795f;
+  margin: 0;
+}
+.action-help,
+.muted-copy {
+  color: #665d4d;
+  font-size: 0.84rem;
+}
+.primary-action-card {
+  background: #f0e7d0;
+  border: 1px solid #b4a582;
+}
+.panel-heading-row {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.7rem;
+  justify-content: space-between;
+}
+.panel-heading-row h2 {
+  margin-bottom: 0;
+}
+.count-badge,
+.privacy-badge,
+.result-badge {
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 850;
+  padding: 0.3rem 0.5rem;
+  white-space: nowrap;
+}
+.count-badge {
+  background: #e3d4a6;
+  color: #56420e;
+}
+.privacy-badge {
+  background: #3b352b;
+  color: #fff2ca;
+}
+.amount-control {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.75rem 0;
+}
+.amount-control > span {
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+.amount-stepper {
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: auto minmax(4rem, 1fr) auto auto;
+}
+.amount-stepper input {
+  min-width: 4rem;
+  text-align: center;
+}
+.compact-button {
+  min-height: 2.45rem;
+  padding: 0.45rem 0.65rem;
+}
+.private-panel {
+  border-top: 3px solid var(--gold);
+}
+.card-symbol {
+  align-items: center;
+  background: #3c382f;
+  border-radius: 50%;
+  color: #f8eac0;
+  display: inline-flex;
+  font-size: 1rem;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+.pact-summary {
+  display: grid;
+  gap: 0.15rem;
+}
+.pact-summary span {
+  display: block;
+}
+.card-copy,
+.card-badges {
+  display: grid;
+}
+.card-copy > span {
+  color: #675d4b;
+  font-size: 0.72rem;
+}
+.card-badges {
+  gap: 0.2rem;
+  justify-items: end;
+}
+.objective-box {
+  background: #fff8e7;
+  border-left: 3px solid var(--gold);
+  margin: 0.7rem 0 1rem;
+  padding: 0.7rem;
+}
+.objective-box h3,
+.objective-box p {
+  margin: 0 0 0.35rem;
+}
+.gameplay-actions,
+.pacts-panel {
+  display: grid;
+  gap: 0.7rem;
+}
+.gameplay-actions .action-card h3,
+.combat-result h2,
+.pacts-panel h2 {
+  margin-bottom: 0.45rem;
+}
+.gameplay-actions button + button {
+  margin-left: 0.4rem;
+}
+.pending-action {
+  border: 2px solid var(--gold);
+  box-shadow: inset 0 0 0 2px #fff3bf;
+}
+.phase-actions {
+  border-top: 1px solid #c5b99d;
+  padding-top: 0.7rem;
+}
+.pacts-panel select {
+  margin-bottom: 0.6rem;
+}
+.combat-result {
+  border-left: 4px solid var(--gold);
+}
+.combat-conquest {
+  background: #edf0d6;
+  border-left-color: #567540;
+}
+.combat-result p {
+  margin: 0.3rem 0;
+}
+.success-badge {
+  background: #587847;
+  color: white;
+}
+.dice-results {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: 1fr 1fr;
+}
+.dice-results > div {
+  background: rgb(255 255 255 / 45%);
+  border-radius: 0.4rem;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem;
+}
+.dice-results > div > span,
+.dice-results small {
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+.die {
+  background: #315e4c;
+  border-radius: 0.3rem;
+  color: white;
+  display: inline-grid;
+  margin-right: 0.25rem;
+  min-height: 1.8rem;
+  min-width: 1.8rem;
+  place-items: center;
+}
+.defender-die {
+  background: #7d433a;
+}
+.finished-panel {
+  background: #f2e4b8;
+  border: 2px solid var(--gold);
+  box-shadow: none;
+  padding: 1rem;
+}
+.pact-row {
+  align-items: center;
+  border-top: 1px solid #d2c7ac;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: space-between;
+  padding-top: 0.55rem;
+}
+.pact-copy {
+  display: grid;
+  gap: 0.15rem;
+}
+.pact-copy small {
+  color: #716346;
+  font-size: 0.63rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.pact-copy span {
+  font-size: 0.76rem;
+}
+.pact-border-sides {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.pact-border-side {
+  align-items: center;
+  background: #f7f0dc;
+  border: 1px solid #a99d82;
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.25rem 0.45rem;
+}
+.pact-border-side b {
+  margin-left: 0.25rem;
+}
+.color-unknown {
+  background: #777;
+}
+
+/* Dense, map-first desktop presentation. */
+.board-layout {
+  gap: 0.65rem;
+  height: calc(100vh - 7.85rem);
+  min-height: 31rem;
+  padding: 0.65rem;
+}
+.map-frame {
+  min-height: 31rem;
+}
+.game-map {
+  height: calc(100% - 6.6rem);
+  min-height: 25rem;
+}
+.adjacency {
+  fill: none;
+  pointer-events: none;
+  stroke: rgb(73 67 48 / 25%);
+  stroke-width: 1.15;
+}
+.territory path {
+  stroke-dasharray: 2.2 1.6;
+  stroke-width: 1.35;
+}
+.army-count {
+  fill: #fffdf4;
+  font-size: 12px;
+  paint-order: stroke;
+  stroke: #26231d;
+  stroke-width: 4px;
+}
+.turn-notice,
+.action-card {
+  padding: 0.58rem;
+}
+.exchange-card-selection {
+  display: grid;
+  gap: 0.42rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0.55rem 0;
+}
+.exchange-card-selection .territory-card {
+  align-items: center;
+  background: #eee3c8;
+  border: 1px solid #a99b7d;
+  color: var(--ink);
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 4.3rem;
+  padding: 0.45rem;
+  position: relative;
+  text-align: left;
+}
+.exchange-card-selection .territory-card.selected {
+  background: #edf2df;
+  border: 3px solid #315e4c;
+  box-shadow:
+    inset 0 0 0 2px #fff8dc,
+    0 3px 8px rgb(35 56 43 / 25%);
+  padding: calc(0.45rem - 2px);
+  transform: translateY(-1px);
+}
+.territory-card .card-badges {
+  grid-column: 1 / -1;
+}
+.selected-check {
+  color: #244d3c;
+  font-size: 0.68rem;
+}
+@media (min-width: 901px) {
+  .gameplay-stage {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 4rem);
+    min-height: 0;
+    overflow: hidden;
+  }
+  .board-layout {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+  .map-frame {
+    min-height: 0;
+  }
+}
+.pact-proposal-form {
+  border-top: 1px solid #c8bda2;
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+}
+.pact-summary {
+  background: rgb(255 255 255 / 38%);
+  margin: 0;
+  padding: 0.45rem;
+}
+.pact-summary > div {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: 4rem 1fr;
+}
+.pact-summary dt {
+  color: #6a5c42;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.pact-summary dd {
+  font-size: 0.78rem;
+  margin: 0;
+}
+@media (max-width: 1100px) {
+  .board-layout {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+}
+
+/* Third visual pass: a stable, compact action dock. */
+.action-dock {
+  min-height: 4rem;
+  overflow-x: visible;
+}
+.action-dock .gameplay-actions {
+  display: grid;
+  grid-template-columns: minmax(15rem, 1fr) auto minmax(21rem, auto);
+  width: 100%;
+}
+.action-dock .primary-action-card,
+.action-dock .pending-action {
+  grid-column: 1;
+}
+.action-dock .phase-actions {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+}
+.action-dock .exchange-card-selection {
+  gap: 0.25rem;
+}
+.action-dock .exchange-card-selection .territory-card {
+  gap: 0.2rem;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  min-height: 2.65rem;
+  min-width: 5.8rem;
+  padding: 0.25rem 0.3rem;
+}
+.action-dock .exchange-card-selection .territory-card.selected {
+  border-width: 2px;
+  padding: calc(0.25rem - 1px) calc(0.3rem - 1px);
+  transform: none;
+}
+.action-dock .exchange-card-selection .card-symbol {
+  font-size: 0.75rem;
+  height: 1.25rem;
+  width: 1.25rem;
+}
+.action-dock .exchange-card-selection .card-copy {
+  line-height: 1.05;
+}
+.action-dock .exchange-card-selection .card-copy strong {
+  font-size: 0.66rem;
+}
+.action-dock .exchange-card-selection .card-badges {
+  align-items: center;
+  display: flex;
+  gap: 0.2rem;
+  grid-column: 1 / -1;
+  justify-content: space-between;
+  line-height: 1;
+}
+.action-dock .exchange-card-selection .card-badges small {
+  font-size: 0.52rem;
+}
+.action-dock .exchange-card-selection .selected-check {
+  background: #315e4c;
+  border-radius: 50%;
+  color: white;
+  display: grid;
+  height: 1rem;
+  place-items: center;
+  width: 1rem;
+}
+.action-dock .amount-control > span {
+  font-size: 0.65rem;
+}
+.action-dock .amount-stepper input {
+  width: 3rem;
+}
+.action-dock .finished-panel {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: auto minmax(20rem, 1fr);
+  margin: 0 auto;
+  max-width: 52rem;
+  place-items: center;
+  text-align: center;
+  width: min(100%, 52rem);
+}
+.action-dock .finished-summary {
+  align-items: center;
+  display: flex;
+  gap: 0.55rem;
+  white-space: nowrap;
+}
+.action-dock .finished-panel .eyebrow,
+.action-dock .finished-panel h1,
+.action-dock .finished-panel .winner-color {
+  margin: 0;
+}
+.action-dock .finished-panel h1 {
+  font-size: 1rem;
+}
+.action-dock .finished-panel .winning-objective {
+  background: rgb(255 255 255 / 45%);
+  border-left: 2px solid var(--gold);
+  font-size: 0.82rem;
+  font-weight: 750;
+  justify-self: stretch;
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+}
+.pact-summary {
+  display: grid;
+  gap: 0.35rem;
+}
+.pact-summary .pact-border-sides {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.3rem;
+}
+.pact-summary .pact-border-side {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0;
+  white-space: nowrap;
+}
+.pact-summary .pact-border-side b {
+  margin: 0 0.15rem 0 0;
+}
+
+@media (max-width: 1250px) {
+  .action-dock .gameplay-actions {
+    grid-template-columns: minmax(13rem, 1fr) auto;
+  }
+}
+
+/* Final cascade for the approved hybrid menu layout. Map styling is untouched. */
+.action-dock .action-card,
+.action-dock .primary-action-card,
+.action-dock .pending-action,
+.action-dock .turn-notice {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  border-radius: 0.4rem;
+  box-shadow: inset 0 1px rgb(255 255 255 / 55%);
+  color: var(--ink);
+}
+
+/* Hybrid menu-layout reset: one predictable parchment action area. */
+
+.action-dock {
+  background: #283128;
+  border: 1px solid #626957;
+  border-radius: 0.55rem;
+  color: var(--ink);
+  min-height: 8.35rem;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+.action-dock > p {
+  margin: 0 0 0.35rem;
+}
+
+.action-dock .action-card,
+.action-dock .primary-action-card,
+.action-dock .pending-action,
+.action-dock .combat-result,
+.action-dock .turn-notice {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  border-radius: 0.4rem;
+  box-shadow: inset 0 1px rgb(255 255 255 / 55%);
+  color: var(--ink);
+}
+
+.action-dock .primary-action-card,
+.action-dock .pending-action {
+  align-content: center;
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: stretch;
+  max-width: none;
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  white-space: normal;
+  width: auto;
+}
+
+.action-dock .primary-action-card h3,
+.action-dock .pending-action h3 {
+  font-size: 0.9rem;
+  margin: 0;
+  width: 100%;
+}
+
+.action-dock .primary-action-card p,
+.action-dock .pending-action p {
+  color: #514938;
+  font-size: 0.74rem;
+  margin: 0;
+}
+
+.action-dock button {
+  min-height: 2.15rem;
+  padding: 0.38rem 0.65rem;
+}
+
+.action-dock .conquest-transfer {
+  flex-wrap: nowrap;
+}
+
+.action-dock .finished-panel {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: auto auto;
+  margin: 0 auto;
+  max-width: 34rem;
+  padding: 0.6rem 1rem;
+}
+
+.action-dock .finished-summary {
+  display: grid;
+  gap: 0.1rem;
+  white-space: normal;
+}
+
+.action-dock .finished-panel h1 {
+  color: var(--ink);
+  font-size: 1.15rem;
+}
+
+.action-dock .finished-panel .winning-objective {
+  aspect-ratio: 5 / 7;
+  background: #fff9e9;
+  border: 1px solid #c5a85d;
+  color: var(--ink);
+  font-size: 0.68rem;
+  padding: 0.55rem;
+  width: 5.6rem;
+}
+
+/* Hybrid reset cascade: intentionally last. */
+.board-main {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-rows: minmax(0, 1fr) 8.35rem;
+  min-height: 0;
+}
+.action-dock {
+  background: #283128;
+  border: 1px solid #626957;
+  color: var(--ink);
+  min-height: 8.35rem;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+.action-dock .gameplay-actions {
+  align-items: stretch;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(0, 2fr) minmax(19rem, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+}
+.action-dock .action-card,
+.action-dock .primary-action-card,
+.action-dock .pending-action,
+.action-dock .turn-notice {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  border-radius: 0.4rem;
+  color: var(--ink);
+}
+.action-dock .primary-action-card,
+.action-dock .pending-action {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: stretch;
+  max-width: none;
+  padding: 0.55rem 0.7rem;
+  white-space: normal;
+  width: auto;
+}
+.action-dock .primary-action-card h3,
+.action-dock .pending-action h3 {
+  color: var(--ink);
+  font-size: 0.9rem;
+  margin: 0;
+  width: 100%;
+}
+.action-dock .primary-action-card p,
+.action-dock .pending-action p {
+  color: #514938;
+}
+.action-dock .amount-control {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+}
+.action-dock .amount-control > span,
+.action-dock .amount-control > small {
+  display: none;
+}
+.action-dock .amount-stepper {
+  display: flex;
+  gap: 0.25rem;
+}
+.action-dock button.secondary {
+  background: #e5d9bc;
+  border-color: #9f9173;
+  color: #302c23;
+}
+.action-dock button:disabled {
+  background: #d7d0be;
+  border-color: #aaa28f;
+  color: #736e63;
+}
+.action-dock .phase-actions {
+  align-items: center;
+  border: 0;
+  display: flex;
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: end;
+  padding: 0.55rem 0.7rem;
+  z-index: 1;
+}
+.action-dock .exchange-card-selection {
+  gap: 0.38rem;
+  max-width: none;
+  overflow-x: auto;
+}
+.action-dock .exchange-card-selection .territory-card {
+  background: #fff9e9;
+  border-color: #a99b7d;
+  flex: 0 0 6.25rem;
+  min-height: 4.7rem;
+  min-width: 6.25rem;
+}
+.action-dock .exchange-card-selection .territory-card.selected {
+  background: #edf2df;
+  border-color: #315e4c;
+}
+.phase-panel.action-dock .pending-action.conquest-transfer {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  flex-wrap: nowrap;
+  padding: 0.55rem 0.7rem;
+  width: auto;
+}
+.phase-panel.action-dock .finished-panel {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: auto auto;
+  margin: 0 auto;
+  max-width: 34rem;
+  padding: 0.6rem 1rem;
+}
+.phase-panel.action-dock .finished-summary {
+  display: grid;
+  gap: 0.1rem;
+  white-space: normal;
+}
+.phase-panel.action-dock .finished-panel h1 {
+  color: var(--ink);
+  font-size: 1.15rem;
+}
+.phase-panel.action-dock .finished-panel .winning-objective {
+  aspect-ratio: 5 / 7;
+  background: #fff9e9;
+  border: 1px solid #c5a85d;
+  color: var(--ink);
+  font-size: 0.68rem;
+  padding: 0.55rem;
+  width: 5.6rem;
+}
+
+@media (max-width: 900px) {
+  .board-main {
+    grid-template-rows: minmax(28rem, 1fr) auto;
+  }
+
+  .action-dock {
+    min-height: 0;
+  }
+}
+
+/* Sixth visual pass: stronger geography and one compact dock language. */
+.action-dock .completion-action {
+  align-items: center;
+  background: #4d806b;
+  border-color: #79a18c;
+  border-radius: 50%;
+  box-shadow: inset 0 1px rgb(255 255 255 / 18%);
+  display: inline-flex;
+  flex: 0 0 2.45rem;
+  height: 2.45rem;
+  justify-content: center;
+  min-height: 2.45rem;
+  min-width: 2.45rem;
+  padding: 0.48rem;
+  width: 2.45rem;
+}
+.action-dock .completion-action:hover:not(:disabled) {
+  background: #5b927b;
+}
+.action-dock .completion-action svg {
+  fill: currentColor;
+  height: 1.3rem;
+  width: 1.3rem;
+}
+.phase-panel.action-dock .pending-action.conquest-transfer {
+  background: rgb(255 255 255 / 4%);
+  border: 0;
+  box-shadow: none;
+  flex-wrap: nowrap;
+  gap: 0.55rem;
+  padding: 0.35rem 0.5rem;
+  width: auto;
+}
+.phase-panel.action-dock .finished-panel {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 18rem;
+  padding: 0.45rem 0.2rem;
+}
+.phase-panel.action-dock .finished-summary {
+  display: grid;
+  gap: 0.08rem;
+  white-space: normal;
+}
+.phase-panel.action-dock .finished-summary .eyebrow {
+  display: block;
+  font-size: 0.62rem;
+}
+.phase-panel.action-dock .finished-panel h1 {
+  font-size: 1.05rem;
+}
+.phase-panel.action-dock .finished-panel .winner-color {
+  justify-content: center;
+}
+.phase-panel.action-dock .finished-panel .winning-objective {
+  align-items: center;
+  aspect-ratio: 5 / 7;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.78rem;
+  justify-content: space-between;
+  margin-inline: auto;
+  max-width: none;
+  padding: 1rem 0.8rem 0.75rem;
+  width: 8.6rem;
+}
+.victory-crest {
+  height: 2.7rem;
+  width: 2.7rem;
+}
+.victory-crest circle,
+.victory-crest path {
+  fill: none;
+  stroke: #9a7a38;
+  stroke-width: 1.5;
+}
+.victory-crest .crest-point {
+  fill: #c5a85d;
+  stroke-width: 0.8;
+}
+
+@media (max-width: 1100px) {
+  .phase-panel.action-dock .gameplay-actions {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .phase-panel.action-dock .primary-action-card,
+  .phase-panel.action-dock .pending-action {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .phase-panel.action-dock .phase-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .landing,
+  .lobby-layout,
+  .board-layout {
+    grid-template-columns: 1fr;
+  }
+  .landing {
+    gap: 2rem;
+    padding: 2rem 1rem;
+  }
+  .landing-hero h1 {
+    font-size: 3.5rem;
+  }
+  .board-layout {
+    height: auto;
+    min-height: 0;
+  }
+  .map-frame {
+    min-height: 28rem;
+  }
+  .admin-layout {
+    grid-template: auto auto 1fr / 1fr;
+  }
+  .admin-layout .topbar {
+    grid-column: 1;
+  }
+  .admin-detail {
+    margin: 0;
+  }
+}
+@media (max-width: 560px) {
+  .topbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .topbar > div {
+    order: 3;
+    text-align: left;
+    width: 100%;
+  }
+  .board-layout {
+    padding: 0.65rem;
+  }
+  .map-frame {
+    min-height: 25rem;
+  }
+  .amount-stepper {
+    grid-template-columns: auto minmax(3.5rem, 1fr) auto;
+  }
+  .amount-stepper button:last-child {
+    grid-column: 1 / -1;
+  }
+  .card-badges {
+    grid-column: 1 / -1;
+    justify-items: start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Second visual pass: one status bar, contiguous map, contextual board dock. */
+.game-shell > .topbar {
+  min-height: 3.35rem;
+  padding: 0.35rem 0.8rem;
+}
+.topbar .brand {
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+.gameplay-stage {
+  min-height: calc(100vh - 3.35rem);
+}
+.board-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+  height: calc(100vh - 3.35rem);
+  padding: 0.5rem;
+}
+.board-main {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  min-width: 0;
+  min-height: 0;
+}
+.map-frame {
+  min-height: 0;
+  overflow: hidden;
+}
+.game-map {
+  height: calc(100% - 4.65rem);
+  min-height: 0;
+  min-width: 660px;
+}
+.territory path {
+  stroke: #514d3f;
+  stroke-dasharray: none;
+  stroke-linejoin: round;
+  stroke-width: 1.35;
+}
+.territory.passive {
+  opacity: 1;
+}
+.territory.owner-blue path {
+  fill: #a9c6de;
+}
+.territory.owner-red path {
+  fill: #dfaaa0;
+}
+.territory.owner-black path {
+  fill: #999891;
+}
+.territory.owner-yellow path {
+  fill: #ead894;
+}
+.territory.owner-green path {
+  fill: #a9cbb0;
+}
+.territory.owner-magenta path {
+  fill: #d3a7ca;
+}
+.territory-label {
+  font-size: 9px;
+  paint-order: stroke;
+  stroke: rgb(245 237 214 / 75%);
+  stroke-width: 2px;
+}
+.army-count {
+  font-size: 13px;
+}
+.action-dock {
+  align-items: center;
+  background: #eee5ce;
+  border-radius: 0.45rem;
+  display: flex;
+  gap: 0.55rem;
+  min-height: 4.4rem;
+  overflow-x: auto;
+  padding: 0.4rem 0.55rem;
+}
+.action-dock > p,
+.action-dock > .warning {
+  margin: 0;
+}
+.action-dock .gameplay-actions {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  gap: 0.45rem;
+}
+.action-dock .gameplay-actions > .eyebrow {
+  display: none;
+}
+.action-dock .action-card {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.4rem 0.5rem;
+}
+.action-dock .action-card h3 {
+  font-family: inherit;
+  font-size: 0.82rem;
+  margin: 0;
+}
+.action-dock .action-card p,
+.action-dock .action-card ul,
+.action-dock .action-help {
+  font-size: 0.72rem;
+  line-height: 1.25;
+  margin: 0;
+}
+.action-dock .amount-control {
+  align-items: center;
+  display: flex;
+  margin: 0;
+}
+.action-dock .amount-control > small {
+  display: none;
+}
+.action-dock .amount-stepper {
+  display: flex;
+}
+.action-dock input,
+.action-dock select {
+  padding: 0.35rem;
+}
+.action-dock button {
+  min-height: 2.15rem;
+  padding: 0.35rem 0.65rem;
+  white-space: nowrap;
+}
+.action-dock .phase-actions {
+  border: 0;
+  flex-wrap: nowrap;
+  padding: 0;
+}
+.action-dock .exchange-card-selection {
+  display: flex;
+  margin: 0;
+}
+.action-dock .exchange-card-selection .territory-card {
+  min-height: 3.35rem;
+  min-width: 8.5rem;
+}
+.private-panel .eyebrow {
+  display: none;
+}
+.objective-box {
+  margin: 0.4rem 0;
+  padding: 0.45rem;
+}
+.objective-box p {
+  font-size: 0.75rem;
+}
+.card-symbol {
+  height: 1.55rem;
+  width: 1.55rem;
+}
+
+@media (min-width: 901px) {
+  .gameplay-stage {
+    height: calc(100vh - 3.35rem);
+  }
+  .board-main,
+  .map-frame {
+    min-height: 0;
+  }
+}
+@media (max-width: 1100px) {
+  .board-layout {
+    grid-template-columns: minmax(0, 1fr) 16rem;
+  }
+  .action-dock {
+    max-height: 8.5rem;
+  }
+  .action-dock .gameplay-actions {
+    flex-wrap: wrap;
+  }
+}
+
+/* Fifth visual pass: derived continent transitions and collision-free dock zones. */
+.action-dock .reinforcement-card h3,
+.action-dock .reinforcement-card p {
+  flex: 0 1 auto;
+  white-space: nowrap;
+}
+.action-dock .reinforcement-card .amount-control {
+  flex: 0 0 auto;
+}
+
+/* The hybrid action-area rules above deliberately win over prior visual passes. */
+.board-main {
+  grid-template-rows: minmax(0, 1fr) 8.35rem;
+}
+.action-dock {
+  background: #283128;
+  color: var(--ink);
+  min-height: 8.35rem;
+  overflow: hidden;
+}
+.action-dock .gameplay-actions {
+  grid-template-columns: minmax(0, 2fr) minmax(19rem, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.action-dock .primary-action-card,
+.action-dock .pending-action {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  color: var(--ink);
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: stretch;
+  max-width: none;
+  width: auto;
+}
+.action-dock .primary-action-card h3,
+.action-dock .pending-action h3 {
+  color: var(--ink);
+}
+.action-dock .phase-actions {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: end;
+  z-index: 1;
+}
+.action-dock .exchange-card-selection {
+  max-width: none;
+}
+.action-dock .combat-result {
+  display: none;
+}
+.phase-panel.action-dock .pending-action.conquest-transfer {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+}
+.phase-panel.action-dock .finished-panel {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  color: var(--ink);
+}
+.phase-panel.action-dock .finished-panel h1,
+.phase-panel.action-dock .finished-panel .winning-objective {
+  color: var(--ink);
+}
+@media (max-width: 1250px) {
+  .board-main {
+    grid-template-rows: minmax(0, 1fr) 9.5rem;
+  }
+  .action-dock {
+    min-height: 9.5rem;
+  }
+}
+.map-frame .game-map {
+  height: calc(100% - 2.75rem);
+}
+.phase-panel.action-dock .gameplay-actions {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 33rem);
+}
+.phase-panel.action-dock .exchange-card-selection {
+  gap: 0.42rem;
+  max-width: 22rem;
+}
+.phase-panel.action-dock .exchange-card-selection .territory-card {
+  flex-basis: 6.6rem;
+  min-width: 6.6rem;
+  padding-inline: 0.45rem;
+}
+
+/* Sixth-pass final cascade corrections. */
+.game-map {
+  height: calc(100% - 2.75rem);
+}
+.action-dock .completion-action {
+  background: #4d806b;
+  border-color: #79a18c;
+  box-shadow: inset 0 1px rgb(255 255 255 / 18%);
+}
+.action-dock .completion-action:disabled {
+  background: #3b433b;
+  border-color: #596057;
+  box-shadow: none;
+  color: #a8aa9f;
+}
+.action-dock .gameplay-actions {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 33rem);
+}
+.action-dock .exchange-card-selection {
+  gap: 0.42rem;
+  max-width: 22rem;
+}
+.action-dock .exchange-card-selection .territory-card {
+  flex-basis: 6.6rem;
+  min-width: 6.6rem;
+  padding-inline: 0.45rem;
+}
+.action-dock .pending-action.conquest-transfer {
+  background: rgb(255 255 255 / 4%);
+  border: 0;
+  flex-wrap: nowrap;
+  gap: 0.55rem;
+  padding: 0.35rem 0.5rem;
+  width: auto;
+}
+.action-dock .conquest-transfer .amount-stepper .compact-button:last-child {
+  display: none;
+}
+.action-dock .finished-panel {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 18rem;
+  padding: 0.45rem 0.2rem;
+}
+.action-dock .finished-summary {
+  display: grid;
+  gap: 0.08rem;
+  white-space: normal;
+}
+.action-dock .finished-summary .eyebrow {
+  display: block;
+  font-size: 0.62rem;
+}
+.action-dock .finished-panel .winning-objective {
+  align-items: center;
+  aspect-ratio: 5 / 7;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.78rem;
+  justify-content: space-between;
+  margin-inline: auto;
+  max-width: none;
+  padding: 1rem 0.8rem 0.75rem;
+  width: 8.6rem;
+}
+@media (max-width: 1250px) {
+  .action-dock .pending-action.conquest-transfer {
+    flex-wrap: wrap;
+  }
+}
+
+/* Fourth visual pass: stronger continent grouping and dark command dock. */
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+.action-dock {
+  background: #1f2921;
+  border: 1px solid #5d634f;
+  box-shadow: 0 0.3rem 0.8rem rgb(34 29 18 / 18%);
+  color: #f5eed9;
+  min-height: 3.8rem;
+  overflow: visible;
+  padding: 0.42rem 0.55rem;
+}
+.action-dock .gameplay-actions {
+  align-items: stretch;
+  display: grid;
+  gap: 0;
+  grid-template-columns: minmax(18rem, 1fr) auto;
+  width: 100%;
+}
+.action-dock .action-card {
+  background: rgb(255 255 255 / 4%);
+  border: 0;
+  border-radius: 0.35rem;
+  color: #f5eed9;
+  min-width: 0;
+}
+.action-dock .primary-action-card,
+.action-dock .pending-action {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.45rem;
+  grid-column: 2;
+  grid-row: 1;
+  padding: 0.35rem 0.45rem;
+}
+.action-dock .primary-action-card h3,
+.action-dock .pending-action h3,
+.action-dock .primary-action-card p,
+.action-dock .pending-action p {
+  margin: 0;
+}
+.action-dock .primary-action-card p {
+  font-size: 0.68rem;
+}
+.action-dock .eyebrow {
+  color: #d8bf79;
+}
+.action-dock .phase-actions {
+  align-items: center;
+  border: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  grid-column: 1;
+  padding: 0.2rem 0.45rem;
+}
+.action-dock button {
+  background: #4d806b;
+  border-color: #79a18c;
+  color: #fffdf5;
+  min-height: 2.1rem;
+  padding: 0.35rem 0.65rem;
+}
+.action-dock button:hover:not(:disabled) {
+  background: #5b927b;
+}
+.action-dock button.secondary {
+  background: #343d34;
+  border-color: #777760;
+  color: #f5eed9;
+}
+.action-dock button:disabled {
+  background: #3b433b;
+  border-color: #596057;
+  color: #a8aa9f;
+}
+.action-dock input,
+.action-dock select {
+  background: #fffaf0;
+  color: #242920;
+}
+.action-dock .amount-control {
+  gap: 0.25rem;
+}
+.action-dock .amount-control > span {
+  font-size: 0.62rem;
+}
+.action-dock .amount-stepper input {
+  padding-inline: 0.15rem;
+  width: 2.35rem;
+}
+.action-dock .amount-stepper button {
+  min-width: 2.1rem;
+  padding-inline: 0.45rem;
+}
+.action-dock .exchange-card-selection {
+  display: flex;
+  gap: 0.3rem;
+  margin: 0;
+}
+.action-dock .exchange-card-selection .territory-card {
+  align-content: center;
+  background: #f7efd9;
+  color: #292d25;
+  display: grid;
+  gap: 0.15rem;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  min-height: 3.8rem;
+  min-width: 6.6rem;
+  padding: 0.28rem 0.35rem;
+  position: relative;
+  text-align: center;
+}
+.action-dock .exchange-card-selection .territory-card.selected {
+  border-color: #8bd0ad;
+  border-width: 3px;
+  box-shadow: inset 0 0 0 1px #204f3e;
+  padding: calc(0.28rem - 2px) calc(0.35rem - 2px);
+  transform: none;
+}
+.action-dock .exchange-card-selection .card-symbol {
+  font-size: 1.15rem;
+  height: 1.5rem;
+  width: 1.5rem;
+}
+.action-dock .exchange-card-selection .card-copy strong {
+  color: #292d25;
+  font-size: 0.67rem;
+  line-height: 1.05;
+}
+.action-dock .exchange-card-selection .card-badges {
+  display: contents;
+}
+.action-dock .exchange-card-selection .card-badges small {
+  color: #7a3f35;
+  font-size: 0.54rem;
+  font-weight: 850;
+}
+.action-dock .exchange-card-selection .selected-check {
+  background: #245c47;
+  border-radius: 50%;
+  color: white;
+  display: grid;
+  height: 1rem;
+  place-items: center;
+  position: absolute;
+  right: 0.18rem;
+  top: 0.18rem;
+  width: 1rem;
+}
+.action-dock .exchange-submit {
+  align-items: center;
+  border-radius: 50%;
+  display: inline-flex;
+  height: 2.65rem;
+  justify-content: center;
+  min-height: 2.65rem;
+  min-width: 2.65rem;
+  padding: 0.55rem;
+  width: 2.65rem;
+}
+.action-dock .exchange-submit svg {
+  fill: currentColor;
+  height: 1.25rem;
+  width: 1.25rem;
+}
+.action-dock .finished-panel {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  display: flex;
+  gap: 0.65rem;
+  justify-content: center;
+  margin: 0 auto;
+  max-width: 42rem;
+  padding: 0.2rem;
+  text-align: center;
+  width: 100%;
+}
+.action-dock .finished-summary {
+  align-items: center;
+  display: flex;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+.action-dock .finished-summary > * {
+  margin: 0;
+}
+.action-dock .finished-panel h1 {
+  color: #fff8e7;
+  font-size: 0.95rem;
+}
+.action-dock .finished-panel .winning-objective {
+  background: #f7efd9;
+  border: 1px solid #c5a85d;
+  border-radius: 0.3rem;
+  color: #292d25;
+  font-size: 0.75rem;
+  font-weight: 750;
+  margin: 0;
+  max-width: 24rem;
+  padding: 0.48rem 0.65rem;
+}
+.pacts-panel {
+  gap: 0.4rem;
+}
+.pacts-panel .panel-heading-row h2 {
+  margin-bottom: 0;
+}
+.pacts-panel .pact-row {
+  padding-top: 0.35rem;
+}
+.pacts-panel select {
+  margin-bottom: 0.25rem;
+}
+.pacts-panel .pact-proposal-form {
+  gap: 0.35rem;
+}
+.pacts-panel .pact-summary {
+  gap: 0.18rem;
+  margin: 0;
+  padding: 0.35rem;
+}
+
+@media (max-width: 1250px) {
+  .action-dock .gameplay-actions {
+    grid-template-columns: 1fr;
+  }
+  .action-dock .phase-actions {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+/* Fifth-pass cascade corrections must follow the approved fourth-pass skin. */
+.action-dock .phase-actions:empty {
+  display: none;
+}
+.action-dock .gameplay-actions {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 31rem);
+}
+.action-dock .primary-action-card,
+.action-dock .pending-action {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  max-width: 100%;
+  min-width: 0;
+}
+.action-dock .phase-actions {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+.action-dock .reinforcement-card {
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+}
+.action-dock .reinforcement-card .amount-stepper input {
+  flex: 0 0 2.25rem;
+  max-width: 2.25rem;
+  min-width: 2.25rem;
+}
+.action-dock .confirm-placement {
+  align-items: center;
+  border-radius: 50%;
+  display: inline-flex;
+  flex: 0 0 2.45rem;
+  height: 2.45rem;
+  justify-content: center;
+  min-height: 2.45rem;
+  min-width: 2.45rem;
+  padding: 0.48rem;
+  width: 2.45rem;
+}
+.action-dock .confirm-placement svg {
+  fill: currentColor;
+  height: 1.3rem;
+  width: 1.3rem;
+}
+.action-dock .exchange-card-selection {
+  flex: 1 1 auto;
+  max-width: 20.5rem;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+.action-dock .exchange-card-selection .territory-card {
+  flex: 0 0 6.35rem;
+  min-width: 6.35rem;
+}
+
+@media (max-width: 1250px) {
+  .action-dock .gameplay-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .action-dock .primary-action-card,
+  .action-dock .pending-action,
+  .action-dock .phase-actions {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .action-dock .reinforcement-card {
+    flex-wrap: wrap;
+    overflow: visible;
+    white-space: normal;
+  }
+}
+
+.topbar .brand .mode-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.25;
+  white-space: normal;
+}

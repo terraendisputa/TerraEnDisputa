@@ -1,0 +1,234 @@
+/* Presentation-only hybrid menu reset. Map selectors intentionally do not live here. */
+.board-main {
+  display: grid;
+  gap: 0.55rem;
+  grid-template-rows: minmax(0, 1fr) 8.35rem;
+  min-height: 0;
+}
+
+.action-dock {
+  background: #283128;
+  border: 1px solid #626957;
+  color: var(--ink);
+  min-height: 8.35rem;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+.action-dock .gameplay-actions {
+  align-items: stretch;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(0, 2fr) auto minmax(19rem, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+}
+
+.action-dock .action-card,
+.action-dock .primary-action-card,
+.action-dock .pending-action,
+.action-dock .turn-notice {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  border-radius: 0.4rem;
+  color: var(--ink);
+}
+
+.action-dock .primary-action-card,
+.action-dock .pending-action {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: stretch;
+  max-width: none;
+  padding: 0.55rem 0.7rem;
+  white-space: normal;
+  width: auto;
+}
+
+.action-dock .primary-action-card h3,
+.action-dock .pending-action h3 {
+  color: var(--ink);
+  font-size: 0.9rem;
+  margin: 0;
+  width: 100%;
+}
+
+.action-dock .primary-action-card p,
+.action-dock .pending-action p {
+  color: #514938;
+}
+
+.action-dock .amount-control {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.action-dock .amount-control > span,
+.action-dock .amount-control > small {
+  display: none;
+}
+
+.action-dock .amount-stepper {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.action-dock button.secondary {
+  background: #e5d9bc;
+  border-color: #9f9173;
+  color: #302c23;
+}
+
+.action-dock button:disabled {
+  background: #d7d0be;
+  border-color: #aaa28f;
+  color: #736e63;
+}
+
+.action-dock .phase-actions {
+  align-items: center;
+  border: 0;
+  display: flex;
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  padding: 0.55rem 0.7rem;
+  z-index: 1;
+}
+
+.action-dock .exchange-card-selection {
+  gap: 0.38rem;
+  max-width: none;
+  overflow-x: auto;
+}
+
+.action-dock .exchange-card-selection .territory-card {
+  background: #fff9e9;
+  border-color: #a99b7d;
+  flex: 0 0 6.25rem;
+  min-height: 4.7rem;
+  min-width: 6.25rem;
+}
+
+.action-dock .exchange-card-selection .territory-card.selected {
+  background: #edf2df;
+  border-color: #315e4c;
+}
+
+.action-dock .combat-result {
+  align-content: center;
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  display: grid;
+  grid-column: 3;
+  grid-row: 2;
+  padding: 0.45rem 0.55rem;
+}
+
+.action-dock > .combat-result {
+  float: right;
+  margin: 1.5rem 0.5rem 0 0.5rem;
+  max-width: 15rem;
+  position: relative;
+  z-index: 2;
+}
+
+.action-dock:has(> .combat-result) .gameplay-actions {
+  padding-right: 15.5rem;
+}
+
+.action-dock .combat-result .panel-heading-row {
+  display: none;
+}
+
+.action-dock .combat-result .dice-results {
+  gap: 0.25rem;
+}
+
+.action-dock .combat-result .dice-results > div {
+  gap: 0.15rem;
+  padding: 0.25rem;
+}
+
+.action-dock .combat-result .die {
+  font-size: 0.68rem;
+  min-height: 1.25rem;
+  min-width: 1.25rem;
+}
+
+.phase-panel.action-dock .pending-action.conquest-transfer {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  flex-wrap: nowrap;
+  padding: 0.55rem 0.7rem;
+  width: auto;
+}
+
+.phase-panel.action-dock .finished-panel {
+  background: #f2e8ce;
+  border: 1px solid #b4a582;
+  color: var(--ink);
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: auto auto;
+  margin: 0 auto;
+  max-width: 34rem;
+  padding: 0.6rem 1rem;
+}
+
+.phase-panel.action-dock .finished-summary {
+  display: grid;
+  gap: 0.1rem;
+  white-space: normal;
+}
+
+.phase-panel.action-dock .finished-panel h1,
+.phase-panel.action-dock .finished-panel .winning-objective {
+  color: var(--ink);
+}
+
+.board-main:has(.finished-panel) {
+  grid-template-rows: minmax(0, 1fr) 10rem;
+}
+
+.board-main:has(.finished-panel) .action-dock {
+  min-height: 10rem;
+}
+
+@media (max-width: 1250px) {
+  .board-main {
+    grid-template-rows: minmax(0, 1fr) 9.5rem;
+  }
+
+  .action-dock {
+    min-height: 9.5rem;
+  }
+
+  .action-dock .gameplay-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .action-dock .primary-action-card,
+  .action-dock .pending-action,
+  .action-dock .phase-actions,
+  .action-dock .combat-result {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .board-main {
+    grid-template-rows: minmax(28rem, 1fr) auto;
+  }
+
+  .action-dock {
+    min-height: 0;
+  }
+}

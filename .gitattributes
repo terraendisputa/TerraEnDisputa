@@ -1,0 +1,2 @@
+apps/server/assets/** -text
+apps/web/src/music/** -text

@@ -1,0 +1,54 @@
+{
+  "name": "ted",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-hosted browser strategy game for 2\u20136 human players",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unlisted3954/TerraEnDisputa.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=24.11.0 <25"
+  },
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "release:build": "pnpm build && node scripts/release-build.mjs",
+    "release:smoke": "node scripts/release-smoke.mjs",
+    "release": "pnpm release:build && pnpm release:smoke",
+    "typecheck": "tsc -b",
+    "test": "pnpm typecheck && pnpm build && pnpm test:integration",
+    "test:classic": "node --test --test-isolation=none tests/classic-reference.test.mjs tests/edition-compatibility.test.mjs",
+    "test:competitive": "node --test tests/competitive-stage*.test.mjs",
+    "test:zone-withdrawal": "node --test tests/international-zone-withdrawal.test.mjs",
+    "test:pact-notifications": "node --test tests/pact-notifications.test.mjs",
+    "test:shortcuts": "node --test tests/shortcuts.test.mjs",
+    "test:security": "node --test tests/security.test.mjs",
+    "test:reconquista": "node --test --test-isolation=none tests/reconquista-*.test.mjs",
+    "test:integration": "pnpm test:classic && pnpm test:competitive && pnpm test:reconquista && pnpm test:zone-withdrawal && pnpm test:pact-notifications && pnpm test:shortcuts && pnpm test:security && pnpm test:identity",
+    "test:identity": "node --test tests/identity.test.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.3.0",
+    "esbuild": "0.28.2",
+    "eslint": "10.9.1",
+    "globals": "17.11.0",
+    "prettier": "3.9.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.68.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "fast-uri@3": "3.1.9",
+      "fast-uri@4": "4.2.3",
+      "brace-expansion@5": "5.0.12",
+      "source-map-js": "1.2.2"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "kind": "reconquista-fixture",
+  "version": 1,
+  "scope": "partial",
+  "players": ["A", "B", "C", "D"],
+  "territories": [
+    {
+      "id": "fixture_shared",
+      "ownership": {
+        "kind": "shared",
+        "playerIds": ["A", "B"]
+      },
+      "forces": [
+        {
+          "playerId": "A",
+          "armies": 3,
+          "missiles": 0
+        },
+        {
+          "playerId": "B",
+          "armies": 2,
+          "missiles": 0
+        }
+      ]
+    },
+    {
+      "id": "fixture_exclusive",
+      "ownership": {
+        "kind": "exclusive",
+        "playerId": "C"
+      },
+      "forces": [
+        {
+          "playerId": "C",
+          "armies": 5,
+          "missiles": 1
+        }
+      ]
+    }
+  ],
+  "crisis": {
+    "kind": "crisis",
+    "participants": ["A", "B", "C", "D"],
+    "rolls": [1, 4, 1, 6],
+    "affectedPlayerIds": ["A", "C"]
+  }
+}

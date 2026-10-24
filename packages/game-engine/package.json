@@ -1,0 +1,14 @@
+{
+  "name": "@game/game-engine",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./reconquista": "./dist/reconquista.js"
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b"
+  }
+}

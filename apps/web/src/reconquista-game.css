@@ -1,0 +1,847 @@
+/* Board artwork and pieces. */
+.reconquista-art {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 62/37;
+}
+.reconquista-art svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.reconquista-art .reconquista-light > svg,
+.reconquista-art .reconquista-dark > svg {
+  pointer-events: none;
+}
+.reconquista-art [id^='country-'] {
+  cursor: pointer;
+  pointer-events: visiblePainted;
+}
+.reconquista-dark {
+  display: none;
+}
+html[data-theme='dark'] .reconquista-dark {
+  display: block;
+}
+html[data-theme='dark'] .reconquista-light {
+  display: none;
+}
+.reconquista-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.reconquista-markers circle {
+  stroke: #222;
+  stroke-width: 1;
+}
+.reconquista-markers text {
+  font: 13px system-ui;
+  font-weight: 700;
+  fill: #fff;
+  paint-order: stroke;
+  stroke: #111;
+  stroke-width: 3px;
+}
+.reconquista-art .reconquista-missile-target {
+  stroke: #b44c30 !important;
+  stroke-width: 2.5 !important;
+}
+html[data-theme='dark'] .reconquista-art .reconquista-missile-target {
+  stroke: #f5b777 !important;
+}
+.reconquista-campaign fieldset {
+  margin: 0.8rem 0;
+  min-width: 0;
+  border: 1px solid var(--border-color, #7778);
+}
+.reconquista-campaign details {
+  margin: 0.8rem 0;
+}
+.reconquista-campaign input[type='checkbox'] {
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+/* Reconquista inside Classic's immersive screen: only the differences. */
+/* Board fonts (OFL, Latin subset): Oswald for countries and oceans, Black Ops One for continents. */
+@font-face {
+  font-family: 'Oswald';
+  font-weight: 200 700;
+  font-display: swap;
+  src: url('./fonts/Oswald.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Black Ops One';
+  font-display: swap;
+  src: url('./fonts/BlackOpsOne.woff2') format('woff2');
+}
+.reconquista-shell .reconquista-art {
+  width: min(100vw, calc(100dvh * 62 / 37));
+  max-width: none;
+}
+.reconquista-shell .map-frame {
+  background: var(--map-sea, #142d30);
+}
+/* Army counters: the player's colour with a dark strip and a red star. */
+.reconquista-shell .reconquista-markers .counter-body {
+  stroke: #22261b;
+  stroke-width: 2;
+}
+.reconquista-shell .reconquista-markers .counter-strip {
+  fill: #22261b;
+}
+.reconquista-shell .reconquista-markers .counter-star {
+  fill: #c8372d;
+}
+html[data-theme='dark'] .reconquista-shell .reconquista-markers .counter-body {
+  stroke: #c9c09a;
+}
+html[data-theme='dark'] .reconquista-shell .reconquista-markers .counter-strip {
+  fill: #c9c09a;
+}
+.reconquista-shell .reconquista-markers text {
+  font:
+    600 15px 'Oswald',
+    'Arial Narrow',
+    sans-serif;
+  text-anchor: middle;
+  paint-order: normal;
+  stroke: none;
+}
+.reconquista-shell .reconquista-markers text.on-dark {
+  fill: #f4eee2;
+}
+.reconquista-shell .reconquista-markers text.on-light {
+  fill: #22261b;
+}
+/* Missiles: body and fins in the owner's colour, set on each piece. */
+.reconquista-shell .reconquista-markers .missile-piece path,
+.reconquista-shell .reconquista-markers .missile-piece rect {
+  stroke: #15170f;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+html[data-theme='dark']
+  .reconquista-shell
+  .reconquista-markers
+  .missile-piece
+  path,
+html[data-theme='dark']
+  .reconquista-shell
+  .reconquista-markers
+  .missile-piece
+  rect {
+  stroke: #d6cda8;
+}
+.reconquista-shell .reconquista-markers .missile-piece .missile-band,
+.reconquista-shell .reconquista-markers .missile-piece .missile-star {
+  stroke: none;
+}
+.reconquista-shell .reconquista-markers .missile-nozzle,
+.reconquista-shell .reconquista-markers .missile-band,
+.reconquista-shell .reconquista-markers .missile-nose.dark-nose {
+  fill: #2a2d24;
+}
+.reconquista-shell .reconquista-markers .missile-nose {
+  fill: #c8372d;
+}
+.reconquista-shell .reconquista-markers .missile-star {
+  fill: #f4eee2;
+}
+.reconquista-shell .reconquista-markers .missile-star.red {
+  fill: #c8372d;
+}
+/* Attack and regroup: solid outline in each player's colour over a dark edge. */
+.reconquista-shell .reconquista-markers .country-outline path {
+  stroke-linejoin: round;
+}
+.reconquista-shell .reconquista-markers .outline-halo {
+  fill: none;
+  stroke: #15170f;
+  stroke-opacity: 0.75;
+  stroke-width: 10;
+}
+html[data-theme='dark'] .reconquista-shell .reconquista-markers .outline-halo {
+  stroke: #05070a;
+}
+.reconquista-shell .reconquista-markers .color-black .outline-halo {
+  stroke: #e6dfc8;
+}
+.reconquista-shell .reconquista-markers .outline-line {
+  fill-opacity: 0.16;
+  stroke-width: 5;
+}
+
+.reconquista-shell .reconquista-markers text.force-delta {
+  font-size: 12px;
+  text-anchor: end;
+  fill: #ffd2c8;
+  paint-order: stroke;
+  stroke: #1d1d1d;
+  stroke-width: 2.5px;
+}
+
+/* Missile switch: an icon button beside Classic's counter or attack button. */
+.reconquista-shell .missile-toggle {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  padding: 5px 8px;
+}
+.game-shell.playing-shell.reconquista-shell
+  .contextual-panel-host
+  button.missile-toggle[aria-pressed='true'] {
+  background: var(--metal);
+  border-color: var(--metal);
+  color: #fff;
+}
+.reconquista-shell .missile-toggle .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+.reconquista-shell .missile-toggle-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 16px;
+  background: #7b2d1f;
+  color: #fff;
+}
+.game-shell.playing-shell.reconquista-shell
+  .contextual-panel-host
+  .attack-card.with-missile,
+.game-shell.playing-shell.reconquista-shell .attack-card.with-missile {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+.game-shell.playing-shell.reconquista-shell
+  .contextual-panel-host
+  .regroup-card {
+  /* Counter, then confirm, cancel and finish on the same row. */
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+.game-shell.playing-shell.reconquista-shell
+  .contextual-panel-host
+  .regroup-card.with-missile {
+  grid-template-columns: minmax(0, 1fr) auto auto auto auto;
+}
+.reconquista-shell .attack-card .defender-choice {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 3px;
+}
+
+/* Situation card: a line of the turn indicator; the card opens like a player popover. */
+.reconquista-shell .situation-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  min-height: 0;
+  font-size: inherit;
+  line-height: 1.2;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--edge, currentColor);
+  border-radius: 999px;
+  box-shadow: none;
+  max-width: 100%;
+}
+.reconquista-shell .situation-indicator .ui-icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.reconquista-shell .situation-indicator span {
+  white-space: normal;
+  text-align: left;
+}
+/* The situation card has the player card's size and grows downwards
+  ; on phones both take the desktop width. */
+.game-shell.playing-shell.reconquista-shell .player-popover {
+  min-width: 230px;
+}
+.game-shell.playing-shell.reconquista-shell .player-popover.situation-card {
+  width: 230px;
+  max-width: calc(100vw - 16px);
+}
+.game-shell.playing-shell.reconquista-shell .player-popover.situation-card p {
+  display: block;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.35;
+}
+.game-shell.playing-shell.reconquista-shell .situation-card .affected-player {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+.reconquista-shell .situation-card header strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.reconquista-shell .situation-card .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Cards. */
+.reconquista-shell .territory-card .card-copy small {
+  display: block;
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+.reconquista-shell .card-badge {
+  font-size: 0.68rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0 0.35rem;
+  white-space: nowrap;
+}
+.reconquista-shell .inherited-card {
+  border-style: dashed;
+}
+.reconquista-shell.lobby-shell .lobby-actions form {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.reconquista-shell.lobby-shell label {
+  display: grid;
+  gap: 0.2rem;
+}
+html[data-theme='dark']
+  .game-shell.playing-shell.reconquista-shell
+  .contextual-panel-host
+  button.missile-toggle[aria-pressed='true'] {
+  color: #1d1d1d;
+}
+
+/* Layout adjustments to Classic's menus (2026-10-19). */
+.game-shell.playing-shell.reconquista-shell
+  :is(.attack-card, .regroup-card)
+  > .action-title {
+  grid-column: 1 / -1;
+}
+/* Refuerzos: counter on the left, then the missile switch and Confirmar. */
+.game-shell.playing-shell.reconquista-shell
+  .action-dock
+  .reinforcement-card
+  > .missile-toggle {
+  margin-left: auto;
+}
+.game-shell.playing-shell.reconquista-shell
+  .action-dock
+  .reinforcement-card
+  > .missile-toggle
+  + .confirm-placement {
+  margin-left: 0;
+}
+/* Ataque: Ataque, missile switch, then the finish flag. */
+.game-shell.playing-shell.reconquista-shell .contextual-panel-host .attack-card,
+.game-shell.playing-shell.reconquista-shell
+  .contextual-panel-host
+  .attack-card.with-missile {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+.game-shell.playing-shell.reconquista-shell .attack-card > .end-attack {
+  min-width: 36px;
+  padding: 5px 8px;
+}
+.game-shell.playing-shell.reconquista-shell
+  .action-dock
+  .reinforcement-card
+  > .missile-toggle {
+  order: 2;
+}
+.game-shell.playing-shell.reconquista-shell
+  .action-dock
+  .reinforcement-card
+  > .confirm-placement {
+  order: 3;
+}
+.game-shell.playing-shell.reconquista-shell
+  .action-dock
+  .reinforcement-card
+  > .action-footer {
+  order: 4;
+}
+
+/* Map preview of a pending move or placement. */
+.reconquista-shell .force-preview {
+  font-weight: 700;
+}
+/* Panel copy uses the theme's soft text color, like the other menus' texts. */
+.game-shell.playing-shell.reconquista-shell
+  :is(.objective-box p, .cards-panel p, .situation-card p) {
+  color: var(--muted);
+}
+
+/* Refuerzos: "+ misil" beside the counter, and the pools as steps. */
+.game-shell.playing-shell.reconquista-shell
+  .reinforcement-card
+  > .missile-plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  order: 2;
+  margin-left: auto;
+}
+.game-shell.playing-shell.reconquista-shell .missile-plan-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.game-shell.playing-shell.reconquista-shell .missile-plan-count .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+.game-shell.playing-shell.reconquista-shell .missile-plan .add-missile {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: auto;
+  white-space: nowrap;
+}
+.game-shell.playing-shell.reconquista-shell
+  .missile-plan
+  .add-missile
+  .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+.game-shell.playing-shell.reconquista-shell .reinforcement-pools .pool-step {
+  width: auto;
+  min-height: 0;
+  height: auto;
+  padding: 1px 6px;
+  border: 1px solid var(--line, currentColor);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+}
+.game-shell.playing-shell.reconquista-shell
+  .reinforcement-pools
+  .pool-step[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--text, inherit);
+  font-weight: 700;
+}
+
+/* White exists only in Reconquista: dark text and an outline keep it apart from the panels. */
+.reconquista-shell .color-white {
+  --player-color: #f4eee2;
+  background: #f4eee2;
+}
+.game-shell.playing-shell.reconquista-shell .roster-player.color-white {
+  border-color: #6f675a;
+  color: #302d20;
+}
+.reconquista-shell .color-dot.color-white {
+  box-shadow: 0 0 0 1px #302d20;
+}
+
+.game-shell.playing-shell.reconquista-shell .objective-box .objective-target {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+/* How each card is exchanged, under its symbol. */
+.game-shell.playing-shell.reconquista-shell .hand-card .card-hint {
+  display: block;
+  font-size: 9px;
+  line-height: 1.2;
+  color: var(--muted);
+}
+/* Ataque: the sword icon, the missile switch and the finish icon on one row. */
+.game-shell.playing-shell.reconquista-shell .attack-card > .attack-button {
+  min-width: 36px;
+  padding: 5px 8px;
+}
+/* Cards: request on the left, exchange on the right, as icon buttons. */
+.game-shell.playing-shell.reconquista-shell .cards-panel .card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .card-actions
+  .exchange-submit {
+  width: auto;
+  min-width: 0;
+}
+/* +3 and +1 carry their number beside (or instead of) the icon. */
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .card-actions
+  .text-icon {
+  width: auto;
+  min-width: 2rem;
+  padding: 0 6px;
+  gap: 2px;
+  font-weight: 700;
+  font-size: 12px;
+}
+.game-shell.playing-shell.reconquista-shell .cards-panel .card-refusal {
+  margin: 4px 0 0;
+  font-size: 11px;
+}
+/* Illustrated card faces. */
+.game-shell.playing-shell.reconquista-shell .hand-card .card-symbol {
+  width: 40px;
+  height: 40px;
+}
+.reconquista-shell .card-art {
+  width: 40px;
+  height: 40px;
+  color: var(--metal);
+}
+.reconquista-shell .card-art .art-main {
+  fill: currentColor;
+}
+.reconquista-shell .card-art .art-light {
+  fill: var(--surface);
+  opacity: 0.75;
+}
+.reconquista-shell .card-art .art-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.reconquista-shell .card-art .art-silhouette {
+  stroke: currentColor;
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+}
+/* Card faces stacked: country, drawing, then the type and its rule. Light
+   when free; dark green when selected or used. */
+.game-shell.playing-shell.reconquista-shell .cards-panel .hand-card {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+  background: var(--surface);
+  color: var(--ink);
+  outline: 0;
+}
+.game-shell.playing-shell.reconquista-shell .cards-panel .hand-card .card-name {
+  order: 1;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  color: inherit;
+}
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .hand-card
+  .card-symbol {
+  order: 2;
+}
+.game-shell.playing-shell.reconquista-shell .cards-panel .hand-card .card-copy {
+  order: 3;
+}
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .hand-card
+  .card-copy
+  small {
+  color: inherit;
+}
+/* Badges (+3, the check) sit in the top corner, above the country name. */
+.game-shell.playing-shell.reconquista-shell .cards-panel .hand-card {
+  padding-top: 18px;
+}
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .hand-card
+  .card-badges {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  display: flex;
+  gap: 3px;
+}
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .hand-card:is(.selected, .bonus-used)
+  .selected-check {
+  color: #faf4e4;
+}
+.game-shell.playing-shell.reconquista-shell .cards-panel .hand-card .card-copy {
+  flex: 0 0 auto;
+  display: grid;
+  justify-items: center;
+}
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .hand-card:is(.selected, .bonus-used) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #faf4e4;
+}
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .hand-card:is(.selected, .bonus-used)
+  :is(.card-art, .card-hint) {
+  color: #faf4e4;
+}
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .hand-card:is(.selected, .bonus-used)
+  .card-art
+  .art-light {
+  fill: var(--accent);
+}
+/* Refuerzos confirms with the same green check button as Traslado. */
+.game-shell.playing-shell.reconquista-shell
+  .action-dock
+  .reinforcement-card
+  > .confirm-placement {
+  flex: 0 0 auto;
+  width: 36px;
+  min-width: 36px;
+  height: 32px;
+  min-height: 32px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #faf4e4;
+}
+.game-shell.playing-shell.reconquista-shell
+  .action-dock
+  .reinforcement-card
+  > .confirm-placement:hover:not(:disabled) {
+  background: var(--accent);
+  filter: brightness(1.1);
+}
+.game-shell.playing-shell.reconquista-shell
+  .action-dock
+  .reinforcement-card
+  > .confirm-placement
+  svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+}
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .hand-card:is(.selected, .bonus-used)
+  .card-badge {
+  color: #faf4e4;
+}
+
+/* Phones: menus shrink to their content with tighter controls, up to half the screen, and
+   scroll inside with their title fixed; Cartas keeps the full width for its cards. */
+@media (max-width: 600px) {
+  .reconquista-shell.game-shell.playing-shell .information-content {
+    --control: 30px;
+    width: fit-content;
+    min-width: min(264px, calc(100vw - 2 * var(--inset)));
+    max-width: calc(100vw - 2 * var(--inset));
+    max-height: 45dvh;
+    padding: 0 6px 6px;
+  }
+  .reconquista-shell.game-shell.playing-shell
+    .information-content:has(> div:not([hidden]) > .reconquista-cards-panel) {
+    width: calc(100vw - 2 * var(--inset));
+    max-height: 50dvh;
+  }
+  .reconquista-shell.game-shell.playing-shell .mobile-panel-heading {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0 -6px 4px;
+    padding: 4px 6px 2px;
+    background: var(--glass);
+    backdrop-filter: blur(4px);
+  }
+  .reconquista-shell.game-shell.playing-shell .mobile-panel-heading button {
+    min-width: 28px;
+    min-height: 28px;
+    padding: 2px;
+  }
+  .reconquista-shell.game-shell.playing-shell
+    .information-content
+    > div
+    > :not(.reconquista-cards-panel)
+    :is(button, select, input) {
+    min-height: var(--control);
+    height: var(--control);
+    padding-block: 2px;
+  }
+  .reconquista-shell.game-shell.playing-shell .information-content :is(p, li) {
+    line-height: 1.3;
+  }
+  .reconquista-shell.game-shell.playing-shell .information-content p + p {
+    margin-top: 3px;
+  }
+}
+
+/* Light theme: the player and situation cards as translucent as the other floating menus. */
+html:not([data-theme='dark'])
+  .game-shell.playing-shell.reconquista-shell
+  .player-popover {
+  background: var(--glass);
+}
+
+/* With the translucent menus a faded card would let the map through: disabled
+   cards keep a solid face and only their text and drawing fade. */
+.game-shell.playing-shell.reconquista-shell .cards-panel .hand-card:disabled {
+  opacity: 1;
+  color: color-mix(in srgb, var(--ink) 50%, var(--surface));
+}
+.game-shell.playing-shell.reconquista-shell
+  .cards-panel
+  .hand-card:disabled
+  .card-art {
+  opacity: 0.6;
+}
+
+/* Situation card: the affected player stands out under the effect. */
+.game-shell.playing-shell.reconquista-shell .situation-card .affected-line {
+  margin-top: 6px;
+  color: var(--ink);
+  font-weight: 700;
+}
+.game-shell.playing-shell.reconquista-shell
+  .situation-card
+  .affected-line
+  .color-dot {
+  width: 10px;
+  height: 10px;
+}
+
+/* Phones: Cartas fits its cards like the other menus, the
+   turn box and the route menus use smaller type. */
+@media (max-width: 600px) {
+  .reconquista-shell.game-shell.playing-shell
+    .information-content:has(> div:not([hidden]) > .reconquista-cards-panel) {
+    width: fit-content;
+  }
+  .reconquista-shell.game-shell.playing-shell
+    .information-content
+    .exchange-card-selection {
+    grid-template-columns: repeat(3, 76px);
+    gap: 6px;
+    margin: 6px 0;
+  }
+  .game-shell.playing-shell.reconquista-shell .cards-panel .hand-card {
+    padding: 14px 3px 5px;
+    gap: 2px;
+  }
+  .game-shell.playing-shell.reconquista-shell
+    .cards-panel
+    .hand-card
+    .card-name {
+    font-size: 11px;
+    line-height: 1.15;
+  }
+  .game-shell.playing-shell.reconquista-shell .hand-card .card-symbol,
+  .game-shell.playing-shell.reconquista-shell .cards-panel .card-art {
+    width: 28px;
+    height: 28px;
+  }
+  .game-shell.playing-shell.reconquista-shell .cards-panel .card-badge {
+    font-size: 9px;
+  }
+  .game-shell.playing-shell.reconquista-shell .cards-panel .action-help {
+    max-width: 240px;
+    font-size: 11px;
+  }
+  .game-shell.playing-shell.reconquista-shell .cards-panel .card-actions {
+    margin-top: 4px;
+  }
+
+  .reconquista-shell.game-shell.playing-shell .right-turn-summary {
+    font-size: 10px;
+    line-height: 1.2;
+    gap: 1px;
+  }
+  .reconquista-shell.game-shell.playing-shell .action-cluster .phase-row {
+    padding: 4px 6px;
+  }
+  .reconquista-shell .situation-indicator,
+  .reconquista-shell .situation-indicator strong {
+    padding: 1px 6px;
+    font-size: 10px;
+  }
+  .reconquista-shell .situation-indicator strong {
+    padding: 0;
+  }
+  .reconquista-shell .situation-indicator .ui-icon {
+    width: 12px;
+    height: 12px;
+  }
+  .reconquista-shell .situation-indicator span {
+    white-space: nowrap;
+  }
+  .reconquista-shell.game-shell.playing-shell .floating-dice {
+    padding: 3px 6px;
+  }
+  .reconquista-shell.game-shell.playing-shell .dice-toggle,
+  .reconquista-shell.game-shell.playing-shell .dice-toggle * {
+    min-height: 22px;
+    font-size: 10px;
+  }
+  .reconquista-shell.game-shell.playing-shell .dice-toggle .ui-icon {
+    width: 14px;
+    height: 14px;
+    min-height: 0;
+  }
+
+  .reconquista-shell.game-shell.playing-shell
+    .action-dock
+    :is(select, input, .amount-control button) {
+    font-size: 12px;
+  }
+  .reconquista-shell.game-shell.playing-shell .action-dock label {
+    font-size: 10px;
+  }
+  .reconquista-shell.game-shell.playing-shell .information-content {
+    --menu-label: 10px;
+  }
+  .reconquista-shell.game-shell.playing-shell
+    .information-content
+    .pacts-panel
+    :is(select, input, button, .muted-copy, .pact-summary, .pact-copy) {
+    font-size: 12px;
+  }
+  .reconquista-shell.game-shell.playing-shell
+    .information-content
+    .pacts-panel
+    label {
+    font-size: 10px;
+  }
+  .reconquista-shell.game-shell.playing-shell
+    .information-content
+    .pact-proposal-form {
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .reconquista-shell.game-shell.playing-shell .mobile-panel-heading strong {
+    font-size: 12px;
+  }
+}

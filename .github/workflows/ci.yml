@@ -1,0 +1,100 @@
+# Runs only at chosen milestones, never on every push:
+# - manually from the Actions tab (verification, plus packages if requested),
+# - on a pull request when the `ci` label is added (verification only),
+# - when a `v*` tag is pushed (verification, packages and a draft release).
+name: CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Build Linux and Windows packages
+        type: boolean
+        default: true
+  pull_request:
+    types: [labeled]
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '24.11.1'
+
+jobs:
+  verify:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'ci'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - if: runner.os == 'Linux'
+        run: pnpm lint
+      - run: pnpm build
+      - run: pnpm test:integration
+
+  package:
+    needs: verify
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.package)
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+          - os: windows-latest
+            target: windows-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm release:build
+      - run: pnpm release:smoke
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ted-${{ matrix.target }}
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            release/*.zip
+            release/*.tar.gz
+            release/SHA256SUMS
+            release/manifest-*.json
+
+  release:
+    needs: package
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Merge checksums
+        run: |
+          mkdir out
+          cat dist/*/SHA256SUMS | sort -k2 > out/SHA256SUMS
+          cp dist/*/*.zip dist/*/*.tar.gz dist/*/manifest-*.json out/
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: out/*

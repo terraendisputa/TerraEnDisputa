@@ -1,0 +1,306 @@
+.game-shell .map-frame {
+  --chart-sea: #c8dcd6;
+  --chart-paper: #efdfb8;
+  --chart-ink: #343128;
+  --chart-faint: #526f66;
+  --chart-edge: #323c32;
+  --chart-coast: #497c7a;
+  --chart-route: #453b2e;
+  --chart-cream: #f8ecd2;
+  --chart-ornament: #675033;
+  --chart-gold: #c49655;
+  --chart-red: #984f3c;
+  --chart-grid: #70978e;
+  --land1: #e3aa88;
+  --land2: #c3ce94;
+  --land3: #d6bed4;
+  --land4: #e0c985;
+  --land5: #b8c5a8;
+  --land6: #d9ac93;
+  background: var(--chart-sea);
+}
+:root[data-theme='dark'] .game-shell .map-frame {
+  --chart-sea: #183537;
+  --chart-paper: #254547;
+  --chart-ink: #f0ddba;
+  --chart-faint: #97b6aa;
+  --chart-edge: #c7a875;
+  --chart-coast: #080f15;
+  --chart-route: #e3b974;
+  --chart-cream: #254547;
+  --chart-ornament: #c9a36b;
+  --chart-gold: #d6af73;
+  --chart-red: #b47955;
+  --chart-grid: #668d83;
+  --land1: #526052;
+  --land2: #456459;
+  --land3: #69616d;
+  --land4: #7b6746;
+  --land5: #52666a;
+  --land6: #7a5a4b;
+}
+.game-shell .map-frame .map-instructions,
+.game-shell .map-frame .map-selection-bar {
+  color: var(--chart-ink);
+  background: transparent;
+}
+.game-shell .map-frame .map-instructions p,
+.game-shell .map-frame .map-selection-bar {
+  color: var(--chart-faint);
+}
+.game-shell .map-frame .map-selection-bar strong {
+  color: var(--chart-ink);
+}
+.game-shell .map-frame .map-zoom-controls button,
+.game-shell .map-frame .map-selection-bar button {
+  background: var(--chart-cream);
+  border-color: color-mix(in srgb, var(--chart-edge) 30%, transparent);
+  color: var(--chart-ink);
+}
+.game-shell .map-frame .map-viewport {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 45%,
+    color-mix(in srgb, var(--chart-ornament) 12%, transparent)
+  );
+}
+.game-shell .map-frame .game-map {
+  isolation: isolate;
+}
+.game-shell .map-frame .territory-fill {
+  fill: var(--land);
+  stroke: var(--chart-edge);
+  stroke-width: 1.65;
+  stroke-linejoin: round;
+}
+.game-shell .map-frame .territory-label {
+  font-family: Georgia, 'Times New Roman', serif;
+  fill: var(--chart-ink);
+  font-size: 15px;
+  font-weight: 600;
+  stroke: var(--land);
+  stroke-width: 3px;
+  letter-spacing: 0.15px;
+}
+:root[data-theme='dark'] .game-shell .map-frame .territory-label {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.25px;
+}
+.game-shell .map-frame .territory circle {
+  stroke: var(--chart-cream);
+  stroke-width: 2.6;
+}
+/* The marker's shadow is a plain circle, not a filter. */
+.game-shell .map-frame .territory circle.army-shadow,
+.game-map .territory circle.army-shadow {
+  fill: #0007;
+  stroke: none;
+  pointer-events: none;
+}
+.game-shell .map-frame .army-count {
+  font:
+    750 14px system-ui,
+    sans-serif;
+}
+.game-shell .map-frame .territory.selected .territory-fill,
+.game-shell .map-frame .territory:focus-visible .territory-fill {
+  stroke: var(--chart-route);
+  stroke-width: 3.5;
+  fill: var(--chart-cream);
+}
+.game-shell .map-frame .territory.source .territory-fill {
+  stroke: var(--chart-red);
+  stroke-width: 4;
+}
+.game-shell .map-frame .map-connections path {
+  fill: none;
+  opacity: 1;
+  stroke-linecap: butt;
+  stroke-linejoin: round;
+}
+.game-shell .map-frame .map-connections .route-underlay {
+  stroke: var(--chart-route);
+  stroke-width: 4.8;
+  stroke-dasharray: none;
+  opacity: 0.7;
+}
+.game-shell .map-frame .map-connections .route-ink {
+  stroke: var(--chart-cream);
+  stroke-width: 2.5;
+  stroke-dasharray: 5 5;
+}
+:root[data-theme='dark']
+  .game-shell
+  .map-frame
+  .map-connections
+  .route-underlay {
+  stroke: var(--chart-sea);
+  stroke-width: 5;
+  opacity: 1;
+}
+:root[data-theme='dark'] .game-shell .map-frame .map-connections .route-ink {
+  stroke: var(--chart-route);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+}
+.route-arrow {
+  fill: var(--chart-route);
+}
+.chart-decoration,
+.chart-wash,
+.chart-coastal-halo {
+  pointer-events: none;
+}
+.chart-coastal-halo path {
+  fill: none;
+  stroke: var(--chart-coast);
+  stroke-linejoin: round;
+}
+.chart-coastal-halo .coast-wide {
+  stroke-width: 18;
+  stroke-opacity: 0.14;
+}
+.chart-coastal-halo .coast-middle {
+  stroke-width: 12;
+  stroke-opacity: 0.2;
+}
+.chart-coastal-halo .coast-narrow {
+  stroke-width: 6;
+  stroke-opacity: 0.3;
+}
+.chart-frame {
+  fill: none;
+  stroke: var(--chart-ornament);
+  stroke-width: 2;
+}
+.chart-line {
+  fill: none;
+  stroke: var(--chart-ornament);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.chart-fill {
+  fill: var(--chart-paper);
+  stroke: var(--chart-ornament);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.chart-solid {
+  fill: var(--chart-ornament);
+  stroke: none;
+}
+.chart-text {
+  fill: var(--chart-ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  text-anchor: middle;
+}
+.chart-ocean {
+  fill: var(--chart-faint);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 25px;
+  letter-spacing: 5px;
+  text-anchor: middle;
+  opacity: 0.75;
+}
+/* Sizes live here, not in the artwork: the game's CSP blocks inline styles
+   (smaller ocean names, OCEANVS clear of the frame). */
+.chart-ocean-west {
+  font-size: 10.5px;
+  letter-spacing: 1.5px;
+}
+.chart-ocean-north {
+  font-size: 12.5px;
+  letter-spacing: 2px;
+}
+.chart-ocean-east {
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+.chart-rhumbs {
+  stroke: var(--chart-grid);
+  fill: none;
+  stroke-width: 1;
+  opacity: 0.18;
+  clip-path: url(#chart-sea-clip);
+}
+.chart-rhumbs.chart-rhumbs-copper {
+  opacity: 0.28;
+}
+.game-shell .map-frame .only-copper {
+  display: none;
+}
+:root[data-theme='dark'] .game-shell .map-frame .only-copper {
+  display: inline;
+}
+:root[data-theme='dark'] .game-shell .map-frame .only-board {
+  display: none;
+}
+.game-shell .map-frame .chart-frame-inner {
+  stroke-dasharray: 8 5;
+  stroke-width: 4;
+}
+:root[data-theme='dark'] .game-shell .map-frame .chart-frame-inner {
+  stroke-dasharray: 1 8;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+.chart-paper-texture {
+  opacity: 0.11;
+  mix-blend-mode: multiply;
+}
+:root[data-theme='dark'] .game-shell .map-frame .chart-paper-texture {
+  opacity: 0.12;
+  mix-blend-mode: soft-light;
+}
+@media (max-width: 599px) {
+  .game-shell .map-frame .map-instructions h1 {
+    font-size: 13px;
+  }
+}
+
+.game-shell .map-frame .territory.legal .territory-fill {
+  stroke: var(--chart-edge);
+  stroke-width: 1.65;
+}
+.game-shell
+  .map-frame
+  .territory:is(
+    .selected,
+    .selected-source,
+    .pending-source,
+    .inspected,
+    :focus-visible
+  )
+  .territory-fill {
+  fill: var(--chart-cream);
+  stroke: var(--chart-route);
+  stroke-width: 3.5;
+}
+.game-shell
+  .map-frame
+  .territory:is(.selected-source, .pending-source)
+  .territory-fill {
+  stroke: var(--chart-red);
+  stroke-width: 4;
+}
+.game-shell
+  .map-frame
+  .territory:is(.selected-target, .pending-target)
+  .territory-fill {
+  fill: var(--chart-cream);
+  stroke: var(--chart-red);
+  stroke-width: 4;
+}
+.game-shell .map-frame .map-connections .route-underlay,
+.game-shell .map-frame .map-connections .route-ink {
+  fill: none;
+}
+.game-shell .map-frame .gesture-hint {
+  display: none;
+}
+.game-shell .map-frame .map-selection-bar {
+  font-size: 11px;
+}

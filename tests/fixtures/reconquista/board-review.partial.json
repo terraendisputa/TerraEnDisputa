@@ -1,0 +1,544 @@
+{
+  "kind": "reconquista-board-review",
+  "version": 1,
+  "scope": "partial",
+  "boardSha256": "164fc18e58e8ff9caceffcd4a94911d515c7f2bd09cfd5876f8acf9585ab375e",
+  "countries": [
+    {
+      "id": "alaska",
+      "continentId": "north_america",
+      "borders": ["canada"],
+      "bridges": ["chukchi", "kamchatka"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "albania",
+      "continentId": "europe",
+      "borders": ["irak", "iran", "polonia", "ucrania"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "alemania",
+      "continentId": "europe",
+      "borders": ["croacia", "francia", "italia", "polonia", "serbia"],
+      "bridges": ["gran_bretana"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "angola",
+      "continentId": "africa",
+      "borders": ["etiopia", "mauritania", "nigeria"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "arabia",
+      "continentId": "asia",
+      "borders": ["israel"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "argentina",
+      "continentId": "south_america",
+      "borders": ["bolivia", "brasil", "chile", "paraguay", "uruguay"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "australia",
+      "continentId": "oceania",
+      "borders": [],
+      "bridges": ["chile", "filipinas", "sumatra", "tasmania", "tonga"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "bielorrusia",
+      "continentId": "europe",
+      "borders": ["finlandia", "polonia", "ucrania"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "bolivia",
+      "continentId": "south_america",
+      "borders": ["argentina", "brasil", "chile", "paraguay"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "brasil",
+      "continentId": "south_america",
+      "borders": [
+        "argentina",
+        "bolivia",
+        "chile",
+        "colombia",
+        "paraguay",
+        "uruguay",
+        "venezuela"
+      ],
+      "bridges": ["sahara"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "california",
+      "continentId": "north_america",
+      "borders": ["florida", "las_vegas", "mexico"],
+      "bridges": ["tonga"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "canada",
+      "continentId": "north_america",
+      "borders": ["alaska", "oregon", "terranova"],
+      "bridges": ["isla_victoria"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "chechenia",
+      "continentId": "asia",
+      "borders": ["china", "rusia", "siberia"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "chicago",
+      "continentId": "north_america",
+      "borders": ["florida", "las_vegas", "nueva_york", "oregon", "terranova"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "chile",
+      "continentId": "south_america",
+      "borders": ["argentina", "bolivia", "brasil", "colombia"],
+      "bridges": ["australia"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "china",
+      "continentId": "asia",
+      "borders": [
+        "chechenia",
+        "chukchi",
+        "corea",
+        "india",
+        "kamchatka",
+        "malasia",
+        "rusia",
+        "siberia",
+        "turquia"
+      ],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S10/usuario 2026-10-15: China y Vietnam separados por Malasia e India; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "chukchi",
+      "continentId": "asia",
+      "borders": ["china", "kamchatka"],
+      "bridges": ["alaska"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "colombia",
+      "continentId": "south_america",
+      "borders": ["brasil", "chile", "nicaragua", "venezuela"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "corea",
+      "continentId": "asia",
+      "borders": ["china", "kamchatka", "malasia", "vietnam"],
+      "bridges": ["japon"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "croacia",
+      "continentId": "europe",
+      "borders": ["alemania", "italia", "polonia", "serbia"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo; S11/usuario 2026-10-22 (D79): rutas por mar del tablero v8"
+    },
+    {
+      "id": "cuba",
+      "continentId": "central_america",
+      "borders": [],
+      "bridges": ["florida", "honduras", "jamaica", "mexico"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "egipto",
+      "continentId": "africa",
+      "borders": ["etiopia", "sahara"],
+      "bridges": ["irak", "israel", "madagascar", "polonia"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-22 (D79): rutas por mar del tablero v8"
+    },
+    {
+      "id": "el_salvador",
+      "continentId": "central_america",
+      "borders": ["honduras", "nicaragua"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "espana",
+      "continentId": "europe",
+      "borders": ["francia", "portugal"],
+      "bridges": ["sahara"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "etiopia",
+      "continentId": "africa",
+      "borders": ["angola", "egipto", "nigeria", "sahara"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "filipinas",
+      "continentId": "oceania",
+      "borders": [],
+      "bridges": ["australia", "tonga", "vietnam"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "finlandia",
+      "continentId": "europe",
+      "borders": ["bielorrusia", "noruega"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11 reafirma Finlandia-Polonia no adyacentes"
+    },
+    {
+      "id": "florida",
+      "continentId": "north_america",
+      "borders": ["california", "chicago", "las_vegas"],
+      "bridges": ["cuba"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "francia",
+      "continentId": "europe",
+      "borders": ["alemania", "espana", "italia"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "gran_bretana",
+      "continentId": "europe",
+      "borders": [],
+      "bridges": ["alemania", "irlanda", "portugal"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "groenlandia",
+      "continentId": "north_america",
+      "borders": [],
+      "bridges": ["isla_victoria", "islandia", "labrador", "nueva_york"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "honduras",
+      "continentId": "central_america",
+      "borders": ["el_salvador", "mexico"],
+      "bridges": ["cuba"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "india",
+      "continentId": "asia",
+      "borders": ["china", "malasia", "turquia", "vietnam"],
+      "bridges": ["sumatra"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "irak",
+      "continentId": "asia",
+      "borders": ["albania", "iran", "israel", "turquia"],
+      "bridges": ["egipto"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "iran",
+      "continentId": "asia",
+      "borders": ["albania", "irak", "rusia", "turquia", "ucrania"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "irlanda",
+      "continentId": "europe",
+      "borders": [],
+      "bridges": ["gran_bretana", "islandia"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "isla_victoria",
+      "continentId": "north_america",
+      "borders": [],
+      "bridges": ["canada", "groenlandia"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "islandia",
+      "continentId": "europe",
+      "borders": [],
+      "bridges": ["groenlandia", "irlanda", "noruega"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "israel",
+      "continentId": "asia",
+      "borders": ["arabia", "irak", "turquia"],
+      "bridges": ["egipto"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo; S11/usuario 2026-10-22 (D79): rutas por mar del tablero v8"
+    },
+    {
+      "id": "italia",
+      "continentId": "europe",
+      "borders": ["alemania", "croacia", "francia"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "jamaica",
+      "continentId": "central_america",
+      "borders": [],
+      "bridges": ["cuba", "nicaragua"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "japon",
+      "continentId": "asia",
+      "borders": [],
+      "bridges": ["corea", "kamchatka"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "kamchatka",
+      "continentId": "asia",
+      "borders": ["china", "chukchi", "corea"],
+      "bridges": ["alaska", "japon"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "labrador",
+      "continentId": "north_america",
+      "borders": [],
+      "bridges": ["groenlandia", "terranova"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "las_vegas",
+      "continentId": "north_america",
+      "borders": ["california", "chicago", "florida", "oregon"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "madagascar",
+      "continentId": "africa",
+      "borders": [],
+      "bridges": ["egipto", "mauritania", "sudafrica"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-22 (D79): rutas por mar del tablero v8"
+    },
+    {
+      "id": "malasia",
+      "continentId": "asia",
+      "borders": ["china", "corea", "india", "vietnam"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "mauritania",
+      "continentId": "africa",
+      "borders": ["angola", "nigeria", "sudafrica"],
+      "bridges": ["madagascar"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-22 (D79): rutas por mar del tablero v8"
+    },
+    {
+      "id": "mexico",
+      "continentId": "central_america",
+      "borders": ["california", "honduras"],
+      "bridges": ["cuba"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "nicaragua",
+      "continentId": "central_america",
+      "borders": ["colombia", "el_salvador"],
+      "bridges": ["jamaica"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "nigeria",
+      "continentId": "africa",
+      "borders": ["angola", "etiopia", "mauritania", "sahara", "sudafrica"],
+      "bridges": ["uruguay"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "noruega",
+      "continentId": "europe",
+      "borders": ["finlandia"],
+      "bridges": ["islandia"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "nueva_york",
+      "continentId": "north_america",
+      "borders": ["chicago"],
+      "bridges": ["groenlandia"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "nueva_zelanda",
+      "continentId": "oceania",
+      "borders": [],
+      "bridges": ["tasmania"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "oregon",
+      "continentId": "north_america",
+      "borders": ["canada", "chicago", "las_vegas", "terranova"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "paraguay",
+      "continentId": "south_america",
+      "borders": ["argentina", "bolivia", "brasil"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "polonia",
+      "continentId": "europe",
+      "borders": [
+        "albania",
+        "alemania",
+        "bielorrusia",
+        "croacia",
+        "serbia",
+        "ucrania"
+      ],
+      "bridges": ["egipto"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo; S11/usuario 2026-10-22 (D79): rutas por mar del tablero v8"
+    },
+    {
+      "id": "portugal",
+      "continentId": "europe",
+      "borders": ["espana"],
+      "bridges": ["gran_bretana"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "rusia",
+      "continentId": "asia",
+      "borders": [
+        "chechenia",
+        "china",
+        "iran",
+        "siberia",
+        "turquia",
+        "ucrania"
+      ],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "sahara",
+      "continentId": "africa",
+      "borders": ["egipto", "etiopia", "nigeria"],
+      "bridges": ["brasil", "espana"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "serbia",
+      "continentId": "europe",
+      "borders": ["alemania", "croacia", "polonia"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "siberia",
+      "continentId": "asia",
+      "borders": ["chechenia", "china", "rusia"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "sudafrica",
+      "continentId": "africa",
+      "borders": ["mauritania", "nigeria"],
+      "bridges": ["madagascar"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "sumatra",
+      "continentId": "oceania",
+      "borders": [],
+      "bridges": ["australia", "india"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "tasmania",
+      "continentId": "oceania",
+      "borders": [],
+      "bridges": ["australia", "nueva_zelanda"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "terranova",
+      "continentId": "north_america",
+      "borders": ["canada", "chicago", "oregon"],
+      "bridges": ["labrador"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "tonga",
+      "continentId": "oceania",
+      "borders": [],
+      "bridges": ["australia", "california", "filipinas"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "turquia",
+      "continentId": "asia",
+      "borders": ["china", "india", "irak", "iran", "israel", "rusia"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S11/usuario 2026-10-16 (D22): corrección explícita por país contra el dibujo autoritativo"
+    },
+    {
+      "id": "ucrania",
+      "continentId": "europe",
+      "borders": ["albania", "bielorrusia", "iran", "polonia", "rusia"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "uruguay",
+      "continentId": "south_america",
+      "borders": ["argentina", "brasil"],
+      "bridges": ["nigeria"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "venezuela",
+      "continentId": "south_america",
+      "borders": ["brasil", "colombia"],
+      "bridges": [],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen"
+    },
+    {
+      "id": "vietnam",
+      "continentId": "asia",
+      "borders": ["corea", "india", "malasia"],
+      "bridges": ["filipinas"],
+      "evidence": "S05/tablero.jpg: segunda revisión visual de límites y puentes a resolución original; aclaraciones S07 prevalecen; S10/usuario 2026-10-15: China y Vietnam separados por Malasia e India"
+    }
+  ]
+}
