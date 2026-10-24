@@ -8,7 +8,7 @@ Tiene tres modalidades, que se eligen al crear la partida:
 - **Competitivo:** para 4 a 6 personas, con relojes, rondas finales automáticas y puntaje.
 - **Reconquista:** 72 países, situaciones que cambian cada ronda, misiles, alianzas y países compartidos.
 
-Terra en disputa is not affiliated with, endorsed by, or sponsored by the owners or publishers of T.E.G. No official artwork, screenshots, rulebook text, or TEGNet material is included.
+Terra en disputa no está afiliado, respaldado ni patrocinado por los titulares o editores de T.E.G. No incluye arte, capturas, textos del reglamento ni material de TEGNet oficiales.
 
 ## Elegí cómo alojarlo
 
