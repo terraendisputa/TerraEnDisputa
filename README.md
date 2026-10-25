@@ -23,7 +23,7 @@ Para jugar alcanza con un navegador moderno, en computadora, tablet o teléfono.
 
 ## 1. Jugar desde tu computadora
 
-Los paquetes compilados incluyen Node.js, así que no hace falta instalar nada más. Se generan con el pipeline de GitHub al publicar una etiqueta `v*`, o podés [compilarlos vos](#compilar-desde-el-código).
+Los paquetes compilados incluyen Node.js, así que no hace falta instalar nada más. Descargalos de [Releases](https://github.com/unlisted3954/TerraEnDisputa/releases) o [compilalos vos](#compilar-desde-el-código).
 
 1. Descargá el paquete de tu sistema, comprobalo con `SHA256SUMS` y extraé **toda la carpeta**.
 2. En Windows abrí `ted.cmd`. En Linux ejecutá `./ted` dentro de la carpeta.
@@ -52,7 +52,7 @@ Las partidas se guardan aparte de la aplicación: `~/.local/share/ted` en Linux 
 
 Para que arranque solo al iniciar sesión, creá una tarea en el **Programador de tareas** con el desencadenador «Al iniciar sesión» y la acción `C:\Juegos\ted\ted.cmd` con el argumento `--no-open`. El código de administración queda en la ventana de la tarea; si no la ves, reiniciá la tarea y entrá con el código nuevo.
 
-Las copias de seguridad funcionan igual que en Linux, con el servidor cerrado: `ted.cmd backup --output C:\copias\ted-backup.json`. No hay instalador como servicio para Windows. La versión de Windows se verifica en el pipeline, pero no se probó a mano.
+Las copias de seguridad funcionan igual que en Linux, con el servidor cerrado: `ted.cmd backup --output C:\copias\ted-backup.json`. No hay instalador como servicio para Windows.
 
 ## 2. Servidor Linux como servicio
 
@@ -133,14 +133,17 @@ Usá la IP `100.x.y.z`, no el nombre `*.ts.net`: el juego solo acepta direccione
 
 ### Tailscale Funnel: enlace HTTPS sin dominio propio
 
-Funnel publica el juego en `https://<equipo>.<tu-red>.ts.net` y los jugadores no necesitan instalar nada. Con el servicio Linux escuchando en `127.0.0.1:3000`:
+Funnel publica el juego en `https://<equipo>.<tu-red>.ts.net` y los jugadores no necesitan instalar nada. Con el servicio Linux escuchando en `127.0.0.1:3000` (la opción por defecto):
 
-```bash
-sudo tailscale funnel --bg --https=443 http://127.0.0.1:3000
-tailscale funnel status          # muestra la dirección pública
-```
+1. Publicá el puerto con Funnel. La primera vez, si Funnel no está habilitado en tu red, el comando muestra un enlace a la consola de Tailscale para activarlo junto con HTTPS; aceptalo y repetí el comando.
+   ```bash
+   sudo tailscale funnel --bg --https=443 http://127.0.0.1:3000
+   tailscale funnel status          # muestra la dirección pública
+   ```
+2. Cargá esa dirección en el servicio como se explica [abajo](#dominio-propio-con-túnel-o-proxy), con `GAME_PUBLIC_ORIGIN=https://<equipo>.<tu-red>.ts.net` y `GAME_TRUSTED_PROXY=127.0.0.1`, y reiniciá el servicio.
+3. Entrá al panel en `https://<equipo>.<tu-red>.ts.net/admin`. La invitación ya usa esa dirección.
 
-Después cargá esa dirección en el servicio, igual que con un dominio propio (ver abajo), con `GAME_PUBLIC_ORIGIN=https://<equipo>.<tu-red>.ts.net` y `GAME_TRUSTED_PROXY=127.0.0.1`. Para cerrarlo: `sudo tailscale funnel --https=443 off`. Funnel tiene que estar habilitado para tu red en la consola de Tailscale. Esta combinación no se probó todavía con el juego.
+Funnel queda activo aunque reinicies el equipo. Para cerrarlo: `sudo tailscale funnel --https=443 off`.
 
 ### Dominio propio con túnel o proxy
 
@@ -199,8 +202,6 @@ pnpm release        # genera el paquete en release/ y lo prueba
 ```
 
 `bash scripts/update-game.sh --build` hace lo mismo con límites pensados para equipos chicos. Ver [actualizar y compilar](docs/UPDATING.md).
-
-Los pipelines de GitHub Actions no corren en cada push. Se inician a mano desde Actions, con la etiqueta `ci` en un pull request, o al publicar una etiqueta `v*`, que además arma los paquetes de Windows y Linux en un borrador de release.
 
 La [referencia técnica](docs/TECHNICAL.md) explica la estructura del código, las sesiones y el almacenamiento.
 
