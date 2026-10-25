@@ -96,7 +96,7 @@ HTTP es para redes de confianza o VPN privadas. En Internet se utiliza HTTPS con
 
 ## Compilación y distribución
 
-Los paquetes portables Linux x64 y Windows x64 incluyen Node, servidor, web, licencia y avisos de terceros. No requieren Node instalado para ejecutarse. `scripts/release-build.mjs` genera el archivo, manifest y checksums; `scripts/release-smoke.mjs` comprueba contenido, arranque, persistencia y backup con datos descartables. Los workflows de GitHub Actions corren solo de forma manual, con la etiqueta `ci` en un pull request o con una etiqueta `v*`, y sus artifacts tienen vencimiento; un build local no equivale a una release publicada.
+Los paquetes portables Linux x64 y Windows x64 incluyen Node, servidor, web, licencia y avisos de terceros. No requieren Node instalado para ejecutarse. `scripts/release-build.mjs` genera el archivo, manifest y checksums; `scripts/release-smoke.mjs` comprueba contenido, arranque, persistencia y backup con datos descartables.
 
 Uso del servidor: [SELF_HOSTING.md](SELF_HOSTING.md). Compilar/actualizar: [UPDATING.md](UPDATING.md). Servicio Linux: [INSTALLING.md](INSTALLING.md). Licencia y procedencia: [LICENSING_IP.md](LICENSING_IP.md).
 
