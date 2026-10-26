@@ -86,7 +86,10 @@ export function TurnSummary({
                 {`Partida: ${Math.max(
                   0,
                   Math.ceil(
-                    (competitiveDurationMs(snapshot.configuredPlayerCount) -
+                    (competitiveDurationMs(
+                      snapshot.configuredPlayerCount,
+                      snapshot.competitiveDurationMinutes,
+                    ) -
                       snapshot.competitiveClock.elapsedMs) /
                       60000,
                   ),

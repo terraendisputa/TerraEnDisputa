@@ -16,7 +16,6 @@ import {
   TERRITORY_IDS,
   TERRITORIES,
   PLAYER_COLORS,
-  blockedByZone,
   isActiveInternationalZone,
 } from '../packages/game-engine/dist/index.js';
 import {
@@ -105,7 +104,7 @@ const border = {
   kind: 'border_non_aggression',
   territoryIds: ['alaska', 'yukon'],
 };
-function offer(s, a, b, terms = general) {
+function offer(s, a, b, terms = border) {
   const proposalId = randomUUID();
   return {
     s: run(s, {
@@ -118,7 +117,7 @@ function offer(s, a, b, terms = general) {
     proposalId,
   };
 }
-function accepted(s, a, b, terms = general) {
+function accepted(s, a, b, terms = border) {
   const o = offer(s, a, b, terms),
     pactId = randomUUID();
   return {
@@ -265,116 +264,102 @@ void test('proposal to recipient who already played survives until their next co
   assert.equal(s.pacts.proposals.length, 0);
   void b;
 });
-void test('all three ruptures release B, preserve only original scope, wait for two B incorporations', () => {
-  for (const terms of [
-    general,
-    border,
-    {
-      kind: 'international_zone',
-      territoryId: 'canada',
-      firstExpectedConquerorId: 'placeholder',
-    },
-  ]) {
-    let { s, a, b } = fixture();
-    const value =
-      terms.kind === 'international_zone'
-        ? { ...terms, firstExpectedConquerorId: b }
-        : terms;
-    if (value.kind === 'international_zone')
-      s = {
-        ...s,
-        players: s.players.map((p) =>
-          p.id === a ? { ...p, completedExchangeCount: 3 } : p,
-        ),
-      };
-    const pact = accepted(s, a, b, value);
-    s = pact.s;
-    assert.equal(
-      deriveLegalActions(s, a).pactIdsToWithdraw.includes(pact.pactId),
-      true,
-    );
-    s = command(s, 'withdraw_pact', { pactId: pact.pactId });
-    assert.equal(s.pacts.active.length, 0);
-    assert.equal(s.pacts.competitiveWithdrawals[0].incorporationsRemaining, 2);
-    assert.equal(pactBlocks(s, b, a, 'yukon', 'alaska'), false);
-    assert.equal(
-      pactBlocks(s, a, b, 'alaska', 'yukon'),
-      value.kind !== 'international_zone',
-    );
-    assert.equal(
-      pactBlocks(s, a, b, 'oregon', 'canada'),
-      value.kind !== 'border_non_aggression',
-    );
-    if (value.kind === 'international_zone') {
-      assert.equal(blockedByZone(s, b), false);
-      assert.equal(isActiveInternationalZone(s, 'canada'), false);
-    }
-    let count = 0,
-      guard = 0;
-    while (count < 2 && guard++ < 60) {
-      const incorporating =
-        s.turn.round.kind === 'normal' && s.turn.round.pass === 'incorporation';
-      const isB = s.turn.playerId === b;
-      s = incorporating ? incorporate(s) : endHostility(s);
-      if (incorporating && isB) count++;
-      assert.equal(s.pacts.competitiveWithdrawals.length, count === 2 ? 0 : 1);
-      if (count < 2)
-        assert.equal(
-          s.pacts.competitiveWithdrawals[0].incorporationsRemaining,
-          2 - count,
-        );
-      assertClassicInvariants(s);
-    }
-    assert.equal(count, 2);
-  }
-});
-void test('distinct compatible pacts coexist, duplicates and contradictory zones rejected', () => {
+void test('rupture releases B, preserves only original scope, waits for two B incorporations', () => {
   let { s, a, b } = fixture();
-  s = accepted(s, a, b, border).s;
-  s = accepted(s, a, b, general).s;
-  assert.equal(s.pacts.active.length, 2);
+  const pact = accepted(s, a, b, border);
+  s = pact.s;
   assert.equal(
-    applyCommand(s, {
-      type: 'propose_pact',
-      playerId: a,
-      recipientId: b,
-      proposalId: randomUUID(),
-      terms: border,
-    }).ok,
-    false,
+    deriveLegalActions(s, a).pactIdsToWithdraw.includes(pact.pactId),
+    true,
   );
+  s = command(s, 'withdraw_pact', { pactId: pact.pactId });
+  assert.equal(s.pacts.active.length, 0);
+  assert.equal(s.pacts.competitiveWithdrawals[0].incorporationsRemaining, 2);
+  assert.equal(pactBlocks(s, b, a, 'yukon', 'alaska'), false);
+  assert.equal(pactBlocks(s, a, b, 'alaska', 'yukon'), true);
+  assert.equal(pactBlocks(s, a, b, 'oregon', 'yukon'), false);
+  // The color stays taken for A until the wait ends.
+  const again = {
+    type: 'propose_pact',
+    playerId: a,
+    recipientId: b,
+    proposalId: randomUUID(),
+    terms: { kind: 'border_non_aggression', territoryIds: ['oregon', 'yukon'] },
+  };
+  assert.equal(applyCommand(s, again).error.code, 'PACT_LIMIT');
+  let count = 0,
+    guard = 0;
+  while (count < 2 && guard++ < 60) {
+    const incorporating =
+      s.turn.round.kind === 'normal' && s.turn.round.pass === 'incorporation';
+    const isB = s.turn.playerId === b;
+    s = incorporating ? incorporate(s) : endHostility(s);
+    if (incorporating && isB) count++;
+    assert.equal(s.pacts.competitiveWithdrawals.length, count === 2 ? 0 : 1);
+    if (count < 2)
+      assert.equal(
+        s.pacts.competitiveWithdrawals[0].incorporationsRemaining,
+        2 - count,
+      );
+    assertClassicInvariants(s);
+  }
+  assert.equal(count, 2);
+});
+void test('one border pact per color; general pacts and zones are not available', () => {
+  let { s, a, b } = fixture();
   s = {
     ...s,
     players: s.players.map((p) =>
       p.id === a ? { ...p, completedExchangeCount: 3 } : p,
     ),
   };
-  const zone = {
-    kind: 'international_zone',
-    territoryId: 'canada',
-    firstExpectedConquerorId: b,
-  };
-  assert.equal(
-    applyCommand(s, {
+  const propose = (state, terms, recipientId = b) =>
+    applyCommand(state, {
       type: 'propose_pact',
       playerId: a,
-      recipientId: b,
+      recipientId,
       proposalId: randomUUID(),
-      terms: zone,
-    }).ok,
-    false,
-  );
-  const one = fixture();
-  const o = offer(one.s, one.a, one.b);
+      terms,
+    });
+  assert.equal(propose(s, general).error.code, 'INVALID_PACT');
+  for (const phase of ['regroup', 'end_of_turn_cards', 'ordinary_exchange'])
+    assert.equal(
+      propose({ ...s, turn: { ...s.turn, phase } }, border).ok,
+      false,
+    );
   assert.equal(
-    applyCommand(o.s, {
-      type: 'propose_pact',
-      playerId: one.a,
-      recipientId: one.b,
-      proposalId: randomUUID(),
-      terms: general,
-    }).ok,
-    false,
+    propose(s, {
+      kind: 'international_zone',
+      territoryId: 'canada',
+      firstExpectedConquerorId: b,
+    }).error.code,
+    'INVALID_PACT',
+  );
+  const other = {
+    kind: 'border_non_aggression',
+    territoryIds: ['oregon', 'yukon'],
+  };
+  // One pending proposal per pair, in either direction.
+  const o = offer(s, a, b, border);
+  assert.equal(propose(o.s, other).error.code, 'PACT_LIMIT');
+  assert.deepEqual(
+    deriveLegalActions(o.s, a).pactProposalChoices.filter(
+      (c) => c.recipientId === b,
+    ),
+    [],
+  );
+  s = run(o.s, {
+    type: 'accept_pact',
+    playerId: b,
+    proposalId: o.proposalId,
+    pactId: randomUUID(),
+  });
+  assert.equal(propose(s, other).error.code, 'PACT_LIMIT');
+  assert.equal(propose(s, border).error.code, 'PACT_LIMIT');
+  assert.ok(
+    deriveLegalActions(s, a).pactProposalChoices.every(
+      (c) => c.recipientId !== b && c.terms.kind === 'border_non_aggression',
+    ),
   );
 });
 void test('acceptance revalidates ownership and supports pending transfer without resolving it', () => {
@@ -547,7 +532,16 @@ void test('elimination removes agreements, offers and waits; surviving 5-player 
   const pact = accepted(s, a, b, border);
   s = pact.s;
   s = command(s, 'withdraw_pact', { pactId: pact.pactId });
-  s = offer(s, a, b, general).s;
+  // Rules forbid a second offer to the same color; inject a stale one.
+  s = {
+    ...s,
+    pacts: {
+      ...s.pacts,
+      proposals: [
+        { id: randomUUID(), proposerId: a, recipientId: b, terms: border },
+      ],
+    },
+  };
   s = {
     ...s,
     territories: Object.fromEntries(
@@ -578,7 +572,20 @@ void test('elimination removes agreements, offers and waits; surviving 5-player 
     if (s.pendingAction)
       s = command(s, 'complete_conquest_transfer', { armies: 1 });
     assert.equal(deriveLegalActions(s, a).pactRecipientIds.includes(c), true);
-    assert.equal(offer(s, a, c).s.pacts.proposals.length, 1);
+    const [from, to] = TERRITORY_IDS.flatMap((id) =>
+      s.territories[id].ownerId === a
+        ? TERRITORIES[id].adjacentTerritoryIds
+            .filter((t) => s.territories[t].ownerId === c)
+            .map((t) => [id, t])
+        : [],
+    )[0];
+    assert.equal(
+      offer(s, a, c, {
+        kind: 'border_non_aggression',
+        territoryIds: [from, to],
+      }).s.pacts.proposals.length,
+      1,
+    );
   }
 });
 const CLASSIC_DEFINITION = {
@@ -660,59 +667,26 @@ void test('concurrent acceptance/end-turn is atomic and duplicate acceptance is 
     }
   }
 });
-void test('attack commands enforce scope and other agreements remain effective after rupture', () => {
-  for (const terms of [general, border]) {
-    let { s, a, b } = fixture();
-    const pact = accepted(s, a, b, terms);
-    s = command(pact.s, 'withdraw_pact', { pactId: pact.pactId });
-    const denied = applyCommand(
-      s,
-      { type: 'attack', playerId: a, from: 'alaska', to: 'yukon' },
-      { dice: { rollDie: () => 6 } },
-    );
-    assert.equal(denied.error.code, 'PACT_PROHIBITS_ATTACK');
-    const outside = applyCommand(
-      s,
-      { type: 'attack', playerId: a, from: 'oregon', to: 'yukon' },
-      { dice: { rollDie: () => 6 } },
-    );
-    assert.equal(outside.ok, terms.kind === 'border_non_aggression');
-  }
+void test('attack commands enforce scope after rupture', () => {
   let { s, a, b } = fixture();
-  s = {
-    ...s,
-    players: s.players.map((p) =>
-      p.id === a ? { ...p, completedExchangeCount: 3 } : p,
-    ),
-  };
-  const zone = accepted(s, a, b, {
-    kind: 'international_zone',
-    territoryId: 'canada',
-    firstExpectedConquerorId: b,
-  });
-  s = command(zone.s, 'withdraw_pact', { pactId: zone.pactId });
-  s = {
-    ...s,
-    territories: {
-      ...s.territories,
-      canada: { ...s.territories.canada, ownerId: b },
-    },
-  };
+  const pact = accepted(s, a, b, border);
+  s = command(pact.s, 'withdraw_pact', { pactId: pact.pactId });
   const denied = applyCommand(
     s,
-    { type: 'attack', playerId: a, from: 'oregon', to: 'canada' },
+    { type: 'attack', playerId: a, from: 'alaska', to: 'yukon' },
     { dice: { rollDie: () => 6 } },
   );
   assert.equal(denied.error.code, 'PACT_PROHIBITS_ATTACK');
-  const fresh = fixture();
-  const first = accepted(fresh.s, fresh.a, fresh.b, border);
-  const both = accepted(first.s, fresh.a, fresh.b, general);
-  s = command(both.s, 'withdraw_pact', { pactId: first.pactId });
-  assert.equal(pactBlocks(s, fresh.b, fresh.a, 'yukon', 'alaska'), true);
+  const outside = applyCommand(
+    s,
+    { type: 'attack', playerId: a, from: 'oregon', to: 'yukon' },
+    { dice: { rollDie: () => 6 } },
+  );
+  assert.equal(outside.ok, true);
 });
 
-void test('zones can be proposed and accepted without exchanges from the first hostility', () => {
-  for (const mode of ['classic', 'competitive']) {
+void test('Classic zones can be proposed and accepted without exchanges from the first hostility', () => {
+  for (const mode of ['classic']) {
     const { s, a, b } = fixture(mode);
     assert.equal(s.turn.round.kind, 'initial_hostility');
     assert.equal(s.players.find((p) => p.id === a).completedExchangeCount, 0);
@@ -727,23 +701,6 @@ void test('zones can be proposed and accepted without exchanges from the first h
       deriveLegalActions(s, a).actions.includes('propose_pact'),
       true,
     );
-    for (const phase of mode === 'competitive'
-      ? ['regroup', 'end_of_turn_cards', 'ordinary_exchange']
-      : []) {
-      assert.equal(
-        applyCommand(
-          { ...s, turn: { ...s.turn, phase } },
-          {
-            type: 'propose_pact',
-            playerId: a,
-            recipientId: b,
-            proposalId: randomUUID(),
-            terms,
-          },
-        ).ok,
-        false,
-      );
-    }
   }
 });
 void test('card conquest threshold remains one before third exchange and two afterwards', () => {

@@ -22,23 +22,17 @@ import { applySetupCommand, skipDisqualifiedSetupActivation } from './setup.js';
 
 export const TURN_MS = 120_000;
 export const FINAL_TURN_MS = 180_000;
-export const TECHNICAL_WAIT_MS = 480_000;
 /**
- * The disconnection wait is one allowance per player for the whole game, so
- * dropping the connection every turn cannot stop the clock again and again.
- * Ending a disconnection pause keeps what is left of it.
+ * Superliga waits up to seven minutes for a disconnected player on each
+ * activation: five minutes of grace with the game clock stopped, then the two
+ * minutes of the turn itself. The grace is kept across reconnections within
+ * the same activation and renews with the next one.
  */
-function bankTechnicalWait(
-  clock: CompetitiveClockState,
-  remaining = clock.technicalRemainingMs,
-): CompetitiveClockState['technicalRemainingByPlayer'] {
-  const pid = clock.disconnectedPlayerId;
-  if (clock.pauseReason !== 'disconnection' || !pid || remaining === undefined)
-    return clock.technicalRemainingByPlayer;
-  return { ...clock.technicalRemainingByPlayer, [pid]: remaining };
-}
-export const competitiveDurationMs = (count: number): number =>
-  (count === 4 ? 60 : 80) * 60_000;
+export const TECHNICAL_WAIT_MS = 300_000;
+export const competitiveDurationMs = (
+  count: number,
+  minutes?: 60 | 80,
+): number => (count === 4 ? 60 : (minutes ?? 80)) * 60_000;
 export function competitiveActor(s: GameState): PlayerId | undefined {
   return (
     s.pendingInheritance?.playerId ??
@@ -91,12 +85,7 @@ export function startCompetitiveClock(
       }),
       updatedAtMs: now,
       ...(restart
-        ? {
-            pauseReason: 'restart',
-            technicalRemainingByPlayer: existing
-              ? bankTechnicalWait(existing)
-              : undefined,
-          }
+        ? { pauseReason: 'restart', disconnectedPlayerId: undefined }
         : {}),
     },
   };
@@ -300,18 +289,27 @@ function expire(s: GameState, random: ShuffleSource): GameState {
   }
   return s.status === 'ACTIVE' ? finishCompetitiveActivation(s) : s;
 }
-function disqualify(
+/**
+ * Where Superliga brings in a bot, the absent player's turns pass on their own
+ * until they reconnect. Their pacts end, as when a bot takes the seat.
+ */
+function markAbsent(
   s: GameState,
   pid: PlayerId,
+  absent: boolean,
   random: ShuffleSource,
 ): GameState {
-  s = resolveInheritance(s, random);
+  if (absent) s = resolveInheritance(s, random);
   const next = {
     ...s,
-    players: s.players.map((p) =>
-      p.id === pid ? { ...p, disqualified: true } : p,
-    ),
+    players: s.players.map((p) => {
+      if (p.id !== pid) return p;
+      const { absent: _absent, ...rest } = p;
+      void _absent;
+      return absent ? { ...rest, absent: true } : rest;
+    }),
   };
+  if (!absent) return next;
   if (!('pacts' in next)) return next;
   return {
     ...next,
@@ -321,6 +319,13 @@ function disqualify(
       proposals: next.pacts.proposals.filter(
         (p) => p.proposerId !== pid && p.recipientId !== pid,
       ),
+      ...(next.pacts.competitiveRejections
+        ? {
+            competitiveRejections: next.pacts.competitiveRejections.filter(
+              (r) => r.proposerId !== pid && r.recipientId !== pid,
+            ),
+          }
+        : {}),
       ...(next.pacts.competitiveWithdrawals
         ? {
             competitiveWithdrawals: next.pacts.competitiveWithdrawals.filter(
@@ -399,16 +404,15 @@ export function tickCompetitiveClock(
           technicalRemainingMs: remaining,
         },
       };
+    // Once the grace is spent, the turn clock runs out the remaining time.
     clock = {
       ...clock,
       updatedAtMs: now,
       pauseReason: undefined,
       technicalRemainingMs: remaining,
-      technicalRemainingByPlayer: bankTechnicalWait(clock, remaining),
       disconnectedPlayerId: undefined,
     };
     s = { ...s, competitiveClock: clock };
-    if (remaining === 0) s = disqualify(s, pid, random);
   } else {
     const used = Math.min(delta, clock.activationRemainingMs);
     const elapsed = clock.elapsedMs + (s.status === 'ACTIVE' ? used : 0);
@@ -420,7 +424,11 @@ export function tickCompetitiveClock(
     };
     if (
       clock.finalRoundNumber === undefined &&
-      elapsed >= competitiveDurationMs(s.configuredPlayerCount)
+      elapsed >=
+        competitiveDurationMs(
+          s.configuredPlayerCount,
+          s.competitiveDurationMinutes,
+        )
     )
       clock = {
         ...clock,
@@ -430,19 +438,29 @@ export function tickCompetitiveClock(
             : 0) + 2,
       };
     s = { ...s, competitiveClock: clock };
+    const absent = s.players.find((p) => p.id === pid)?.absent;
+    if (absent && connected) s = markAbsent(s, pid, false, random);
     if (!connected) s = resolveInheritance(s, random);
-    if (!connected && s.status !== 'FINISHED')
+    if (absent && !connected) s = expire(s, random);
+    else if (
+      !connected &&
+      s.status !== 'FINISHED' &&
+      (clock.technicalRemainingMs ?? TECHNICAL_WAIT_MS) > 0
+    )
       return {
         ...s,
         competitiveClock: {
           ...clock,
           pauseReason: 'disconnection',
           disconnectedPlayerId: pid,
-          technicalRemainingMs:
-            clock.technicalRemainingByPlayer?.[pid] ?? TECHNICAL_WAIT_MS,
+          technicalRemainingMs: clock.technicalRemainingMs ?? TECHNICAL_WAIT_MS,
         },
       };
-    if (clock.activationRemainingMs === 0) s = expire(s, random);
+    else if (clock.activationRemainingMs === 0) {
+      if (!connected && s.status !== 'FINISHED')
+        s = markAbsent(s, pid, true, random);
+      s = expire(s, random);
+    }
   }
   s = synchronizeCompetitiveClock(original, s, now);
   // Disqualified players remain defenders but receive no activations or reinforcements.
@@ -480,7 +498,6 @@ export function pauseCompetitiveClock(
       pauseReason: paused ? 'admin' : undefined,
       disconnectedPlayerId: undefined,
       technicalRemainingMs: clock.technicalRemainingMs,
-      technicalRemainingByPlayer: bankTechnicalWait(clock),
     },
   };
 }

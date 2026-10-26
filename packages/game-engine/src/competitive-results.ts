@@ -1,4 +1,8 @@
-import { CONTINENTS, TERRITORY_IDS } from './classic-data.js';
+import {
+  CONTINENTS,
+  SECRET_OBJECTIVES,
+  TERRITORY_IDS,
+} from './classic-data.js';
 import type {
   ActiveGameState,
   FinishedGameState,
@@ -67,6 +71,14 @@ export function competitiveResults(
     exclusions.push('no_competitors');
   if (state.pendingInheritance) exclusions.push('pending_inheritance');
   const scoringEligible = exclusions.length === 0;
+  // An elimination that completes the winner's destruction objective earns only the objective bonus.
+  const reason = state.result.victoryReason;
+  const missionTargetId =
+    reason.kind === 'secret_objective' &&
+    SECRET_OBJECTIVES[reason.objectiveId].kind === 'destruction'
+      ? state.players.find((p) => p.id === state.result.winnerId)
+          ?.effectiveDestructionTargetPlayerId
+      : undefined;
   const rows: CompetitiveResultRow[] = state.players.map((p) => {
     const owned = TERRITORY_IDS.filter(
       (id) => state.territories[id].ownerId === p.id,
@@ -99,20 +111,19 @@ export function competitiveResults(
       basePoints: exact(0),
       objectiveBonus: state.result.winnerId === p.id ? 25 : 0,
       eliminationBonus:
-        history.eliminations.filter((e) => e.eliminatingPlayerId === p.id)
-          .length * 10,
+        history.eliminations.filter(
+          (e) =>
+            e.eliminatingPlayerId === p.id &&
+            !(
+              p.id === state.result.winnerId &&
+              e.eliminatedPlayerId === missionTargetId
+            ),
+        ).length * 10,
       eliminationPenalty: p.eliminated ? -5 : 0,
       totalPoints: exact(0),
     };
   });
-  const metricKeys = [
-    'territories',
-    'armies',
-    'exchanges',
-    'cards',
-    'continentTerritories',
-    'continentArmies',
-  ] as const;
+  const metricKeys = ['territories', 'armies', 'exchanges', 'cards'] as const;
   const compare = (a: CompetitiveResultRow, b: CompetitiveResultRow) => {
     if (a.playerId === state.result.winnerId)
       return b.playerId === a.playerId ? 0 : -1;

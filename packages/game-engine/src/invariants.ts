@@ -310,6 +310,14 @@ export function classicInvariantViolations(
     pactIds.add(wait.id);
     validateTerms(wait.terms, playerIds, errors, `withdrawal ${wait.id}`);
   }
+  for (const rejection of state.pacts.competitiveRejections ?? [])
+    if (
+      state.mode !== 'competitive' ||
+      !playerIds.has(rejection.proposerId) ||
+      !playerIds.has(rejection.recipientId) ||
+      rejection.proposerId === rejection.recipientId
+    )
+      errors.push('invalid competitive pact rejection');
 
   for (const pact of state.pacts.active) {
     if (pactIds.has(pact.id)) errors.push(`duplicate pact ${pact.id}`);
@@ -559,6 +567,10 @@ export function classicInvariantViolations(
       ))
   )
     errors.push('invalid competitive clock');
+  if (state.mode !== 'competitive' && state.players.some((p) => p.absent))
+    errors.push('Only Competitive can have absent players');
+  if (state.mode !== 'competitive' && state.competitiveDurationMinutes)
+    errors.push('Only Competitive can choose its duration');
   if (state.mode === 'classic' && state.players.some((p) => p.disqualified))
     errors.push('Classic cannot contain disqualified players');
   return errors;

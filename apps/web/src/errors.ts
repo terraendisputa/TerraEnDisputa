@@ -40,6 +40,8 @@ export const errorMessage = (code: ProtocolErrorCode): string =>
     NOT_ADJACENT: 'Los territorios no son adyacentes.',
     INSUFFICIENT_ARMIES: 'No hay ejércitos suficientes.',
     PACT_PROHIBITS_ATTACK: 'Un pacto vigente impide esa acción.',
+    SUICIDE_ATTACK:
+      'Con un solo país no podés atacar hasta tener más de 4 ejércitos en él.',
     INVALID_DICE: 'El resultado de dados no es válido.',
     INVALID_TRANSFER: 'El traslado no es válido.',
     INVALID_PLACEMENT: 'La colocación de ejércitos no es válida.',
@@ -50,6 +52,9 @@ export const errorMessage = (code: ProtocolErrorCode): string =>
     INVALID_PACT: 'El pacto propuesto no es válido.',
     DUPLICATE_PACT: 'Ese pacto ya existe.',
     PACT_NOT_FOUND: 'El pacto ya no existe.',
+    PACT_LIMIT: 'Ya tenés un pacto con ese jugador.',
+    PACT_COOLDOWN:
+      'Ese jugador rechazó tu pacto. Esperá 5 minutos para volver a proponerle.',
     INTERNATIONAL_ZONE_OBLIGATION:
       'Primero debés resolver la zona internacional.',
   })[code];

@@ -79,6 +79,7 @@ export class GameLifecycleService {
   configure(
     gameId: string,
     configuredPlayerCount: 2 | 3 | 4 | 5 | 6,
+    competitiveDurationMinutes?: 60 | 80,
   ): Promise<number> {
     return this.coordinator.run(gameId, async () => {
       const current = await this.requireGame(gameId);
@@ -86,14 +87,22 @@ export class GameLifecycleService {
         throw new LifecycleOperationError('INVALID_LIFECYCLE_STATE');
       if (
         !validPlayerCount(current.state.mode, configuredPlayerCount) ||
-        configuredPlayerCount < current.state.players.length
+        configuredPlayerCount < current.state.players.length ||
+        (competitiveDurationMinutes !== undefined &&
+          current.state.mode !== 'competitive')
       )
         throw new LifecycleOperationError('INVALID_GAME_COMMAND');
       const revision = current.revision + 1;
       await this.store.commitGame(
         {
           ...current,
-          state: { ...current.state, configuredPlayerCount },
+          state: {
+            ...current.state,
+            configuredPlayerCount,
+            ...(competitiveDurationMinutes
+              ? { competitiveDurationMinutes }
+              : {}),
+          },
           revision,
         },
         {
@@ -118,12 +127,21 @@ export class GameLifecycleService {
       const revision = current.revision + 1;
       const state = (() => {
         try {
-          return resolveGameRuntime(current.state.definition).createSetup(
+          const setup = resolveGameRuntime(
+            current.state.definition,
+          ).createSetup(
             current.state.id,
             current.state.players,
             this.randomness,
             current.state.mode,
           );
+          return current.state.competitiveDurationMinutes
+            ? {
+                ...setup,
+                competitiveDurationMinutes:
+                  current.state.competitiveDurationMinutes,
+              }
+            : setup;
         } catch (error) {
           if (error instanceof SetupDealExhaustedError)
             throw new LifecycleOperationError('SETUP_DEAL_EXHAUSTED');

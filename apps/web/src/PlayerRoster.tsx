@@ -127,11 +127,13 @@ export function PlayerRoster({
               ? 'Descalificado'
               : player.eliminated
                 ? 'Eliminado'
-                : player.controller === 'controllerless_reassignment'
-                  ? 'Sin jugador'
-                  : player.id === actor
-                    ? 'Jugando ahora'
-                    : 'En partida'}
+                : player.absent
+                  ? 'Ausente · turnos automáticos'
+                  : player.controller === 'controllerless_reassignment'
+                    ? 'Sin jugador'
+                    : player.id === actor
+                      ? 'Jugando ahora'
+                      : 'En partida'}
           </small>
         </section>
       )}

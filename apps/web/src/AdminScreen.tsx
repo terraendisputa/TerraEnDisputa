@@ -478,33 +478,71 @@ export function AdminScreen() {
               gameId={selected.gameId}
               lobby={selected.status === 'LOBBY'}
               seats={
-                <label className="inline-control">
-                  Jugadores requeridos
-                  <select
-                    disabled={busy || selected.status !== 'LOBBY'}
-                    value={selected.configuredPlayerCount}
-                    onChange={(event) =>
-                      void run(() =>
-                        api.configureGame(
-                          selected.gameId,
-                          Number(event.target.value),
-                        ),
-                      )
-                    }
-                  >
-                    {(selected.mode === 'competitive'
-                      ? [4, 5, 6]
-                      : [2, 3, 4, 5, 6]
-                    ).map((count) => (
-                      <option
-                        key={count}
-                        disabled={count < selected.players.length}
+                <>
+                  <label className="inline-control">
+                    Jugadores requeridos
+                    <select
+                      disabled={busy || selected.status !== 'LOBBY'}
+                      value={selected.configuredPlayerCount}
+                      onChange={(event) =>
+                        void run(() =>
+                          api.configureGame(
+                            selected.gameId,
+                            Number(event.target.value),
+                            selected.competitiveDurationMinutes,
+                          ),
+                        )
+                      }
+                    >
+                      {(selected.mode === 'competitive'
+                        ? [4, 5, 6]
+                        : [2, 3, 4, 5, 6]
+                      ).map((count) => (
+                        <option
+                          key={count}
+                          disabled={count < selected.players.length}
+                        >
+                          {count}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {selected.mode === 'competitive' && (
+                    <label className="inline-control">
+                      Duración
+                      <select
+                        disabled={
+                          busy ||
+                          selected.status !== 'LOBBY' ||
+                          selected.configuredPlayerCount === 4
+                        }
+                        value={
+                          selected.configuredPlayerCount === 4
+                            ? 60
+                            : (selected.competitiveDurationMinutes ?? 80)
+                        }
+                        onChange={(event) =>
+                          void run(() =>
+                            api.configureGame(
+                              selected.gameId,
+                              selected.configuredPlayerCount,
+                              Number(event.target.value) as 60 | 80,
+                            ),
+                          )
+                        }
                       >
-                        {count}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                        {selected.configuredPlayerCount !== 4 && (
+                          <option value={80}>1:20 h + 2 rondas</option>
+                        )}
+                        <option value={60}>
+                          {selected.configuredPlayerCount === 4
+                            ? '1:00 h + 2 rondas'
+                            : 'Express: 1:00 h + 2 rondas'}
+                        </option>
+                      </select>
+                    </label>
+                  )}
+                </>
               }
               start={
                 <>

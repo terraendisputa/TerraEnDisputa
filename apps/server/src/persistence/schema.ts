@@ -41,6 +41,7 @@ const player = z.strictObject({
   controller: z.enum(['controlled', 'controllerless_reassignment']),
   eliminated: z.boolean(),
   disqualified: z.boolean().optional(),
+  absent: z.literal(true).optional(),
   cards: z.array(
     z.strictObject({
       cardId: z.enum(TERRITORY_IDS),
@@ -126,6 +127,15 @@ const pacts = z.strictObject({
         withdrawingPlayerId: id,
         recipientId: id,
         incorporationsRemaining: z.union([z.literal(1), z.literal(2)]),
+      }),
+    )
+    .optional(),
+  competitiveRejections: z
+    .array(
+      z.strictObject({
+        proposerId: id,
+        recipientId: id,
+        elapsedMs: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
       }),
     )
     .optional(),
@@ -223,6 +233,9 @@ const base = {
     z.literal(5),
     z.literal(6),
   ]),
+  competitiveDurationMinutes: z
+    .union([z.literal(60), z.literal(80)])
+    .optional(),
   players: z.array(player),
 };
 const competitiveHistory = z.strictObject({

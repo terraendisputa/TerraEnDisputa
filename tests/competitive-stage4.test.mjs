@@ -583,49 +583,19 @@ void test('HTTP detailed results require administrator session and remain availa
     await rm(directory, { recursive: true, force: true });
   }
 });
-void test('last two tiebreakers count only fully occupied continents, then armies within them', () => {
+void test('after countries, armies, exchanges and cards, tied players share their points', () => {
   let s = fixture(),
     [a, b, c, d] = s.players;
-  let aIds = new Set([
-    ...CONTINENTS.north_america.territoryIds,
-    ...CONTINENTS.africa.territoryIds.slice(0, 5),
-  ]);
-  let bIds = new Set(CONTINENTS.asia.territoryIds);
-  let remaining = 0;
-  s = {
-    ...s,
-    territories: Object.fromEntries(
-      TERRITORY_IDS.map((id) => [
-        id,
-        {
-          ownerId: aIds.has(id)
-            ? a.id
-            : bIds.has(id)
-              ? b.id
-              : remaining++ < 10
-                ? c.id
-                : d.id,
-          armies: 1,
-          fixedArmiesThisTurn: 0,
-        },
-      ]),
-    ),
-  };
-  let result = competitiveResults(finish(s));
-  assert.equal(rowFor(result, b).position, 1);
-  assert.equal(rowFor(result, a).position, 2);
-  assert.equal(rowFor(result, b).metrics.continentTerritories, 15);
-  assert.equal(rowFor(result, a).metrics.continentTerritories, 10);
-  // Equal total countries/armies and equal fully controlled continent sizes.
-  aIds = new Set([
+  // Equal countries, armies, exchanges and cards; only continents differ.
+  const aIds = new Set([
     ...CONTINENTS.africa.territoryIds,
     ...CONTINENTS.north_america.territoryIds.slice(0, 4),
   ]);
-  bIds = new Set([
+  const bIds = new Set([
     ...CONTINENTS.south_america.territoryIds,
     ...CONTINENTS.europe.territoryIds.slice(0, 4),
   ]);
-  remaining = 0;
+  let remaining = 0;
   s = {
     ...s,
     territories: Object.fromEntries(
@@ -645,17 +615,57 @@ void test('last two tiebreakers count only fully occupied continents, then armie
       ]),
     ),
   };
-  result = competitiveResults(finish(s));
-  assert.equal(
-    rowFor(result, a).metrics.armies,
-    rowFor(result, b).metrics.armies,
-  );
-  assert.equal(rowFor(result, a).metrics.continentTerritories, 6);
-  assert.equal(rowFor(result, b).metrics.continentTerritories, 6);
+  const result = competitiveResults(finish(s));
   assert.equal(rowFor(result, a).metrics.continentArmies, 7);
   assert.equal(rowFor(result, b).metrics.continentArmies, 6);
-  assert.equal(rowFor(result, a).position, 3);
-  assert.equal(rowFor(result, b).position, 4);
+  for (const player of [a, b]) {
+    assert.equal(rowFor(result, player).position, 3);
+    assert.equal(rowFor(result, player).tiedPlayers, 2);
+    assert.deepEqual(rowFor(result, player).basePoints, fraction(27, 2));
+  }
+});
+void test('the elimination that completes a destruction objective earns no +10', () => {
+  let s = board(fixture(5), [30, 10, 10, 0, 0]);
+  const [a, b, , d, e] = s.players;
+  s = {
+    ...s,
+    players: s.players.map((p) =>
+      p.id === a.id
+        ? {
+            ...p,
+            secretObjectiveId: `destroy_${d.color}`,
+            effectiveDestructionTargetPlayerId: d.id,
+          }
+        : p.id === d.id || p.id === e.id
+          ? { ...p, eliminated: true }
+          : p,
+    ),
+    competitiveHistory: {
+      complete: true,
+      eliminations: [
+        { eliminatedPlayerId: e.id, eliminatingPlayerId: a.id, turnNumber: 1 },
+        { eliminatedPlayerId: d.id, eliminatingPlayerId: a.id, turnNumber: 2 },
+      ],
+    },
+  };
+  const finished = {
+    ...finish(s, 6, a.id),
+    result: {
+      winnerId: a.id,
+      scoringEligible: true,
+      victoryReason: {
+        kind: 'secret_objective',
+        objectiveId: `destroy_${d.color}`,
+      },
+    },
+  };
+  const result = competitiveResults(finished);
+  assert.equal(rowFor(result, a).objectiveBonus, 25);
+  assert.equal(rowFor(result, a).eliminationBonus, 10);
+  assert.equal(rowFor(result, b).eliminationBonus, 0);
+  // Winning by the common objective keeps both elimination bonuses.
+  const common = competitiveResults(finish(s, 6, a.id));
+  assert.equal(rowFor(common, a).eliminationBonus, 20);
 });
 void test('three-way tie shares occupied positions without rounding or awarding a spurious objective', () => {
   let s = fixture();

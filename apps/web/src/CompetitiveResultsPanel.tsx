@@ -5,7 +5,6 @@ import {
   resultExport,
 } from './competitive-results.js';
 import { playerColorLabel } from './colors.js';
-import { CONTINENTS, type ContinentId } from '@game/game-engine';
 export function CompetitiveResultsPanel({
   game,
 }: {
@@ -66,9 +65,6 @@ export function CompetitiveResultsPanel({
                 'Tropas',
                 'Canjes',
                 'Cartas',
-                'Continentes completos',
-                'Países en continentes',
-                'Tropas en continentes',
                 'Base',
                 'Objetivo',
                 'Eliminaciones',
@@ -107,16 +103,6 @@ export function CompetitiveResultsPanel({
                   <td>{row.metrics.armies}</td>
                   <td>{row.metrics.exchanges}</td>
                   <td>{row.metrics.cards}</td>
-                  <td>
-                    {row.metrics.fullContinents
-                      .map(
-                        (id) =>
-                          CONTINENTS[id as ContinentId]?.displayName ?? id,
-                      )
-                      .join(', ') || '—'}
-                  </td>
-                  <td>{row.metrics.continentTerritories}</td>
-                  <td>{row.metrics.continentArmies}</td>
                   <td>{exactPointsText(row.basePoints)}</td>
                   <td>{row.objectiveBonus}</td>
                   <td>{row.eliminationBonus}</td>

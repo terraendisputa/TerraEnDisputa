@@ -310,7 +310,10 @@ export class GameService {
         !paused &&
         accounted.players.some(
           (p) =>
-            !p.eliminated && !p.disqualified && !this.connected(gameId, p.id),
+            !p.eliminated &&
+            !p.disqualified &&
+            !p.absent &&
+            !this.connected(gameId, p.id),
         )
       )
         throw new Error('PLAYERS_UNAVAILABLE');
@@ -412,7 +415,9 @@ export class GameService {
           timed.competitiveClock?.finalRoundNumber ||
         initial.status !== timed.status ||
         initial.players.some(
-          (p, i) => p.disqualified !== timed.players[i]?.disqualified,
+          (p, i) =>
+            p.disqualified !== timed.players[i]?.disqualified ||
+            p.absent !== timed.players[i]?.absent,
         ) ||
         !!initial.pendingInheritance !== !!timed.pendingInheritance;
       if (temporalBoundary) {

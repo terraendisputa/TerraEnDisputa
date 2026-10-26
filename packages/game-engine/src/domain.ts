@@ -27,6 +27,8 @@ export interface PlayerState {
   readonly controller: 'controlled' | 'controllerless_reassignment';
   readonly eliminated: boolean;
   readonly disqualified?: boolean;
+  /** Competitive: disconnected past the wait; turns pass on their own. */
+  readonly absent?: boolean;
   readonly cards: readonly TerritoryCardPossession[];
   readonly completedExchangeCount: number;
   readonly secretObjectiveId?: SecretObjectiveId;
@@ -216,8 +218,15 @@ export interface CompetitivePactWithdrawal {
   readonly recipientId: PlayerId;
   readonly incorporationsRemaining: 1 | 2;
 }
+export interface CompetitivePactRejection {
+  readonly proposerId: PlayerId;
+  readonly recipientId: PlayerId;
+  /** Game clock time of the rejection. */
+  readonly elapsedMs: number;
+}
 export interface PactState {
   readonly competitiveWithdrawals?: readonly CompetitivePactWithdrawal[];
+  readonly competitiveRejections?: readonly CompetitivePactRejection[];
   readonly proposals: readonly PactProposal[];
   readonly active: readonly ActivePact[];
 }
@@ -280,6 +289,8 @@ interface GameStateBase {
   readonly mode: GameMode;
   readonly id: GameId;
   readonly configuredPlayerCount: 2 | 3 | 4 | 5 | 6;
+  /** Competitive with five or six players may be the 60 minute Express game. */
+  readonly competitiveDurationMinutes?: 60 | 80;
   readonly players: readonly PlayerState[];
 }
 export interface LobbyGameState extends GameStateBase {

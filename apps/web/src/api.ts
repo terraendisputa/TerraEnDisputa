@@ -70,12 +70,19 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ configuredPlayerCount, mode }),
     }),
-  configureGame: (gameId: string, configuredPlayerCount: number) =>
+  configureGame: (
+    gameId: string,
+    configuredPlayerCount: number,
+    competitiveDurationMinutes?: 60 | 80,
+  ) =>
     request<{ gameId: string; revision: number }>(
       `/api/admin/games/${gameId}`,
       {
         method: 'PATCH',
-        body: JSON.stringify({ configuredPlayerCount }),
+        body: JSON.stringify({
+          configuredPlayerCount,
+          competitiveDurationMinutes,
+        }),
       },
     ),
   pauseGame: (gameId: string, paused: boolean) =>

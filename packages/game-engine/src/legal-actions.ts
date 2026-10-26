@@ -11,7 +11,9 @@ import {
   isLegalExchange,
   isPactProposalLegal,
   isActiveInternationalZone,
+  competitiveProposalError,
   pactBlocks,
+  suicideBlocks,
 } from './rules.js';
 
 export type LegalActionType =
@@ -214,6 +216,7 @@ export function deriveLegalActions(
             (player) =>
               !player.eliminated &&
               !player.disqualified &&
+              !player.absent &&
               player.id !== playerId,
           )
           .map(({ id }) => id)
@@ -241,6 +244,7 @@ export function deriveLegalActions(
             },
           });
     }
+    if (competitiveProposalError(state, playerId, recipientId)) return [];
     return candidates.filter(({ terms }) =>
       isPactProposalLegal(state, playerId, recipientId, terms as PactTerms),
     );
@@ -342,7 +346,11 @@ export function deriveLegalActions(
   }
   if (phase === 'attack') {
     const attackChoices = owned.flatMap((from) => {
-      if (state.territories[from].armies < 2) return [];
+      if (
+        state.territories[from].armies < 2 ||
+        suicideBlocks(state, playerId, from)
+      )
+        return [];
       const targets = TERRITORIES[from].adjacentTerritoryIds.filter((to) => {
         const defender = state.territories[to].ownerId;
         return (

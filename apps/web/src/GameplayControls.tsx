@@ -640,7 +640,11 @@ export function GameplayControls({
       {turn.phase === 'attack' && (
         <div className="action-card action-layout primary-action-card attack-card">
           {snapshot.legalActions.attackChoices.length === 0 && (
-            <p className="muted-copy">No hay ataques disponibles.</p>
+            <p className="muted-copy">
+              {loneCountryArmies(snapshot) !== undefined
+                ? 'Con un solo país no podés atacar hasta tener más de 4 ejércitos en él.'
+                : 'No hay ataques disponibles.'}
+            </p>
           )}
           <ActionRoute
             source={selectedSource}
@@ -1294,6 +1298,23 @@ export function PactsPanel({
             )}
           </div>
         ))}
+        {(snapshot.pacts?.competitiveRejections ?? [])
+          .filter((r) => r.proposerId === snapshot.selfPlayerId)
+          .map((r) => {
+            const minutes = Math.ceil(
+              (r.elapsedMs +
+                300_000 -
+                (snapshot.competitiveClock?.elapsedMs ?? 0)) /
+                60_000,
+            );
+            return minutes > 0 ? (
+              <p key={r.recipientId} className="muted-copy">
+                {participant(r.recipientId)} rechazó tu pacto. Podés volver a
+                proponerle en {minutes} {minutes === 1 ? 'minuto' : 'minutos'}{' '}
+                de partida.
+              </p>
+            ) : null;
+          })}
         {choices.length > 0 && (
           <div className="pact-proposal-form">
             <label>
@@ -1352,6 +1373,17 @@ export function PactsPanel({
       </details>
     </section>
   );
+}
+
+/** Armies on the viewer's only country when Competitive forbids attacking from it. */
+function loneCountryArmies(snapshot: PlayerGameView): number | undefined {
+  if (snapshot.mode !== 'competitive') return undefined;
+  const owned = Object.values(snapshot.territories ?? {}).filter(
+    (t) => t.ownerId === snapshot.selfPlayerId,
+  );
+  return owned.length === 1 && owned[0]!.armies <= 4
+    ? owned[0]!.armies
+    : undefined;
 }
 
 type PactProposalChoice =

@@ -9,7 +9,7 @@ export const gameDefinitionSchema = z.strictObject({
 });
 export type GameDefinitionView = z.infer<typeof gameDefinitionSchema>;
 
-export const PROTOCOL_VERSION = 13 as const;
+export const PROTOCOL_VERSION = 14 as const;
 export const MAX_WEBSOCKET_MESSAGE_BYTES = 64 * 1024;
 
 const id = z.string().uuid();
@@ -133,6 +133,7 @@ export const protocolErrorCodeSchema = z.enum([
   'NOT_ADJACENT',
   'INSUFFICIENT_ARMIES',
   'PACT_PROHIBITS_ATTACK',
+  'SUICIDE_ATTACK',
   'INVALID_DICE',
   'INVALID_TRANSFER',
   'INVALID_PLACEMENT',
@@ -143,6 +144,8 @@ export const protocolErrorCodeSchema = z.enum([
   'INVALID_PACT',
   'DUPLICATE_PACT',
   'PACT_NOT_FOUND',
+  'PACT_LIMIT',
+  'PACT_COOLDOWN',
   'INTERNATIONAL_ZONE_OBLIGATION',
 ]);
 export type ProtocolErrorCode = z.infer<typeof protocolErrorCodeSchema>;
@@ -155,6 +158,7 @@ export interface PublicPlayerView {
   readonly controller: 'controlled' | 'controllerless_reassignment';
   readonly eliminated: boolean;
   readonly disqualified?: boolean;
+  readonly absent?: boolean;
   readonly cardCount: number;
   readonly completedExchangeCount: number;
 }
@@ -253,6 +257,11 @@ export interface PactStateView {
     readonly withdrawingPlayerId: string;
     readonly recipientId: string;
     readonly incorporationsRemaining: 1 | 2;
+  }[];
+  readonly competitiveRejections?: readonly {
+    readonly proposerId: string;
+    readonly recipientId: string;
+    readonly elapsedMs: number;
   }[];
   readonly proposals: readonly {
     readonly id: string;
@@ -383,6 +392,7 @@ export interface PlayerGameView {
   readonly status: 'LOBBY' | 'SETUP' | 'ACTIVE' | 'FINISHED';
   readonly mode: 'classic' | 'competitive';
   readonly configuredPlayerCount: number;
+  readonly competitiveDurationMinutes?: 60 | 80;
   readonly selfPlayerId: string;
   readonly players: readonly PublicPlayerView[];
   readonly readyPlayerIds?: readonly string[];
@@ -476,6 +486,7 @@ export interface AdminGameView {
   readonly status: PlayerGameView['status'];
   readonly mode: 'classic' | 'competitive';
   readonly configuredPlayerCount: number;
+  readonly competitiveDurationMinutes?: 60 | 80;
   readonly players: readonly PublicPlayerView[];
   readonly readyPlayerIds?: readonly string[];
   readonly setup?: SetupView;
@@ -542,6 +553,7 @@ const publicPlayerViewSchema = z.strictObject({
   controller: z.enum(['controlled', 'controllerless_reassignment']),
   eliminated: z.boolean(),
   disqualified: z.boolean().optional(),
+  absent: z.literal(true).optional(),
   cardCount: z.number().int().nonnegative().max(50),
   completedExchangeCount: z.number().int().nonnegative(),
 });
@@ -643,6 +655,15 @@ const pactStateViewSchema = z.strictObject({
         withdrawingPlayerId: id,
         recipientId: id,
         incorporationsRemaining: z.union([z.literal(1), z.literal(2)]),
+      }),
+    )
+    .optional(),
+  competitiveRejections: z
+    .array(
+      z.strictObject({
+        proposerId: id,
+        recipientId: id,
+        elapsedMs: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
       }),
     )
     .optional(),
@@ -761,6 +782,9 @@ export const playerGameViewSchema = z.strictObject({
   status: z.enum(['LOBBY', 'SETUP', 'ACTIVE', 'FINISHED']),
   mode: z.enum(['classic', 'competitive']),
   configuredPlayerCount: z.number().int().min(2).max(6),
+  competitiveDurationMinutes: z
+    .union([z.literal(60), z.literal(80)])
+    .optional(),
   selfPlayerId: id,
   players: z.array(publicPlayerViewSchema).min(1).max(6),
   readyPlayerIds: z.array(id).max(6).optional(),
@@ -900,6 +924,9 @@ export const gamePlayerParamsSchema = z.strictObject({
 });
 export const updateGameConfigurationBodySchema = z.strictObject({
   configuredPlayerCount: z.number().int().min(2).max(6),
+  competitiveDurationMinutes: z
+    .union([z.literal(60), z.literal(80)])
+    .optional(),
 });
 export const confirmGameActionBodySchema = z.strictObject({
   confirmGameId: id,

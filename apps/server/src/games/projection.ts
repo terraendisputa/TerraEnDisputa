@@ -17,6 +17,7 @@ const publicPlayers = (state: GameState): AdminGameView['players'] =>
     ...(player.disqualified === undefined
       ? {}
       : { disqualified: player.disqualified }),
+    ...(player.absent ? { absent: true as const } : {}),
     cardCount: player.cards.length,
     completedExchangeCount: player.completedExchangeCount,
   }));
@@ -36,6 +37,9 @@ export function projectGameForAdmin(
       ? { competitiveClock: structuredClone(state.competitiveClock) }
       : {}),
     configuredPlayerCount: state.configuredPlayerCount,
+    ...(state.competitiveDurationMinutes
+      ? { competitiveDurationMinutes: state.competitiveDurationMinutes }
+      : {}),
     players: publicPlayers(state),
     ...(state.pendingInheritance
       ? {
@@ -100,6 +104,9 @@ export function projectGameFor(
       ? { competitiveClock: structuredClone(state.competitiveClock) }
       : {}),
     configuredPlayerCount: state.configuredPlayerCount,
+    ...(state.competitiveDurationMinutes
+      ? { competitiveDurationMinutes: state.competitiveDurationMinutes }
+      : {}),
     selfPlayerId: playerId,
     legalActions: runtime.deriveLegalActions(state, playerId),
     players: publicPlayers(state),

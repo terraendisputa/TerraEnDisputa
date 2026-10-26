@@ -39,6 +39,7 @@ export type DomainErrorCode =
   | 'NOT_ADJACENT'
   | 'INSUFFICIENT_ARMIES'
   | 'PACT_PROHIBITS_ATTACK'
+  | 'SUICIDE_ATTACK'
   | 'INVALID_DICE'
   | 'INVALID_TRANSFER'
   | 'INVALID_PLACEMENT'
@@ -49,6 +50,8 @@ export type DomainErrorCode =
   | 'INVALID_PACT'
   | 'DUPLICATE_PACT'
   | 'PACT_NOT_FOUND'
+  | 'PACT_LIMIT'
+  | 'PACT_COOLDOWN'
   | 'INTERNATIONAL_ZONE_OBLIGATION';
 
 export interface DomainError {
@@ -371,6 +374,21 @@ export function pactBlocks(
     })
   );
 }
+/**
+ * Competitive forbids attacking from a player's only territory while it holds
+ * four armies or fewer, so nobody can throw their last armies away.
+ */
+export function suicideBlocks(
+  s: Pick<ActiveGameState, 'mode' | 'territories'>,
+  pid: PlayerId,
+  from: TerritoryId,
+): boolean {
+  return (
+    s.mode === 'competitive' &&
+    s.territories[from].armies <= 4 &&
+    ownedIds(s, pid).length === 1
+  );
+}
 function zoneAttackAvailable(
   s: ActiveGameState,
   pid: PlayerId,
@@ -564,6 +582,43 @@ function pactConflict(
       ),
   );
 }
+export const PACT_REJECTION_WAIT_MS = 300_000;
+/** Game time the proposer still waits after the recipient rejected them. */
+export function pactRejectionWaitMs(
+  s: Pick<ActiveGameState, 'pacts' | 'competitiveClock'>,
+  proposerId: PlayerId,
+  recipientId: PlayerId,
+): number {
+  const rejection = s.pacts.competitiveRejections?.find(
+    (r) => r.proposerId === proposerId && r.recipientId === recipientId,
+  );
+  return rejection
+    ? Math.max(
+        0,
+        rejection.elapsedMs +
+          PACT_REJECTION_WAIT_MS -
+          (s.competitiveClock?.elapsedMs ?? 0),
+      )
+    : 0;
+}
+/** Competitive allows one pact per color, so one proposal per pair at a time. */
+export function competitiveProposalError(
+  s: ActiveGameState,
+  proposerId: PlayerId,
+  recipientId: PlayerId,
+): DomainErrorCode | undefined {
+  if (s.mode !== 'competitive') return undefined;
+  const pair = normalizedParties(proposerId, recipientId);
+  if (
+    s.pacts.proposals.some(
+      (p) => normalizedParties(p.proposerId, p.recipientId) === pair,
+    )
+  )
+    return 'PACT_LIMIT';
+  if (pactRejectionWaitMs(s, proposerId, recipientId) > 0)
+    return 'PACT_COOLDOWN';
+  return undefined;
+}
 function validatePactFormation(
   s: ActiveGameState,
   proposerId: PlayerId,
@@ -580,9 +635,22 @@ function validatePactFormation(
     recipient.eliminated ||
     proposer.disqualified ||
     recipient.disqualified ||
+    proposer.absent ||
+    recipient.absent ||
     proposerId === recipientId
   )
     return 'INVALID_PACT';
+  if (s.mode === 'competitive') {
+    // Superliga: only border pacts, one per color while it lasts or is being withdrawn.
+    if (terms.kind !== 'border_non_aggression') return 'INVALID_PACT';
+    const pair = normalizedParties(proposerId, recipientId);
+    if (
+      [...s.pacts.active, ...(s.pacts.competitiveWithdrawals ?? [])].some(
+        (p) => normalizedParties(...p.parties) === pair,
+      )
+    )
+      return 'PACT_LIMIT';
+  }
   const candidate = { proposerId, recipientId, terms };
   if (s.pacts.active.some((p) => samePact(candidate, p)))
     return 'DUPLICATE_PACT';
@@ -885,6 +953,7 @@ function attack(
   if (!TERRITORIES[c.from].adjacentTerritoryIds.includes(c.to))
     return reject('NOT_ADJACENT');
   if (from.armies < 2) return reject('INSUFFICIENT_ARMIES');
+  if (suicideBlocks(s, c.playerId, c.from)) return reject('SUICIDE_ATTACK');
   if (to.ownerId && pactBlocks(s, c.playerId, to.ownerId, c.from, c.to))
     return reject('PACT_PROHIBITS_ATTACK');
   const combat = resolveCombat(from.armies, to.armies, dice);
@@ -1401,6 +1470,8 @@ function propose(
     c.terms,
   );
   if (formationError) return reject(formationError);
+  const limitError = competitiveProposalError(s, c.playerId, c.recipientId);
+  if (limitError) return reject(limitError);
   if (
     s.pacts.proposals.some(
       (p) =>
@@ -1488,11 +1559,31 @@ function removeProposal(
       : p.proposerId !== c.playerId
   )
     return reject('INVALID_PACT');
+  const rejected = c.type === 'reject_pact' && s.mode === 'competitive';
   return accepted({
     ...s,
     pacts: {
       ...s.pacts,
       proposals: s.pacts.proposals.filter((x) => x.id !== p.id),
+      ...(rejected
+        ? {
+            competitiveRejections: [
+              ...(s.pacts.competitiveRejections ?? []).filter(
+                (r) =>
+                  pactRejectionWaitMs(s, r.proposerId, r.recipientId) > 0 &&
+                  !(
+                    r.proposerId === p.proposerId &&
+                    r.recipientId === p.recipientId
+                  ),
+              ),
+              {
+                proposerId: p.proposerId,
+                recipientId: p.recipientId,
+                elapsedMs: s.competitiveClock?.elapsedMs ?? 0,
+              },
+            ],
+          }
+        : {}),
     },
   });
 }

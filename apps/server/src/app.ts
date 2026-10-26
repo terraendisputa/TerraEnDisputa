@@ -568,6 +568,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         const revision = await lifecycle.configure(
           params.data.gameId,
           body.data.configuredPlayerCount as 2 | 3 | 4 | 5 | 6,
+          body.data.competitiveDurationMinutes,
         );
         await broadcastCurrentGame(params.data.gameId);
         return { gameId: params.data.gameId, revision };

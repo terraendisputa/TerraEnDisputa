@@ -70,11 +70,13 @@ Para actualizar a mano: detené el servidor, hacé una copia, reemplazá la carp
 
 ## Competitivo
 
-El servidor administra turnos de dos minutos, pausas técnicas y el anuncio automático de las rondas finales tras 60 minutos de juego efectivo con cuatro jugadores iniciales, u 80 con cinco o seis. Completa la ronda en curso y dos rondas más; en las finales cada turno tiene tres minutos. Las pausas y el tiempo con el servidor apagado no cuentan como juego efectivo.
+El servidor administra turnos de dos minutos, pausas técnicas y el anuncio automático de las rondas finales tras 60 minutos de juego efectivo con cuatro jugadores iniciales, u 80 con cinco o seis. Con cinco o seis, en la sala de espera se puede elegir la partida Express de 60 minutos. Completa la ronda en curso y dos rondas más; en las finales cada turno tiene tres minutos. Las pausas y el tiempo con el servidor apagado no cuentan como juego efectivo.
 
-Al reiniciar, las partidas de Competitivo en curso vuelven en pausa. Reconectá a los jugadores y reanudá desde el control de pausa técnica del panel. Si el jugador de turno no está, recibe ocho minutos de espera técnica por partida; si se agotan, queda descalificado y sus países y ejércitos siguen en el tablero. Un asiento desconectado no queda libre para que lo tome otra persona.
+Al reiniciar, las partidas de Competitivo en curso vuelven en pausa. Reconectá a los jugadores y reanudá desde el control de pausa técnica del panel. Si el jugador de turno se desconecta, se lo espera hasta siete minutos cada vez: cinco de gracia, con el reloj de partida detenido, y los dos de su turno. Si no vuelve, queda ausente: sus pactos se rompen y sus turnos pasan solos, con los refuerzos repartidos al azar, hasta que se reconecta y retoma su lugar. Conserva su puesto y sus puntos. Un asiento desconectado no queda libre para que lo tome otra persona.
 
-Para ver los resultados, abrí **Finalizadas** en el panel y elegí la partida. La tabla muestra puestos, métricas y componentes, y se puede exportar a JSON o CSV con fracciones exactas, sin cartas individuales ni credenciales. Con menos de seis rondas normales completas, historial incompleto o todos descalificados no hay puntos oficiales. Si quedan cartas heredadas por elegir, el resultado es provisional. Los descalificados no reciben puesto ni puntos.
+Con cinco o seis jugadores solo hay pactos de frontera, uno por color. Si alguien rechaza un pacto, quien lo propuso espera cinco minutos de partida para volver a proponerle. Quien tiene un solo país no puede atacar desde él con cuatro ejércitos o menos.
+
+Para ver los resultados, abrí **Finalizadas** en el panel y elegí la partida. La tabla muestra puestos, métricas y componentes, y se puede exportar a JSON o CSV con fracciones exactas, sin cartas individuales ni credenciales. Los empates se definen por países, ejércitos, canjes y cartas; si persisten, se reparten los puntos. La eliminación que cumple un objetivo de destrucción no suma el bonus de 10 puntos. Con menos de seis rondas normales completas, historial incompleto o todos descalificados no hay puntos oficiales. Si quedan cartas heredadas por elegir, el resultado es provisional. Los descalificados no reciben puesto ni puntos.
 
 ## Código fuente y licencia
 
