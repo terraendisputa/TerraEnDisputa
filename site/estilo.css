@@ -1,0 +1,281 @@
+:root {
+  --fondo: #f6f1e4;
+  --superficie: #fffaf0;
+  --texto: #2a2a22;
+  --suave: #5c5a4c;
+  --borde: #d9cfb8;
+  --acento: #4a6741;
+  --acento-texto: #ffffff;
+  --mar: #17332f;
+  --crema: #fdf3dc;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #121a18;
+    --superficie: #1b2522;
+    --texto: #ece6d6;
+    --suave: #b3ad9c;
+    --borde: #34423d;
+    --acento: #8fb27f;
+    --acento-texto: #10170f;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.15;
+}
+
+a {
+  color: var(--acento);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.contenedor {
+  width: min(1100px, 100% - 32px);
+  margin-inline: auto;
+}
+
+.portada {
+  background:
+    linear-gradient(90deg, rgb(10 28 25 / 0.92), rgb(10 28 25 / 0.55)),
+    url('img/fondo.webp') center / cover;
+  color: var(--crema);
+  padding: 20px 0 72px;
+}
+
+.barra {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 64px;
+}
+
+.marca {
+  font-family: Georgia, serif;
+  font-weight: bold;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+}
+
+.barra a {
+  color: var(--crema);
+}
+
+.etiqueta {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.portada h1 {
+  font-size: clamp(2.6rem, 8vw, 5rem);
+  margin: 0 0 16px;
+  max-width: 14ch;
+}
+
+.portada p.bajada {
+  font-size: 1.15rem;
+  max-width: 46ch;
+  margin: 0 0 28px;
+}
+
+.botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.boton {
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  background: #4a6741;
+  color: #ffffff;
+  border: 1px solid transparent;
+}
+
+.boton.secundario {
+  background: transparent;
+  color: var(--crema);
+  border-color: rgb(253 243 220 / 0.6);
+}
+
+.captura-principal {
+  margin-top: -40px;
+  border-radius: 12px;
+  border: 1px solid var(--borde);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.25);
+  overflow: hidden;
+}
+
+section {
+  padding: 56px 0 8px;
+}
+
+section h2 {
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  margin: 0 0 24px;
+}
+
+.modos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.tarjeta img {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 12px;
+}
+
+.tarjeta h3 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+}
+
+.tarjeta p {
+  margin: 0;
+  color: var(--suave);
+}
+
+.lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px 32px;
+  padding: 0;
+  list-style: none;
+}
+
+.lista li {
+  padding-left: 22px;
+  position: relative;
+}
+
+.lista li::before {
+  content: '◆';
+  position: absolute;
+  left: 0;
+  color: var(--acento);
+  font-size: 0.8rem;
+  top: 0.3em;
+}
+
+.pasos {
+  counter-reset: paso;
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.pasos li {
+  counter-increment: paso;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 16px 20px 16px 64px;
+  position: relative;
+}
+
+.pasos li::before {
+  content: counter(paso);
+  position: absolute;
+  left: 20px;
+  top: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--acento);
+  color: var(--acento-texto);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+
+.galeria {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.galeria figure {
+  margin: 0;
+}
+
+.galeria img {
+  border-radius: 10px;
+  border: 1px solid var(--borde);
+}
+
+.galeria figcaption {
+  font-size: 0.9rem;
+  color: var(--suave);
+  margin-top: 6px;
+}
+
+footer {
+  margin-top: 64px;
+  padding: 32px 0 48px;
+  border-top: 1px solid var(--borde);
+  color: var(--suave);
+  font-size: 0.9rem;
+}
+
+footer p {
+  margin: 0 0 8px;
+}
+
+@media (max-width: 760px) {
+  .barra {
+    margin-bottom: 40px;
+  }
+
+  .galeria {
+    grid-template-columns: 1fr;
+  }
+
+  .galeria figure:last-child img {
+    max-width: 260px;
+  }
+
+  .captura-principal {
+    margin-top: -24px;
+  }
+}

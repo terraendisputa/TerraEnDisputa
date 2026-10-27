@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terra en disputa · Turn-based strategy game</title>
+    <meta
+      name="description"
+      content="Turn-based strategy game for 2 to 6 players: conquer countries with dice, cards and pacts. Played in the browser on a server you host. Free and open source."
+    />
+    <link rel="icon" type="image/svg+xml" href="../img/ted-clasico.svg" />
+    <link
+      rel="alternate"
+      hreflang="es"
+      href="https://unlisted3954.github.io/TerraEnDisputa/"
+    />
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://unlisted3954.github.io/TerraEnDisputa/en/"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Terra en disputa" />
+    <meta
+      property="og:description"
+      content="Turn-based strategy for 2 to 6 players, in the browser, on your own server."
+    />
+    <meta
+      property="og:image"
+      content="https://unlisted3954.github.io/TerraEnDisputa/img/vista-previa.jpg"
+    />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="../estilo.css" />
+  </head>
+  <body>
+    <header class="portada">
+      <div class="contenedor">
+        <nav class="barra">
+          <span class="marca">TED</span>
+          <a href="../" hreflang="es" lang="es">Español</a>
+        </nav>
+        <p class="etiqueta">Free and open source · 2 to 6 players</p>
+        <h1>Terra en disputa</h1>
+        <p class="bajada">
+          A turn-based strategy game about conquering countries with dice, cards
+          and pacts. Everyone plays in the browser, and you host the server.
+        </p>
+        <div class="botones">
+          <a
+            class="boton"
+            href="https://github.com/unlisted3954/TerraEnDisputa/releases"
+            >Download</a
+          >
+          <a
+            class="boton secundario"
+            href="https://github.com/unlisted3954/TerraEnDisputa"
+            >View the code</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <main class="contenedor">
+      <img
+        class="captura-principal"
+        src="../img/clasico.webp"
+        width="1440"
+        height="900"
+        alt="The Classic board with countries split between four players"
+      />
+
+      <section>
+        <h2>Three game modes</h2>
+        <div class="modos">
+          <article class="tarjeta">
+            <img src="../img/ted-clasico.svg" alt="" width="56" height="56" />
+            <h3>Classic</h3>
+            <p>
+              50 countries. With 4 to 6 players there are secret objectives plus
+              the shared goal of holding 30 countries; with 2 or 3, whoever
+              conquers all 50 wins.
+            </p>
+          </article>
+          <article class="tarjeta">
+            <img
+              src="../img/ted-competitivo.svg"
+              alt=""
+              width="56"
+              height="56"
+            />
+            <h3>Competitive</h3>
+            <p>
+              For 4 to 6 players, with clocks, automatic final rounds and
+              scoring.
+            </p>
+          </article>
+          <article class="tarjeta">
+            <img
+              src="../img/ted-reconquista.svg"
+              alt=""
+              width="56"
+              height="56"
+            />
+            <h3>Reconquista</h3>
+            <p>
+              72 countries, situations that change every round, missiles, pacts
+              and shared countries.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>Features</h2>
+        <ul class="lista">
+          <li>
+            Play on a computer, tablet or phone. Players don't install anything.
+          </li>
+          <li>
+            No accounts: each player joins with a link and picks a nickname and
+            color.
+          </li>
+          <li>
+            Games are saved on the host's machine, not on someone else's server.
+          </li>
+          <li>Windows and Linux packages that bundle everything they need.</li>
+          <li>Light and dark themes, music and a turn chime.</li>
+          <li>Open source under the AGPL-3.0 license.</li>
+        </ul>
+        <p>The game interface is in Spanish.</p>
+      </section>
+
+      <section>
+        <h2>How to play</h2>
+        <ol class="pasos">
+          <li>
+            Download the package for your system from
+            <a href="https://github.com/unlisted3954/TerraEnDisputa/releases"
+              >Releases</a
+            >
+            and extract the whole folder.
+          </li>
+          <li>
+            Open <code>ted.cmd</code> on Windows or <code>./ted</code> on Linux.
+            The host panel opens, where you create the game.
+          </li>
+          <li>
+            Copy the invitation and send it to your friends. Once everyone marks
+            themselves as ready, the game starts.
+          </li>
+        </ol>
+        <p>
+          To keep it running on a Linux server or to play remotely, follow the
+          <a href="https://github.com/unlisted3954/TerraEnDisputa#readme"
+            >install guide</a
+          >
+          (in Spanish).
+        </p>
+      </section>
+
+      <section>
+        <h2>Screenshots</h2>
+        <div class="galeria">
+          <figure>
+            <img
+              src="../img/competitivo.webp"
+              width="1440"
+              height="900"
+              loading="lazy"
+              alt="Competitive mode in the dark theme, with the turn clock"
+            />
+            <figcaption>Competitive, dark theme</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="../img/reconquista.webp"
+              width="1440"
+              height="900"
+              loading="lazy"
+              alt="The Reconquista map with 72 countries and the initial placement menu"
+            />
+            <figcaption>Reconquista</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="../img/movil.webp"
+              width="390"
+              height="844"
+              loading="lazy"
+              alt="The Classic board on a phone screen"
+            />
+            <figcaption>On a phone</figcaption>
+          </figure>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="contenedor">
+        <p>
+          Questions or ideas? Post them in
+          <a href="https://github.com/unlisted3954/TerraEnDisputa/discussions"
+            >Discussions</a
+          >.
+        </p>
+        <p>
+          Terra en disputa is not affiliated with, endorsed by or sponsored by
+          the owners or publishers of T.E.G. It includes no official artwork,
+          screenshots, rulebook text or TEGNet material.
+        </p>
+        <p>
+          Code under
+          <a
+            href="https://github.com/unlisted3954/TerraEnDisputa/blob/main/LICENSE"
+            >AGPL-3.0</a
+          >.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
