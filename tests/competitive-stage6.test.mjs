@@ -141,7 +141,7 @@ void test('games played only by bots never get stuck', () => {
     }
 });
 
-void test('the bot reinforces an exposed border and attacks only with a clear advantage', () => {
+void test('normal reinforces an exposed border and attacks only with a clear advantage', () => {
   let { s, a } = fixture();
   while (s.turn.round.kind !== 'normal' || s.turn.playerId !== a)
     s = tickCompetitiveClock(
@@ -150,11 +150,11 @@ void test('the bot reinforces an exposed border and attacks only with a clear ad
       true,
       rng,
     );
-  const place = chooseBotCommand(s, a, 'hard');
+  const place = chooseBotCommand(s, a, 'normal');
   assert.equal(place.type, 'place_reinforcements');
   const [target] = Object.keys(place.placements);
   assert.ok(enemies(s, a, target).length > 0);
-  // Attacks need at least two armies more than the defender.
+  // Normal needs at least two armies more than the defender.
   s = { ...s, turn: { ...s.turn, phase: 'attack' } };
   const [from, to] = TERRITORY_IDS.flatMap((id) =>
     s.territories[id].ownerId === a
@@ -174,16 +174,16 @@ void test('the bot reinforces an exposed border and attacks only with a clear ad
       ),
     },
   });
-  const hold = chooseBotCommand(board(4, 3), a, 'hard');
+  const hold = chooseBotCommand(board(4, 3), a, 'normal');
   assert.notEqual(hold.type, 'attack');
-  assert.deepEqual(chooseBotCommand(board(5, 3), a, 'hard'), {
+  assert.deepEqual(chooseBotCommand(board(5, 3), a, 'normal'), {
     type: 'attack',
     playerId: a,
     from,
     to,
   });
   assert.equal(chooseBotCommand(board(4, 3), a, 'easy').type, 'attack');
-  assert.equal(chooseBotCommand(s, s.players[1].id, 'hard'), undefined);
+  assert.equal(chooseBotCommand(s, s.players[1].id, 'normal'), undefined);
 });
 
 void test('a disconnected player is replaced by a bot after seven minutes and takes the seat back', () => {

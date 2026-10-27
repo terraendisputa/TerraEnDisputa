@@ -208,6 +208,7 @@ function playBot(state: GameState, now: number): GameState {
     state,
     actor,
     state.competitiveBotLevel ?? 'hard',
+    secureGameRandomness,
   );
   if (!command) return state;
   const result = applyBotCommand(state, command, {
