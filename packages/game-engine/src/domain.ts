@@ -40,6 +40,8 @@ export interface PlayerState {
   readonly botPlayed?: true;
   /** Deciding Competitive game: left or absent, plays one-minute turns. */
   readonly inactive?: true;
+  /** Classic: the turn in which this seat's bot last proposed a pact. */
+  readonly botProposalTurn?: number;
   readonly cards: readonly TerritoryCardPossession[];
   readonly completedExchangeCount: number;
   readonly secretObjectiveId?: SecretObjectiveId;

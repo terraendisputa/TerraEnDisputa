@@ -198,7 +198,9 @@ export function deriveLegalActions(
   const pactIdsToWithdraw = state.pacts.active
     .filter(
       (pact) =>
-        state.competitiveClock?.finalRoundNumber === undefined &&
+        // Classic Express still lets pacts be broken in the final rounds.
+        (state.mode !== 'competitive' ||
+          state.competitiveClock?.finalRoundNumber === undefined) &&
         pact.parties.includes(playerId) &&
         pact.withdrawal.kind === 'none',
     )
@@ -221,7 +223,7 @@ export function deriveLegalActions(
               !player.eliminated &&
               !player.disqualified &&
               !player.absent &&
-              !player.bot &&
+              (state.mode !== 'competitive' || !player.bot) &&
               player.id !== playerId,
           )
           .map(({ id }) => id)

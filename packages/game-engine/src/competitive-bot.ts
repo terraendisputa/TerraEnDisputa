@@ -6,10 +6,17 @@ import {
   type ContinentId,
   type TerritoryId,
 } from './classic-data.js';
-import type { ActiveGameState, GameState, PlayerId } from './domain.js';
+import type {
+  ActiveGameState,
+  GameState,
+  PactId,
+  PactProposalId,
+  PlayerId,
+} from './domain.js';
 import { deriveLegalActions } from './legal-actions.js';
 import {
   applyCommand,
+  isPactProposalLegal,
   type DiceSource,
   type DomainResult,
   type GameplayCommand,
@@ -122,14 +129,10 @@ const inFinalRounds = (s: ActiveGameState) => {
 };
 
 /**
- * How much the hard bot wants each country it does not own: what its secret
- * mission still needs, the color it must destroy, continents it is about to
- * complete, and every country once 30 is closer than the mission.
+ * What the bot plays for: its secret mission, or the common objective once
+ * that is closer.
  */
-function targetValues(
-  s: GameState,
-  pid: PlayerId,
-): Partial<Record<TerritoryId, number>> {
+function aims(s: GameState, pid: PlayerId) {
   const me = s.players.find((p) => p.id === pid);
   const owned = TERRITORY_IDS.filter((id) => owner(s, id) === pid).length;
   const objective = me?.secretObjectiveId
@@ -148,7 +151,25 @@ function targetValues(
     ('commonVictoryCondition' in s
       ? s.commonVictoryCondition.territoryCount
       : 30) - owned;
-  const common = commonGap < missionGap;
+  return {
+    objective,
+    target,
+    missionGap,
+    commonGap,
+    common: commonGap < missionGap,
+  };
+}
+
+/**
+ * How much the hard bot wants each country it does not own: what its secret
+ * mission still needs, the color it must destroy, continents it is about to
+ * complete, and every country once 30 is closer than the mission.
+ */
+function targetValues(
+  s: GameState,
+  pid: PlayerId,
+): Partial<Record<TerritoryId, number>> {
+  const { objective, target, missionGap, common } = aims(s, pid);
   const values: Partial<Record<TerritoryId, number>> = {};
   for (const id of TERRITORY_IDS) {
     const holder = owner(s, id);
@@ -409,20 +430,201 @@ function hardAttack(
   return best;
 }
 
+type PactTerms = ActiveGameState['pacts']['proposals'][number]['terms'];
+/** Countries short of the common objective at which any pact is in the way. */
+const COMMON_GAP_TO_BREAK = 5;
+/** A partner with less than this share of the bot's armies is much weaker. */
+const MUCH_WEAKER = 0.5;
+
+const strength = (s: GameState, pid: PlayerId) =>
+  TERRITORY_IDS.reduce(
+    (sum, id) => (owner(s, id) === pid ? sum + armies(s, id) : sum),
+    0,
+  );
+
+/** The bordering pairs, own country first, that these terms keep at peace. */
+function coveredBorders(
+  s: GameState,
+  pid: PlayerId,
+  partner: PlayerId,
+  terms: PactTerms,
+): (readonly [TerritoryId, TerritoryId])[] {
+  if (terms.kind === 'border_non_aggression') {
+    const [a, b] = terms.territoryIds;
+    return [owner(s, a) === pid ? [a, b] : [b, a]];
+  }
+  if (terms.kind === 'international_zone') return [];
+  return TERRITORY_IDS.flatMap((id) =>
+    owner(s, id) === pid
+      ? TERRITORIES[id].adjacentTerritoryIds
+          .filter((t) => owner(s, t) === partner)
+          .map((t) => [id, t] as const)
+      : [],
+  );
+}
+
+/** Whether one of the borders lies on a continent missing at most this many. */
+const guardsContinent = (
+  s: GameState,
+  pid: PlayerId,
+  borders: readonly (readonly [TerritoryId, TerritoryId])[],
+  missing = 0,
+) =>
+  borders.some(([own]) => {
+    const c = TERRITORIES[own].continentId;
+    return continentSize(c) - ownedIn(s, pid, c) <= missing;
+  });
+
+/**
+ * Whether a pact with this partner stands in the bot's way: the partner is
+ * the color it must destroy or is much weaker, or the pact keeps it from a
+ * country its mission needs, or from any country once 30 is a few away.
+ */
+function pactInTheWay(
+  s: GameState,
+  pid: PlayerId,
+  partner: PlayerId,
+  borders: readonly (readonly [TerritoryId, TerritoryId])[],
+): boolean {
+  const plan = aims(s, pid);
+  if (partner === plan.target) return true;
+  if (strength(s, partner) < MUCH_WEAKER * strength(s, pid)) return true;
+  return borders.some(([from, to]) => {
+    if (armies(s, from) < 2) return false;
+    if (plan.common) return plan.commonGap <= COMMON_GAP_TO_BREAK;
+    const c = TERRITORIES[to].continentId;
+    const needed =
+      plan.objective?.kind === 'occupation'
+        ? ((
+            plan.objective.continentMinimums as Partial<
+              Record<ContinentId, number>
+            >
+          )[c] ?? 0)
+        : 0;
+    return ownedIn(s, pid, c) < needed;
+  });
+}
+
+/**
+ * Classic: the answer to the first proposal waiting for the bot. It accepts
+ * when the proposer is stronger or the pact guards a continent it holds, and
+ * never pacts with the color it must destroy or over an international zone.
+ * Easy decides at random.
+ */
+function pactAnswer(
+  s: ActiveGameState,
+  pid: PlayerId,
+  level: BotLevel,
+  shuffle: ShuffleSource | undefined,
+  newId: () => string,
+): GameplayCommand | undefined {
+  const proposal = s.pacts.proposals.find((p) => p.recipientId === pid);
+  if (!proposal) return undefined;
+  const from = proposal.proposerId;
+  const possible =
+    proposal.terms.kind !== 'international_zone' &&
+    from !== aims(s, pid).target &&
+    isPactProposalLegal(s, from, pid, proposal.terms);
+  const accept =
+    possible &&
+    (level === 'easy'
+      ? pick([true, false], shuffle)
+      : strength(s, from) > strength(s, pid) ||
+        guardsContinent(s, pid, coveredBorders(s, pid, from, proposal.terms)));
+  return accept
+    ? {
+        type: 'accept_pact',
+        playerId: pid,
+        proposalId: proposal.id,
+        pactId: newId() as PactId,
+      }
+    : { type: 'reject_pact', playerId: pid, proposalId: proposal.id };
+}
+
+/** Classic hard: announces the end of the first pact in its way. */
+function pactToBreak(
+  s: ActiveGameState,
+  pid: PlayerId,
+): GameplayCommand | undefined {
+  const pact = s.pacts.active.find((p) => {
+    if (!p.parties.includes(pid) || p.withdrawal.kind !== 'none') return false;
+    const partner = p.parties.find((id) => id !== pid)!;
+    return pactInTheWay(
+      s,
+      pid,
+      partner,
+      coveredBorders(s, pid, partner, p.terms),
+    );
+  });
+  return pact
+    ? { type: 'withdraw_pact', playerId: pid, pactId: pact.id }
+    : undefined;
+}
+
+/**
+ * Classic hard: once a turn, and with no offer of its own still waiting, a
+ * border pact to a stronger neighbor that threatens a continent it holds or
+ * is one country from completing. Never to the color it must destroy.
+ */
+function pactToPropose(
+  s: ActiveGameState,
+  pid: PlayerId,
+  newId: () => string,
+): GameplayCommand | undefined {
+  const me = s.players.find((p) => p.id === pid)!;
+  if (
+    me.botProposalTurn === s.turn.turnNumber ||
+    s.pacts.proposals.some((p) => p.proposerId === pid)
+  )
+    return undefined;
+  const mine = strength(s, pid);
+  for (const own of TERRITORY_IDS) {
+    if (owner(s, own) !== pid) continue;
+    for (const theirs of TERRITORIES[own].adjacentTerritoryIds) {
+      const neighbor = owner(s, theirs);
+      const border = [[own, theirs] as const];
+      if (
+        !neighbor ||
+        neighbor === pid ||
+        strength(s, neighbor) <= mine ||
+        armies(s, theirs) < armies(s, own) ||
+        !guardsContinent(s, pid, border, 1) ||
+        pactInTheWay(s, pid, neighbor, border)
+      )
+        continue;
+      const terms: PactTerms = {
+        kind: 'border_non_aggression',
+        territoryIds: [own, theirs],
+      };
+      if (isPactProposalLegal(s, pid, neighbor, terms))
+        return {
+          type: 'propose_pact',
+          playerId: pid,
+          recipientId: neighbor,
+          proposalId: newId() as PactProposalId,
+          terms,
+        };
+    }
+  }
+  return undefined;
+}
+
 /**
  * The next move for a seat played by the server, or nothing when the bot has
  * no move. Easy picks almost at random among reasonable moves, normal follows
  * fixed rules, and hard plays its mission, guards its continents, weighs the
  * real dice odds, saves cards and plays the final rounds for the tiebreak.
  * It plays Classic and Competitive alike: the legal actions keep it within
- * the pacts in force and make it trade when Classic requires it. No level
- * offers pacts.
+ * the pacts in force and make it trade when Classic requires it. In Classic
+ * it also answers pacts, even out of turn, and hard proposes and breaks them;
+ * Competitive bots never pact.
  */
 export function chooseBotCommand(
   s: GameState,
   pid: PlayerId,
   level: BotLevel = 'hard',
   shuffle?: ShuffleSource,
+  newId: () => string = () => globalThis.crypto.randomUUID(),
 ): BotCommand | undefined {
   if (s.pendingInheritance?.playerId === pid)
     return {
@@ -436,6 +638,10 @@ export function chooseBotCommand(
     return s.setup.currentPlayerId === pid
       ? setupCommand(s, pid, level, shuffle)
       : undefined;
+  if (s.status === 'ACTIVE' && s.mode === 'classic') {
+    const answer = pactAnswer(s, pid, level, shuffle, newId);
+    if (answer) return answer;
+  }
   if (s.status !== 'ACTIVE' || s.turn.playerId !== pid) return undefined;
   const legal = deriveLegalActions(s, pid);
   const can = (action: (typeof legal.actions)[number]) =>
@@ -502,6 +708,15 @@ export function chooseBotCommand(
     }
     if (Object.keys(placements).length)
       return { type: 'place_reinforcements', playerId: pid, placements };
+  }
+  if (
+    phase === 'attack' &&
+    level === 'hard' &&
+    s.mode === 'classic' &&
+    !s.pendingAction
+  ) {
+    const pactMove = pactToBreak(s, pid) ?? pactToPropose(s, pid, newId);
+    if (pactMove) return pactMove;
   }
   if (phase === 'attack') {
     let best: { from: TerritoryId; to: TerritoryId } | undefined;
@@ -575,6 +790,21 @@ export function applyBotCommand(
   command: BotCommand,
   dependencies: { readonly dice: DiceSource; readonly shuffle: ShuffleSource },
 ): DomainResult<GameState> {
+  if (command.type === 'propose_pact' && s.status === 'ACTIVE') {
+    // Remember the turn, so the bot offers one pact a turn at most.
+    const result = applyCommand(s, command, dependencies);
+    if (!result.ok) return result;
+    const turnNumber = s.turn.turnNumber;
+    return {
+      ...result,
+      state: {
+        ...result.state,
+        players: result.state.players.map((p) =>
+          p.id === command.playerId ? { ...p, botProposalTurn: turnNumber } : p,
+        ),
+      } as GameState,
+    };
+  }
   if (command.type !== 'place_setup_armies')
     return applyCommand(s, command, dependencies);
   if (s.status !== 'SETUP')

@@ -16,6 +16,7 @@ import {
   startCompetitiveClock,
   tickCompetitiveClock,
   synchronizeCompetitiveClock,
+  deriveLegalActions,
 } from '../packages/game-engine/dist/index.js';
 
 const players = (count) =>
@@ -52,9 +53,14 @@ const classic = (count, random, express = false) => {
   const s = createClassicSetup(randomUUID(), players(count), random, 'classic');
   return express ? startCompetitiveClock({ ...s, classicExpress: true }, 0) : s;
 };
-/** Applies the bot's move for whoever must act, failing on illegal moves. */
+/**
+ * Applies the bot's move for whoever must act, failing on illegal moves. A
+ * pact offer is answered first, like the server does for every bot.
+ */
 function botMove(s, level, random) {
-  const actor = competitiveActor(s);
+  const actor =
+    (s.status === 'ACTIVE' && s.pacts.proposals[0]?.recipientId) ||
+    competitiveActor(s);
   const command = actor ? chooseBotCommand(s, actor, level, random) : undefined;
   if (!command) return undefined;
   const result = applyBotCommand(s, command, { dice: random, shuffle: random });
@@ -192,4 +198,250 @@ void test('with more than five cards a Classic bot trades before placing', () =>
   };
   for (const level of BOT_LEVELS)
     assert.equal(chooseBotCommand(held, a, level).type, 'exchange_cards');
+});
+
+/** A board for the bot on turn: the given countries, the rest to `rest`. */
+function board(s, spec, rest, armies = 1) {
+  return {
+    ...s,
+    turn: { ...s.turn, phase: 'attack' },
+    territories: Object.fromEntries(
+      TERRITORY_IDS.map((id) => [
+        id,
+        {
+          ownerId: spec[id]?.[0] ?? rest,
+          armies: spec[id]?.[1] ?? armies,
+          fixedArmiesThisTurn: 0,
+        },
+      ]),
+    ),
+  };
+}
+const seats = (s) => {
+  const a = s.turn.playerId;
+  const [b, c] = s.players.filter((p) => p.id !== a).map((p) => p.id);
+  return { a, b, c };
+};
+const offer = (s, proposerId, recipientId, terms) => ({
+  ...s,
+  pacts: {
+    ...s.pacts,
+    proposals: [{ id: randomUUID(), proposerId, recipientId, terms }],
+  },
+});
+const pact = (s, a, b, terms = { kind: 'general_non_aggression' }) => ({
+  ...s,
+  pacts: {
+    ...s.pacts,
+    active: [
+      {
+        kind: terms.kind,
+        id: randomUUID(),
+        parties: [a, b],
+        terms,
+        withdrawal: { kind: 'none' },
+      },
+    ],
+  },
+});
+const general = { kind: 'general_non_aggression' };
+const OCEANIA = ['australia', 'sumatra', 'borneo', 'java'];
+
+void test('a bot accepts a stronger proposer and rejects a weaker one', () => {
+  const s = untilHostility(3, 500);
+  const { a, b, c } = seats(s);
+  const strong = board(s, { sahara: [a, 3], brazil: [b, 30] }, c);
+  const weak = board(s, { sahara: [a, 30], brazil: [b, 2] }, c);
+  for (const level of ['normal', 'hard']) {
+    assert.equal(
+      chooseBotCommand(offer(strong, b, a, general), a, level).type,
+      'accept_pact',
+      level,
+    );
+    assert.equal(
+      chooseBotCommand(offer(weak, b, a, general), a, level).type,
+      'reject_pact',
+      level,
+    );
+  }
+});
+
+void test('a bot accepts a pact that guards a continent it holds', () => {
+  const s = untilHostility(3, 510);
+  const { a, b, c } = seats(s);
+  const spec = Object.fromEntries(OCEANIA.map((id) => [id, [a, 20]]));
+  const held = board(s, { ...spec, chile: [b, 1] }, c);
+  assert.equal(
+    chooseBotCommand(offer(held, b, a, general), a, 'normal').type,
+    'accept_pact',
+  );
+  // The same weak proposer without a continent at stake is turned down.
+  const loose = board(s, { australia: [a, 20], chile: [b, 1] }, c);
+  assert.equal(
+    chooseBotCommand(offer(loose, b, a, general), a, 'normal').type,
+    'reject_pact',
+  );
+});
+
+void test('a bot never pacts with its target or over an international zone', () => {
+  const s = untilHostility(3, 520);
+  const { a, b, c } = seats(s);
+  const strong = board(s, { sahara: [a, 3], brazil: [b, 30] }, c);
+  const hunting = {
+    ...strong,
+    players: strong.players.map((p) =>
+      p.id === a
+        ? {
+            ...p,
+            secretObjectiveId: `destroy_${s.players.find((x) => x.id === b).color}`,
+            effectiveDestructionTargetPlayerId: b,
+          }
+        : p,
+    ),
+  };
+  assert.equal(
+    chooseBotCommand(offer(hunting, b, a, general), a, 'hard').type,
+    'reject_pact',
+  );
+  const zone = {
+    kind: 'international_zone',
+    territoryId: 'brazil',
+    firstExpectedConquerorId: a,
+  };
+  assert.equal(
+    chooseBotCommand(offer(strong, b, a, zone), a, 'hard').type,
+    'reject_pact',
+  );
+});
+
+void test('easy answers at random, and any bot answers out of turn', () => {
+  const s = untilHostility(3, 530);
+  const { a, b, c } = seats(s);
+  const weak = offer(
+    board(s, { sahara: [a, 30], brazil: [b, 2] }, c),
+    b,
+    a,
+    general,
+  );
+  const first = { shuffle: (items) => [...items] };
+  const last = { shuffle: (items) => [...items].reverse() };
+  assert.equal(chooseBotCommand(weak, a, 'easy', first).type, 'accept_pact');
+  assert.equal(chooseBotCommand(weak, a, 'easy', last).type, 'reject_pact');
+  // The player on turn offers; the bot of another seat answers right away.
+  const offered = offer(
+    board(s, { sahara: [a, 9], egypt: [c, 2] }, b, 3),
+    a,
+    c,
+    general,
+  );
+  const strong = {
+    ...offered,
+    players: offered.players.map((p) =>
+      p.id === c
+        ? {
+            ...p,
+            secretObjectiveId: undefined,
+            effectiveDestructionTargetPlayerId: undefined,
+          }
+        : p,
+    ),
+  };
+  const answer = chooseBotCommand(strong, c, 'hard');
+  assert.equal(answer.type, 'accept_pact');
+  const result = applyCommand(strong, answer);
+  assert.equal(result.ok, true, JSON.stringify(result.error));
+  assert.equal(result.state.pacts.active.length, 1);
+});
+
+void test('hard breaks a pact that blocks its mission or binds it to a weak partner', () => {
+  const s = untilHostility(3, 540);
+  const { a, b, c } = seats(s);
+  const mission = (state) => ({
+    ...state,
+    players: state.players.map((p) =>
+      p.id === a
+        ? {
+            ...p,
+            secretObjectiveId: 'occupation_09',
+            effectiveDestructionTargetPlayerId: undefined,
+          }
+        : p,
+    ),
+  });
+  // Africa is in the mission and the partner holds Egypt next to Sahara.
+  const blocked = pact(
+    mission(board(s, { sahara: [a, 6], egypt: [b, 2] }, b, 3)),
+    a,
+    b,
+  );
+  const move = chooseBotCommand(blocked, a, 'hard');
+  assert.equal(move.type, 'withdraw_pact');
+  const result = applyCommand(blocked, move);
+  assert.equal(result.ok, true, JSON.stringify(result.error));
+  assert.equal(result.state.pacts.active[0].withdrawal.kind, 'announced');
+  // Normal keeps its pacts.
+  assert.notEqual(chooseBotCommand(blocked, a, 'normal').type, 'withdraw_pact');
+  const weakPartner = pact(
+    board(s, { sahara: [a, 20], brazil: [b, 2] }, c),
+    a,
+    b,
+  );
+  assert.equal(chooseBotCommand(weakPartner, a, 'hard').type, 'withdraw_pact');
+  // A strong partner away from what it needs keeps the pact.
+  const fine = pact(board(s, { sahara: [a, 4], brazil: [b, 9] }, b), a, b);
+  assert.notEqual(chooseBotCommand(fine, a, 'hard').type, 'withdraw_pact');
+});
+
+void test('hard offers one border pact a turn to guard its continent', () => {
+  const s = untilHostility(3, 550);
+  const { a, b } = seats(s);
+  const spec = Object.fromEntries(OCEANIA.map((id) => [id, [a, 2]]));
+  let state = board(s, { ...spec, chile: [b, 5] }, b);
+  state = {
+    ...state,
+    players: state.players.map((p) =>
+      p.id === a
+        ? {
+            ...p,
+            secretObjectiveId: undefined,
+            effectiveDestructionTargetPlayerId: undefined,
+          }
+        : p,
+    ),
+  };
+  const move = chooseBotCommand(state, a, 'hard');
+  assert.equal(move.type, 'propose_pact');
+  assert.equal(move.recipientId, b);
+  assert.deepEqual([...move.terms.territoryIds].sort(), ['australia', 'chile']);
+  assert.equal(
+    chooseBotCommand(state, a, 'normal').type === 'propose_pact',
+    false,
+  );
+  const random = seeded(1);
+  const proposed = applyBotCommand(state, move, {
+    dice: random,
+    shuffle: random,
+  });
+  assert.equal(proposed.ok, true, JSON.stringify(proposed.error));
+  const rejected = applyCommand(proposed.state, {
+    type: 'reject_pact',
+    playerId: b,
+    proposalId: move.proposalId,
+  });
+  assert.equal(rejected.ok, true);
+  assert.notEqual(
+    chooseBotCommand(rejected.state, a, 'hard').type,
+    'propose_pact',
+  );
+});
+
+void test('Classic Express lets pacts be broken in the final rounds', () => {
+  const s = untilHostility(3, 560);
+  const { a, b } = seats(s);
+  const final = pact(
+    { ...s, classicExpress: true, competitiveClock: { finalRoundNumber: 1 } },
+    a,
+    b,
+  );
+  assert.equal(deriveLegalActions(final, a).pactIdsToWithdraw.length, 1);
 });

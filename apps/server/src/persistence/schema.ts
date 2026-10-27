@@ -45,6 +45,7 @@ const player = z.strictObject({
   bot: z.enum(['absent', 'admin', 'requested', 'table']).optional(),
   botPlayed: z.literal(true).optional(),
   inactive: z.literal(true).optional(),
+  botProposalTurn: nonnegativeInteger.optional(),
   cards: z.array(
     z.strictObject({
       cardId: z.enum(TERRITORY_IDS),

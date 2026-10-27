@@ -638,8 +638,8 @@ function validatePactFormation(
     recipient.disqualified ||
     proposer.absent ||
     recipient.absent ||
-    proposer.bot ||
-    recipient.bot ||
+    // Classic bots answer and offer pacts; Competitive bots never do.
+    (s.mode === 'competitive' && (proposer.bot || recipient.bot)) ||
     proposerId === recipientId
   )
     return 'INVALID_PACT';
