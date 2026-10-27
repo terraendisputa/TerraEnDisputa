@@ -42,7 +42,8 @@ const player = z.strictObject({
   eliminated: z.boolean(),
   disqualified: z.boolean().optional(),
   absent: z.literal(true).optional(),
-  bot: z.enum(['absent', 'admin']).optional(),
+  bot: z.enum(['absent', 'admin', 'requested', 'table']).optional(),
+  botPlayed: z.literal(true).optional(),
   cards: z.array(
     z.strictObject({
       cardId: z.enum(TERRITORY_IDS),
@@ -239,6 +240,7 @@ const base = {
     .optional(),
   competitiveBotLevel: z.enum(['easy', 'normal', 'hard']).optional(),
   competitiveBotsReplaceAbsent: z.boolean().optional(),
+  competitiveBotSeats: z.literal(2).optional(),
   players: z.array(player),
 };
 const competitiveHistory = z.strictObject({
@@ -448,7 +450,7 @@ function validateDurableGame(
     }
   }
   for (const seat of parsed.state.players)
-    if (!parsed.auth.players[seat.id]) {
+    if (!parsed.auth.players[seat.id] && seat.bot !== 'table') {
       if (seat.controller === 'controllerless_reassignment')
         throw new Error('controllerless player is missing reassignment auth');
       if (!allowLegacyMissingAuth)

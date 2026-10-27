@@ -1149,11 +1149,18 @@ export function PactsPanel({
       : value.kind === 'border_non_aggression'
         ? `Frontera ${value.territoryIds.map((id) => TERRITORY_LABELS[id]).join(' / ')}`
         : `Zona internacional: ${TERRITORY_LABELS[value.territoryId]}`;
-  if (snapshot.mode === 'competitive' && snapshot.configuredPlayerCount === 4)
+  if (
+    snapshot.mode === 'competitive' &&
+    snapshot.configuredPlayerCount - (snapshot.competitiveBotSeats ?? 0) === 4
+  )
     return (
       <section className="panel pacts-panel">
         <h2>Pactos</h2>
-        <p>Competitivo de cuatro jugadores se juega sin pactos.</p>
+        <p>
+          {snapshot.competitiveBotSeats
+            ? 'La mesa de cuatro jugadores y dos bots se juega sin pactos.'
+            : 'Competitivo de cuatro jugadores se juega sin pactos.'}
+        </p>
       </section>
     );
   return (

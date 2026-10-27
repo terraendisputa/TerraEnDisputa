@@ -31,9 +31,13 @@ export interface PlayerState {
   readonly absent?: boolean;
   /**
    * Competitive: the server plays this seat. `absent` replaces a disconnected
-   * player until they return; `admin` was put by the administrator.
+   * player until they return; `admin` was put by the administrator;
+   * `requested` was asked for by the player with one country left in the
+   * final rounds; `table` is one of the bots of a four plus two table.
    */
-  readonly bot?: 'absent' | 'admin';
+  readonly bot?: 'absent' | 'admin' | 'requested' | 'table';
+  /** Competitive: a bot played this seat at some point. */
+  readonly botPlayed?: true;
   readonly cards: readonly TerritoryCardPossession[];
   readonly completedExchangeCount: number;
   readonly secretObjectiveId?: SecretObjectiveId;
@@ -74,6 +78,8 @@ export interface ExactPoints {
 }
 export interface CompetitiveResultRow {
   readonly playerId: PlayerId;
+  /** A table bot, or a player a bot replaced at some point. */
+  readonly bot?: 'table' | 'replacement';
   readonly status: 'survivor' | 'eliminated' | 'disqualified';
   readonly position?: number;
   readonly tiedPlayers: number;
@@ -300,6 +306,8 @@ interface GameStateBase {
   readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
   /** False keeps automatic turns for absent players instead of a bot. */
   readonly competitiveBotsReplaceAbsent?: boolean;
+  /** Competitive table of six where bots take two seats (Superliga 4 + 2). */
+  readonly competitiveBotSeats?: 2;
   readonly players: readonly PlayerState[];
 }
 export interface LobbyGameState extends GameStateBase {

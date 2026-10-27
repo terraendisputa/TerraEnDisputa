@@ -698,8 +698,11 @@ function GameView({
           <section className="panel lobby-main">
             <p className="eyebrow">Sala de espera</p>
             <h1>
-              {snapshot.players.length} de {snapshot.configuredPlayerCount}{' '}
+              {snapshot.players.length} de{' '}
+              {snapshot.configuredPlayerCount -
+                (snapshot.competitiveBotSeats ?? 0)}{' '}
               jugadores
+              {snapshot.competitiveBotSeats ? ' + 2 bots' : ''}
             </h1>
             <ul className="player-list">
               {snapshot.players.map((player) => (
@@ -855,6 +858,24 @@ function GameView({
                     snapshot={snapshot}
                     presentation={presentation}
                   />
+                  {snapshot.botRequestAvailable && (
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={!!state.inFlight}
+                      title="Con un solo país en las rondas finales, un bot puede jugar por vos el resto de la partida."
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            'Un bot va a jugar por vos hasta el final de la partida y los puntos siguen siendo tuyos. Solo el administrador puede devolverte el lugar. ¿Seguir?',
+                          )
+                        )
+                          submit({ type: 'request_bot' });
+                      }}
+                    >
+                      Pedir bot
+                    </button>
+                  )}
                 </div>
                 {actionHost &&
                   createPortal(

@@ -87,6 +87,7 @@ export const commandPayloadSchema = z.discriminatedUnion('type', [
     pactId: id,
   }),
   z.strictObject({ type: z.literal('withdraw_pact'), pactId: id }),
+  z.strictObject({ type: z.literal('request_bot') }),
 ]);
 
 export const clientCommandSchema = z.strictObject({
@@ -160,7 +161,7 @@ export interface PublicPlayerView {
   readonly eliminated: boolean;
   readonly disqualified?: boolean;
   readonly absent?: boolean;
-  readonly bot?: 'absent' | 'admin';
+  readonly bot?: 'absent' | 'admin' | 'requested' | 'table';
   readonly cardCount: number;
   readonly completedExchangeCount: number;
 }
@@ -397,7 +398,10 @@ export interface PlayerGameView {
   readonly competitiveDurationMinutes?: 60 | 80;
   readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
   readonly competitiveBotsReplaceAbsent?: boolean;
+  readonly competitiveBotSeats?: 2;
   readonly selfPlayerId: string;
+  /** The viewer may hand their seat to a bot (one country, final rounds). */
+  readonly botRequestAvailable?: true;
   readonly players: readonly PublicPlayerView[];
   readonly readyPlayerIds?: readonly string[];
   readonly territories?: Readonly<
@@ -438,6 +442,7 @@ export interface ExactPoints {
 }
 export interface CompetitiveResultRow {
   readonly playerId: string;
+  readonly bot?: 'table' | 'replacement';
   readonly status: 'survivor' | 'eliminated' | 'disqualified';
   readonly position?: number;
   readonly tiedPlayers: number;
@@ -493,6 +498,7 @@ export interface AdminGameView {
   readonly competitiveDurationMinutes?: 60 | 80;
   readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
   readonly competitiveBotsReplaceAbsent?: boolean;
+  readonly competitiveBotSeats?: 2;
   readonly players: readonly PublicPlayerView[];
   readonly readyPlayerIds?: readonly string[];
   readonly setup?: SetupView;
@@ -560,7 +566,7 @@ const publicPlayerViewSchema = z.strictObject({
   eliminated: z.boolean(),
   disqualified: z.boolean().optional(),
   absent: z.literal(true).optional(),
-  bot: z.enum(['absent', 'admin']).optional(),
+  bot: z.enum(['absent', 'admin', 'requested', 'table']).optional(),
   cardCount: z.number().int().nonnegative().max(50),
   completedExchangeCount: z.number().int().nonnegative(),
 });
@@ -794,6 +800,8 @@ export const playerGameViewSchema = z.strictObject({
     .optional(),
   competitiveBotLevel: z.enum(['easy', 'normal', 'hard']).optional(),
   competitiveBotsReplaceAbsent: z.boolean().optional(),
+  competitiveBotSeats: z.literal(2).optional(),
+  botRequestAvailable: z.literal(true).optional(),
   selfPlayerId: id,
   players: z.array(publicPlayerViewSchema).min(1).max(6),
   readyPlayerIds: z.array(id).max(6).optional(),
@@ -931,12 +939,20 @@ export const gamePlayerParamsSchema = z.strictObject({
   gameId: id,
   playerId: id,
 });
-export const updateGameConfigurationBodySchema = z.strictObject({
-  configuredPlayerCount: z.number().int().min(2).max(6),
-  competitiveDurationMinutes: z
-    .union([z.literal(60), z.literal(80)])
-    .optional(),
-});
+export const updateGameConfigurationBodySchema = z
+  .strictObject({
+    configuredPlayerCount: z.number().int().min(2).max(6),
+    competitiveDurationMinutes: z
+      .union([z.literal(60), z.literal(80)])
+      .optional(),
+    competitiveBotSeats: z.literal(2).optional(),
+  })
+  .refine(
+    (body) =>
+      !body.competitiveBotSeats ||
+      (body.configuredPlayerCount === 6 &&
+        body.competitiveDurationMinutes !== 60),
+  );
 export const configureBotsBodySchema = z
   .strictObject({
     level: z.enum(['easy', 'normal', 'hard']).optional(),

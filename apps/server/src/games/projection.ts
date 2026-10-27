@@ -1,6 +1,7 @@
 import {
   resolveGameRuntime,
   competitiveResults,
+  canRequestCompetitiveBot,
   type GameState,
   type PlayerId,
 } from '@game/game-engine';
@@ -46,6 +47,9 @@ export function projectGameForAdmin(
       : {}),
     ...(state.competitiveBotsReplaceAbsent !== undefined
       ? { competitiveBotsReplaceAbsent: state.competitiveBotsReplaceAbsent }
+      : {}),
+    ...(state.competitiveBotSeats
+      ? { competitiveBotSeats: state.competitiveBotSeats }
       : {}),
     players: publicPlayers(state),
     ...(state.pendingInheritance
@@ -120,7 +124,13 @@ export function projectGameFor(
     ...(state.competitiveBotsReplaceAbsent !== undefined
       ? { competitiveBotsReplaceAbsent: state.competitiveBotsReplaceAbsent }
       : {}),
+    ...(state.competitiveBotSeats
+      ? { competitiveBotSeats: state.competitiveBotSeats }
+      : {}),
     selfPlayerId: playerId,
+    ...(canRequestCompetitiveBot(state, playerId)
+      ? { botRequestAvailable: true as const }
+      : {}),
     legalActions: runtime.deriveLegalActions(state, playerId),
     players: publicPlayers(state),
     ...(state.pendingInheritance

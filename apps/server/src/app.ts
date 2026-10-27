@@ -3,6 +3,7 @@ import cookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
 import type { PlayerId, PlayerState } from '@game/game-engine';
+import { humanSeats } from '@game/game-engine';
 import {
   MAX_WEBSOCKET_MESSAGE_BYTES,
   PROTOCOL_VERSION,
@@ -630,6 +631,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
           params.data.gameId,
           body.data.configuredPlayerCount as 2 | 3 | 4 | 5 | 6,
           body.data.competitiveDurationMinutes,
+          body.data.competitiveBotSeats,
         );
         await broadcastCurrentGame(params.data.gameId);
         return { gameId: params.data.gameId, revision };
@@ -703,7 +705,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         status: durable.state.status,
         canJoin:
           durable.state.status === 'LOBBY' &&
-          durable.state.players.length < durable.state.configuredPlayerCount,
+          durable.state.players.length < humanSeats(durable.state),
         availableColors: [
           'blue',
           'red',

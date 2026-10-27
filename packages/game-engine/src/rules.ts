@@ -625,7 +625,8 @@ function validatePactFormation(
   recipientId: PlayerId,
   terms: PactTerms,
 ): DomainErrorCode | undefined {
-  if (!pactsAllowed(s.mode, s.configuredPlayerCount)) return 'INVALID_PACT';
+  if (!pactsAllowed(s.mode, s.configuredPlayerCount, s.competitiveBotSeats))
+    return 'INVALID_PACT';
   const proposer = player(s, proposerId),
     recipient = player(s, recipientId);
   if (
@@ -707,7 +708,11 @@ export function applyCommand(
   if (state.status === 'FINISHED') return reject('GAME_FINISHED');
   if (state.status !== 'ACTIVE') return reject('GAME_NOT_ACTIVE');
   if (
-    !pactsAllowed(state.mode, state.configuredPlayerCount) &&
+    !pactsAllowed(
+      state.mode,
+      state.configuredPlayerCount,
+      state.competitiveBotSeats,
+    ) &&
     (command.type === 'propose_pact' || command.type === 'accept_pact')
   )
     return reject('INVALID_PACT');

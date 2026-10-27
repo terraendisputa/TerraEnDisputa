@@ -5,6 +5,7 @@ import {
   synchronizeCompetitiveClock,
   pauseCompetitiveClock,
   selectCompetitiveTerritory,
+  requestCompetitiveBot,
   competitiveActor,
   chooseBotCommand,
   applyBotCommand,
@@ -120,6 +121,19 @@ function execute(
       ok: false as const,
       error: { code: 'GAME_PAUSED', message: 'Game is paused' },
     };
+  if (payload.type === 'request_bot') {
+    try {
+      return {
+        ok: true as const,
+        state: requestCompetitiveBot(state, playerId),
+      };
+    } catch {
+      return {
+        ok: false as const,
+        error: { code: 'INVALID_PHASE', message: 'A bot cannot take over now' },
+      };
+    }
+  }
   if (state.players.find((p) => p.id === playerId)?.disqualified)
     return {
       ok: false as const,

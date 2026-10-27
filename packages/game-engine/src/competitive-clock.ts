@@ -289,7 +289,8 @@ function expire(s: GameState, random: ShuffleSource): GameState {
   }
   return s.status === 'ACTIVE' ? finishCompetitiveActivation(s) : s;
 }
-export type CompetitiveSeat = 'absent' | 'bot-absent' | 'bot-admin';
+export type CompetitiveSeat =
+  'absent' | 'bot-absent' | 'bot-admin' | 'bot-requested';
 /**
  * Who plays a seat that its player left. As in the Superliga, a bot takes it
  * and the player's pacts end; with bots off, its turns pass on their own.
@@ -310,7 +311,11 @@ export function setCompetitiveSeat(
       return seat === 'absent'
         ? { ...rest, absent: true }
         : seat
-          ? { ...rest, bot: seat === 'bot-admin' ? 'admin' : 'absent' }
+          ? {
+              ...rest,
+              bot: seat.slice(4) as 'absent' | 'admin' | 'requested',
+              botPlayed: true,
+            }
           : rest;
     }),
   } as GameState;
@@ -449,7 +454,7 @@ export function tickCompetitiveClock(
     if ((absent || seat?.bot === 'absent') && connected)
       s = setCompetitiveSeat(s, pid, undefined);
     const botPlays =
-      seat?.bot === 'admin' || (seat?.bot === 'absent' && !connected);
+      seat?.bot !== undefined && (seat.bot !== 'absent' || !connected);
     if (!connected && !botPlays) s = resolveInheritance(s, random);
     if (absent && !connected) s = expire(s, random);
     else if (
@@ -531,11 +536,19 @@ export function assignCompetitiveBot(
     (s.status !== 'SETUP' && s.status !== 'ACTIVE') ||
     !player ||
     player.eliminated ||
-    player.disqualified
+    player.disqualified ||
+    player.bot === 'table'
   )
     throw new Error('INVALID_PHASE');
   if (!enabled) return player.bot ? setCompetitiveSeat(s, pid, undefined) : s;
-  const next = setCompetitiveSeat(s, pid, 'bot-admin');
+  return botTakesSeat(s, pid, 'bot-admin');
+}
+function botTakesSeat(
+  s: GameState,
+  pid: PlayerId,
+  seat: 'bot-admin' | 'bot-requested',
+): GameState {
+  const next = setCompetitiveSeat(s, pid, seat);
   const clock = next.competitiveClock!;
   return clock.pauseReason === 'disconnection' &&
     clock.disconnectedPlayerId === pid
@@ -548,6 +561,30 @@ export function assignCompetitiveBot(
         },
       }
     : next;
+}
+/**
+ * As the Superliga allows, from the second to last round a player left with a
+ * single country may hand their seat to a bot for the rest of the game.
+ */
+export function canRequestCompetitiveBot(s: GameState, pid: PlayerId): boolean {
+  const player = s.players.find((p) => p.id === pid);
+  const final = s.competitiveClock?.finalRoundNumber;
+  return (
+    s.mode === 'competitive' &&
+    s.status === 'ACTIVE' &&
+    final !== undefined &&
+    s.turn.round.kind === 'normal' &&
+    s.turn.round.roundNumber >= final - 1 &&
+    !!player &&
+    !player.eliminated &&
+    !player.disqualified &&
+    !player.bot &&
+    TERRITORY_IDS.filter((id) => s.territories[id].ownerId === pid).length === 1
+  );
+}
+export function requestCompetitiveBot(s: GameState, pid: PlayerId): GameState {
+  if (!canRequestCompetitiveBot(s, pid)) throw new Error('INVALID_PHASE');
+  return botTakesSeat(s, pid, 'bot-requested');
 }
 export function selectCompetitiveTerritory(
   s: GameState,

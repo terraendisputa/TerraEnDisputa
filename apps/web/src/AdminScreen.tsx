@@ -268,8 +268,12 @@ export function AdminScreen() {
     );
 
   const selected = games.find(({ gameId }) => gameId === selectedId);
+  // A four plus two table waits for four people; the bots sit at the start.
+  const humanSeats = selected
+    ? selected.configuredPlayerCount - (selected.competitiveBotSeats ?? 0)
+    : 0;
   const missingPlayers = selected
-    ? Math.max(0, selected.configuredPlayerCount - selected.players.length)
+    ? Math.max(0, humanSeats - selected.players.length)
     : 0;
   const missingReady = selected
     ? Math.max(
@@ -282,7 +286,9 @@ export function AdminScreen() {
   const readyToStart =
     selected?.status === 'LOBBY' &&
     missingReady === 0 &&
-    selected.players.length >= (selected.mode === 'competitive' ? 4 : 2);
+    (selected.competitiveBotSeats
+      ? missingPlayers === 0
+      : selected.players.length >= (selected.mode === 'competitive' ? 4 : 2));
   return (
     <main className="admin-layout">
       <header className="topbar">
@@ -483,14 +489,22 @@ export function AdminScreen() {
                     Jugadores requeridos
                     <select
                       disabled={busy || selected.status !== 'LOBBY'}
-                      value={selected.configuredPlayerCount}
+                      value={
+                        selected.competitiveBotSeats
+                          ? '6+2'
+                          : selected.configuredPlayerCount
+                      }
                       onChange={(event) =>
                         void run(() =>
-                          api.configureGame(
-                            selected.gameId,
-                            Number(event.target.value),
-                            selected.competitiveDurationMinutes,
-                          ),
+                          event.target.value === '6+2'
+                            ? api.configureGame(selected.gameId, 6, 80, 2)
+                            : api.configureGame(
+                                selected.gameId,
+                                Number(event.target.value),
+                                selected.competitiveBotSeats
+                                  ? undefined
+                                  : selected.competitiveDurationMinutes,
+                              ),
                         )
                       }
                     >
@@ -505,6 +519,14 @@ export function AdminScreen() {
                           {count}
                         </option>
                       ))}
+                      {selected.mode === 'competitive' && (
+                        <option
+                          value="6+2"
+                          disabled={selected.players.length > 4}
+                        >
+                          6: 4 jugadores + 2 bots
+                        </option>
+                      )}
                     </select>
                   </label>
                   {selected.mode === 'competitive' && (
@@ -514,7 +536,8 @@ export function AdminScreen() {
                         disabled={
                           busy ||
                           selected.status !== 'LOBBY' ||
-                          selected.configuredPlayerCount === 4
+                          selected.configuredPlayerCount === 4 ||
+                          !!selected.competitiveBotSeats
                         }
                         value={
                           selected.configuredPlayerCount === 4
@@ -534,11 +557,13 @@ export function AdminScreen() {
                         {selected.configuredPlayerCount !== 4 && (
                           <option value={80}>1:20 h + 2 rondas</option>
                         )}
-                        <option value={60}>
-                          {selected.configuredPlayerCount === 4
-                            ? '1:00 h + 2 rondas'
-                            : 'Express: 1:00 h + 2 rondas'}
-                        </option>
+                        {!selected.competitiveBotSeats && (
+                          <option value={60}>
+                            {selected.configuredPlayerCount === 4
+                              ? '1:00 h + 2 rondas'
+                              : 'Express: 1:00 h + 2 rondas'}
+                          </option>
+                        )}
                       </select>
                     </label>
                   )}
@@ -562,7 +587,10 @@ export function AdminScreen() {
                             ? `Esperando que ${missingReady} ${missingReady === 1 ? 'persona marque' : 'personas marquen'} «Estoy listo».`
                             : 'Todos están listos. Podés comenzar.'}{' '}
                       Listos: {selected.readyPlayerIds?.length ?? 0}/
-                      {selected.configuredPlayerCount}.
+                      {humanSeats}.
+                      {selected.competitiveBotSeats
+                        ? ' Los 2 bots se suman al comenzar.'
+                        : ''}
                     </p>
                   )}
                   <div className="button-row">
@@ -577,10 +605,7 @@ export function AdminScreen() {
                         }
                         onClick={() =>
                           void run(async () => {
-                            if (
-                              selected.players.length !==
-                              selected.configuredPlayerCount
-                            )
+                            if (selected.players.length !== humanSeats)
                               await api.configureGame(
                                 selected.gameId,
                                 selected.players.length,
@@ -793,14 +818,18 @@ export function AdminScreen() {
                         <span className="admin-player-copy">
                           <strong>
                             {player.nickname}
-                            {player.bot ? ' (bot)' : ''}
+                            {player.bot && player.bot !== 'table'
+                              ? ' (bot)'
+                              : ''}
                           </strong>
                           <small>
                             {playerColorLabel(player.color)} · Asiento{' '}
                             {player.seatIndex + 1} ·{' '}
-                            {player.controller === 'controlled'
-                              ? 'con jugador'
-                              : 'sin jugador'}
+                            {player.bot === 'table'
+                              ? 'bot de la mesa'
+                              : player.controller === 'controlled'
+                                ? 'con jugador'
+                                : 'sin jugador'}
                           </small>
                           {selected.status === 'LOBBY' && (
                             <span
@@ -827,7 +856,8 @@ export function AdminScreen() {
                             (selected.status === 'SETUP' ||
                               selected.status === 'ACTIVE') &&
                             !player.eliminated &&
-                            !player.disqualified && (
+                            !player.disqualified &&
+                            player.bot !== 'table' && (
                               <button
                                 type="button"
                                 className="secondary"

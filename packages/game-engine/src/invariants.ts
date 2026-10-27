@@ -1,4 +1,9 @@
-import { setupArmies, validPlayerCount, pactsAllowed } from './mode-policy.js';
+import {
+  setupArmies,
+  validPlayerCount,
+  pactsAllowed,
+  humanSeats,
+} from './mode-policy.js';
 import {
   CONTINENTS,
   CONTINENT_IDS,
@@ -21,13 +26,17 @@ export function classicInvariantViolations(
     errors.push('invalid mode or player count');
   if (
     state.status !== 'LOBBY' &&
-    !pactsAllowed(state.mode, state.configuredPlayerCount) &&
+    !pactsAllowed(
+      state.mode,
+      state.configuredPlayerCount,
+      state.competitiveBotSeats,
+    ) &&
     (state.pacts.active.length || state.pacts.proposals.length)
   )
     errors.push('pacts disabled');
   if (
     state.mode === 'competitive' &&
-    state.configuredPlayerCount === 4 &&
+    humanSeats(state) === 4 &&
     state.players.some((p) => p.secretObjectiveId?.startsWith('destroy_'))
   )
     errors.push('destruction objectives disabled');
@@ -71,8 +80,15 @@ export function classicInvariantViolations(
       errors.push(`invalid destruction target for ${player.id}`);
   }
   if (state.status === 'LOBBY') {
-    if (state.players.length > state.configuredPlayerCount)
+    if (state.players.length > humanSeats(state))
       errors.push('lobby exceeds configured player count');
+    if (
+      state.competitiveBotSeats &&
+      (state.mode !== 'competitive' ||
+        state.configuredPlayerCount !== 6 ||
+        state.competitiveDurationMinutes === 60)
+    )
+      errors.push('A bot table is six seats with two bots and no Express');
     const readyIds = new Set<PlayerId>();
     for (const id of state.readyPlayerIds) {
       if (!playerIds.has(id)) errors.push(`invalid ready player ${id}`);
@@ -571,9 +587,23 @@ export function classicInvariantViolations(
     state.mode !== 'competitive' &&
     (state.players.some((p) => p.absent || p.bot) ||
       state.competitiveBotLevel ||
-      state.competitiveBotsReplaceAbsent !== undefined)
+      state.competitiveBotsReplaceAbsent !== undefined ||
+      state.competitiveBotSeats)
   )
     errors.push('Only Competitive can have bots');
+  if (
+    state.competitiveBotSeats &&
+    (state.configuredPlayerCount !== 6 ||
+      state.competitiveDurationMinutes === 60 ||
+      state.players.filter((p) => p.bot === 'table').length !==
+        state.competitiveBotSeats)
+  )
+    errors.push('A bot table is six seats with two bots and no Express');
+  if (
+    !state.competitiveBotSeats &&
+    state.players.some((p) => p.bot === 'table')
+  )
+    errors.push('Table bots belong to a started bot table');
   if (state.players.some((p) => p.absent && p.bot))
     errors.push('A seat is either absent or played by a bot');
   if (state.mode !== 'competitive' && state.players.some((p) => p.absent))

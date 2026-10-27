@@ -88,6 +88,11 @@ export function CompetitiveResultsPanel({
                   </td>
                   <th scope="row">
                     {player.nickname} · {playerColorLabel(player.color)}
+                    {row.bot === 'table'
+                      ? ' · bot de la mesa'
+                      : row.bot === 'replacement'
+                        ? ' · lo reemplazó un bot'
+                        : ''}
                   </th>
                   <td>
                     <strong>{exactPointsText(row.totalPoints)}</strong>

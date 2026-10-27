@@ -210,7 +210,11 @@ export function deriveLegalActions(
       state.turn.round.pass === 'hostility');
   const pactRecipientIds =
     ownsHostilityActivation &&
-    pactsAllowed(state.mode, state.configuredPlayerCount)
+    pactsAllowed(
+      state.mode,
+      state.configuredPlayerCount,
+      state.competitiveBotSeats,
+    )
       ? state.players
           .filter(
             (player) =>
@@ -252,7 +256,11 @@ export function deriveLegalActions(
   });
   const pactActions = actionList(
     ownsHostilityActivation &&
-      pactsAllowed(state.mode, state.configuredPlayerCount) &&
+      pactsAllowed(
+        state.mode,
+        state.configuredPlayerCount,
+        state.competitiveBotSeats,
+      ) &&
       'propose_pact',
     pactProposalIdsToAnswer.length > 0 && 'accept_pact',
     pactProposalIdsToAnswer.length > 0 && 'reject_pact',

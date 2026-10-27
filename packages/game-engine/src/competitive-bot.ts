@@ -20,6 +20,21 @@ import { applySetupCommand, type SetupCommand } from './setup.js';
 export const BOT_LEVELS = ['easy', 'normal', 'hard'] as const;
 export type BotLevel = (typeof BOT_LEVELS)[number];
 export type BotCommand = GameplayCommand | SetupCommand;
+/** Names for the bots that complete a table, dealt at random. */
+export const COMPETITIVE_BOT_NAMES = [
+  'Bot Paul',
+  'Bot Bélico',
+  'Bot Seisdados',
+  'Bot Tirabombas',
+  'Bot Mate',
+  'Bot Facón',
+  'Bot Pampa',
+  'Bot Truco',
+  'Bot Bandoneón',
+  'Bot Gaucho',
+  'Bot Tango',
+  'Bot Asado',
+] as const;
 
 /** Armies the attacker needs above the defender (easy and normal). */
 const ATTACK_MARGIN = { easy: 1, normal: 2 } as const;

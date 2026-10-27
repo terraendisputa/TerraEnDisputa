@@ -80,12 +80,12 @@ export function PlayerRoster({
               aria-current={p.id === actor ? 'true' : undefined}
               aria-expanded={inspected === p.id}
               aria-label={`Ver información de ${p.nickname}${p.id === actor ? ', turno actual' : ''}`}
-              title={`${p.nickname}${p.bot ? ' (bot)' : ''}`}
+              title={`${p.nickname}${p.bot && p.bot !== 'table' ? ' (bot)' : ''}`}
               onClick={() => setInspected(inspected === p.id ? null : p.id)}
             >
               <span className="roster-name">
                 {p.nickname}
-                {p.bot ? ' (bot)' : ''}
+                {p.bot && p.bot !== 'table' ? ' (bot)' : ''}
               </span>
               <span className="turn-alert" aria-hidden="true">
                 !
@@ -102,7 +102,7 @@ export function PlayerRoster({
           <header>
             <strong>
               {player.nickname}
-              {player.bot ? ' (bot)' : ''}
+              {player.bot && player.bot !== 'table' ? ' (bot)' : ''}
               {player.id === snapshot.selfPlayerId ? ' · vos' : ''}
             </strong>
             <button
@@ -131,15 +131,17 @@ export function PlayerRoster({
               ? 'Descalificado'
               : player.eliminated
                 ? 'Eliminado'
-                : player.bot
-                  ? 'Juega un bot'
-                  : player.absent
-                    ? 'Ausente · turnos automáticos'
-                    : player.controller === 'controllerless_reassignment'
-                      ? 'Sin jugador'
-                      : player.id === actor
-                        ? 'Jugando ahora'
-                        : 'En partida'}
+                : player.bot === 'table'
+                  ? 'Bot de la mesa'
+                  : player.bot
+                    ? 'Juega un bot'
+                    : player.absent
+                      ? 'Ausente · turnos automáticos'
+                      : player.controller === 'controllerless_reassignment'
+                        ? 'Sin jugador'
+                        : player.id === actor
+                          ? 'Jugando ahora'
+                          : 'En partida'}
           </small>
         </section>
       )}

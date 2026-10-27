@@ -74,6 +74,7 @@ export const api = {
     gameId: string,
     configuredPlayerCount: number,
     competitiveDurationMinutes?: 60 | 80,
+    competitiveBotSeats?: 2,
   ) =>
     request<{ gameId: string; revision: number }>(
       `/api/admin/games/${gameId}`,
@@ -82,6 +83,7 @@ export const api = {
         body: JSON.stringify({
           configuredPlayerCount,
           competitiveDurationMinutes,
+          competitiveBotSeats,
         }),
       },
     ),

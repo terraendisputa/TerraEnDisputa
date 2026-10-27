@@ -101,6 +101,11 @@ export function competitiveResults(
     };
     return {
       playerId: p.id,
+      ...(p.bot === 'table'
+        ? { bot: 'table' as const }
+        : p.botPlayed
+          ? { bot: 'replacement' as const }
+          : {}),
       status: p.disqualified
         ? 'disqualified'
         : p.eliminated

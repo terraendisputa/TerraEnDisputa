@@ -1,5 +1,12 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   CLASSIC_GAME_DEFINITION,
+  COMPETITIVE_BOT_NAMES,
+  humanSeats,
+  PLAYER_COLORS,
+  type PlayerId,
+  type PlayerState,
   resolveGameDefinition,
   resolveGameRuntime,
   startCompetitiveClock,
@@ -9,6 +16,7 @@ import {
   validPlayerCount,
   type SetupRandomness,
 } from '@game/game-engine';
+import { sameNickname } from '@game/protocol';
 
 import { emptyGameAuthState } from '../auth/types.js';
 import {
@@ -80,6 +88,7 @@ export class GameLifecycleService {
     gameId: string,
     configuredPlayerCount: 2 | 3 | 4 | 5 | 6,
     competitiveDurationMinutes?: 60 | 80,
+    competitiveBotSeats?: 2,
   ): Promise<number> {
     return this.coordinator.run(gameId, async () => {
       const current = await this.requireGame(gameId);
@@ -87,21 +96,38 @@ export class GameLifecycleService {
         throw new LifecycleOperationError('INVALID_LIFECYCLE_STATE');
       if (
         !validPlayerCount(current.state.mode, configuredPlayerCount) ||
-        configuredPlayerCount < current.state.players.length ||
+        humanSeats({ configuredPlayerCount, competitiveBotSeats }) <
+          current.state.players.length ||
         (competitiveDurationMinutes !== undefined &&
-          current.state.mode !== 'competitive')
+          current.state.mode !== 'competitive') ||
+        (competitiveBotSeats !== undefined &&
+          (current.state.mode !== 'competitive' ||
+            configuredPlayerCount !== 6 ||
+            competitiveDurationMinutes === 60))
       )
         throw new LifecycleOperationError('INVALID_GAME_COMMAND');
       const revision = current.revision + 1;
+      // A bot table always plays 1:20 h, so it drops an earlier Express choice.
+      const {
+        competitiveBotSeats: _seats,
+        competitiveDurationMinutes: _minutes,
+        ...rest
+      } = current.state;
+      void _seats;
+      void _minutes;
+      const previousMinutes = competitiveBotSeats
+        ? undefined
+        : (competitiveDurationMinutes ?? _minutes);
       await this.store.commitGame(
         {
           ...current,
           state: {
-            ...current.state,
+            ...rest,
             configuredPlayerCount,
-            ...(competitiveDurationMinutes
-              ? { competitiveDurationMinutes }
+            ...(previousMinutes
+              ? { competitiveDurationMinutes: previousMinutes }
               : {}),
+            ...(competitiveBotSeats ? { competitiveBotSeats } : {}),
           },
           revision,
         },
@@ -120,20 +146,28 @@ export class GameLifecycleService {
       if (current.state.status !== 'LOBBY')
         throw new LifecycleOperationError('INVALID_LIFECYCLE_STATE');
       if (
-        current.state.players.length !== current.state.configuredPlayerCount ||
+        current.state.players.length !== humanSeats(current.state) ||
         current.state.readyPlayerIds.length !== current.state.players.length
       )
         throw new LifecycleOperationError('INVALID_GAME_COMMAND');
       const revision = current.revision + 1;
+      const players = [
+        ...current.state.players,
+        ...this.tableBots(
+          current.state.players,
+          current.state.competitiveBotSeats ?? 0,
+        ),
+      ];
       const state = (() => {
         try {
           const setup = resolveGameRuntime(
             current.state.definition,
           ).createSetup(
             current.state.id,
-            current.state.players,
+            players,
             this.randomness,
             current.state.mode,
+            current.state.competitiveBotSeats,
           );
           return current.state.competitiveDurationMinutes
             ? {
@@ -161,6 +195,37 @@ export class GameLifecycleService {
       );
       return revision;
     });
+  }
+
+  /**
+   * The bots that complete a four plus two table: free seats and colors, and
+   * names from the list at random that no person at the table uses.
+   */
+  private tableBots(
+    people: readonly PlayerState[],
+    count: number,
+  ): PlayerState[] {
+    if (!count) return [];
+    const names = this.randomness
+      .shuffle(COMPETITIVE_BOT_NAMES)
+      .filter((name) => !people.some((p) => sameNickname(p.nickname, name)));
+    const colors = this.randomness
+      .shuffle(PLAYER_COLORS)
+      .filter((color) => !people.some((p) => p.color === color));
+    const seats = [0, 1, 2, 3, 4, 5].filter(
+      (seat) => !people.some((p) => p.seatIndex === seat),
+    );
+    return Array.from({ length: count }, (_, i) => ({
+      id: randomUUID() as PlayerId,
+      seatIndex: seats[i]!,
+      nickname: names[i]!,
+      color: colors[i]!,
+      controller: 'controlled' as const,
+      eliminated: false,
+      cards: [],
+      completedExchangeCount: 0,
+      bot: 'table' as const,
+    }));
   }
 
   delete(gameId: string): Promise<void> {

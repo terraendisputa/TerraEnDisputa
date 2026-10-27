@@ -1,4 +1,5 @@
 import type { GameState, PlayerId, PlayerState } from '@game/game-engine';
+import { humanSeats } from '@game/game-engine';
 import { sameNickname } from '@game/protocol';
 
 import type { CommitResult, DurableGame } from '../persistence/types.js';
@@ -295,7 +296,7 @@ export class AuthenticationService {
           )
         )
           throw new AuthenticationOperationError('NICKNAME_ALREADY_IN_USE');
-        if (current.state.players.length >= current.state.configuredPlayerCount)
+        if (current.state.players.length >= humanSeats(current.state))
           throw new AuthenticationOperationError('INVALID_GAME_COMMAND');
         const candidate = this.transitions.createPlayer(
           current.auth,
