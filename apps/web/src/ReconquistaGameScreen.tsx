@@ -210,6 +210,11 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
   useEffect(() => {
     if (hostilityStep && !rolling) setPanel('actions');
   }, [hostilityStep, rolling]);
+  // The result, with the winners' cards, opens on its own when the game ends.
+  const finished = presentation?.mode === 'finished';
+  useEffect(() => {
+    if (finished && !rolling) setPanel('actions');
+  }, [finished, rolling]);
   // The player on turn shares what is selected, so everyone sees the same outlines.
   const mine = !!presentation?.mine;
   useEffect(() => {

@@ -173,6 +173,15 @@ export const reconquistaViewSchema = z.strictObject({
     })
     .nullable(),
   restingPlayerId: identifier.nullable(),
+  winnerObjectives: z
+    .array(
+      z.strictObject({
+        playerId: identifier,
+        objectives: z.array(secret).max(2),
+      }),
+    )
+    .max(6)
+    .optional(),
   campaign: campaignPublicSchema.nullable(),
   hostility: z
     .strictObject({

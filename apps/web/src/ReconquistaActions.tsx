@@ -8,7 +8,7 @@ import type {
 import { ActionRoute } from './ActionRoute.js';
 import { ActionTitle, Amount } from './GameplayControls.js';
 import { UiIcon } from './UiIcon.js';
-import { continentNames } from './reconquista-labels.js';
+import { continentNames, playerColorNames } from './reconquista-labels.js';
 import type { Presentation } from './reconquista-client.js';
 
 export type Weapon = 'dice' | 'missile';
@@ -330,15 +330,8 @@ export function ReconquistaActions(
       return null;
     case 'zone':
       return <Zone {...props} />;
-    case 'finished': {
-      const winners = view.campaign?.winners ?? [];
-      return (
-        <p className="turn-notice">
-          {winners.length > 1 ? 'Victoria compartida' : 'Victoria'}:{' '}
-          <strong>{winners.map(player).join(' y ')}</strong>.
-        </p>
-      );
-    }
+    case 'finished':
+      return <Finished view={view} />;
     default:
       return (
         <>
@@ -1072,5 +1065,52 @@ function Zone({ view, busy, send }: ActionProps) {
         Cerrar zona
       </button>
     </div>
+  );
+}
+
+/** Like Classic's result: who won, their color and the objective card. */
+function Finished({ view }: { readonly view: ReconquistaView }) {
+  const winners = (view.campaign?.winners ?? []).flatMap(
+    (id) => view.players.find((p) => p.id === id) ?? [],
+  );
+  const objectives = (view.winnerObjectives ?? []).flatMap((w) =>
+    w.objectives.map((o) => o.description),
+  );
+  return (
+    <section
+      className="finished-panel objective-box"
+      aria-labelledby="finished-title"
+    >
+      <div className="finished-summary">
+        <p className="eyebrow">
+          {winners.length > 1 ? 'Victoria compartida' : 'Partida finalizada'}
+        </p>
+        <h1 id="finished-title">
+          {winners.length > 1 ? 'Ganaron ' : 'Ganó '}
+          {winners.map((p) => p.nickname).join(' y ')}
+        </h1>
+        {winners.map((p) => (
+          <p className="winner-color" key={p.id}>
+            <span className={`color-dot color-${p.color}`} aria-hidden="true" />
+            {playerColorNames[p.color] ?? p.color}
+          </p>
+        ))}
+      </div>
+      <p className="winning-objective">
+        <span>
+          {objectives.length
+            ? objectives.join(' ')
+            : 'Cumplió su objetivo secreto.'}
+        </span>
+        <svg className="victory-crest" aria-hidden="true" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="20" />
+          <path d="M32 8v48M8 32h48M18 18l28 28M46 18 18 46" />
+          <path
+            className="crest-point"
+            d="m32 14 5 13 13 5-13 5-5 13-5-13-13-5 13-5Z"
+          />
+        </svg>
+      </p>
+    </section>
   );
 }

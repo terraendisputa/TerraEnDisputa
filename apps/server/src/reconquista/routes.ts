@@ -281,6 +281,13 @@ export async function registerReconquista(
   // Selection shared by the player on turn: memory only, so it never reaches the journal.
   const focuses = new Map<string, NonNullable<ReconquistaView['focus']>>();
   const countryIds = new Set(board.countries.map((c) => c.id));
+  const described = <T extends { objectiveId: string }>(o: T) => ({
+    ...o,
+    description:
+      o.objectiveId === 'common_45'
+        ? 'Ocupar 45 países.'
+        : assets.descriptions.get(o.objectiveId)!,
+  });
   function view(
     current: ReconquistaEnvelope,
     viewer: string | null,
@@ -349,19 +356,21 @@ export async function registerReconquista(
       ...(focuses.has(current.gameId)
         ? { focus: focuses.get(current.gameId) }
         : {}),
+      ...(publicView.winnerObjectives.length
+        ? {
+            winnerObjectives: publicView.winnerObjectives.map((w) => ({
+              playerId: w.playerId,
+              objectives: w.objectives.map(described),
+            })),
+          }
+        : {}),
       ...(self
         ? {
             self: {
               playerId: self.playerId,
               ...(self.campaign ? { campaign: self.campaign } : {}),
               legal: self.legal,
-              objectives: self.objectives.map((o) => ({
-                ...o,
-                description:
-                  o.objectiveId === 'common_45'
-                    ? 'Ocupar 45 países.'
-                    : assets.descriptions.get(o.objectiveId)!,
-              })),
+              objectives: self.objectives.map(described),
             },
           }
         : {}),
