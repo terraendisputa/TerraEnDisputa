@@ -24,6 +24,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { emptyGameAuthState } from '../apps/server/dist/auth/types.js';
+import { AuthenticationService } from '../apps/server/dist/auth/authentication.js';
 import { FileGameStore } from '../apps/server/dist/persistence/file-game-store.js';
 import { GameLifecycleService } from '../apps/server/dist/games/lifecycle-service.js';
 import { PerGameCoordinator } from '../apps/server/dist/games/per-game-coordinator.js';
@@ -726,6 +727,29 @@ void test('the lobby chooses how many bots join a Classic table', async () => {
     assert.deepEqual(freed.auth.players[bots[0].id], { playerId: bots[0].id });
     assertClassicInvariants(freed.state);
     decodeGame(encodeGame(freed));
+    // Whoever takes it plays under their own name, which must be free.
+    const auth = new AuthenticationService(store);
+    assert.equal(
+      await auth.takeAvailableSeat(id, bots[0].id, 'HTTP'),
+      undefined,
+    );
+    await assert.rejects(
+      auth.takeAvailableSeat(
+        id,
+        bots[0].id,
+        'HTTP',
+        undefined,
+        people[0].nickname,
+      ),
+    );
+    assert.ok(
+      await auth.takeAvailableSeat(id, bots[0].id, 'HTTP', undefined, 'Lucía'),
+    );
+    const taken = await store.loadGame(id);
+    const person = taken.state.players.find((p) => p.id === bots[0].id);
+    assert.equal(person.nickname, 'Lucía');
+    assert.equal(person.controller, 'controlled');
+    decodeGame(encodeGame(taken));
   });
 });
 

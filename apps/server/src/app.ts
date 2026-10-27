@@ -792,6 +792,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
           body.data.playerId as PlayerId,
           transportClass(request),
           existingToken,
+          body.data.nickname,
         );
         if (!token)
           return reply.code(409).send({ code: 'INVALID_GAME_COMMAND' });

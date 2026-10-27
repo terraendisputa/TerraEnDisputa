@@ -74,7 +74,7 @@ En la sala de espera de una partida de Clásico, el selector «Duración» ofrec
 
 En Clásico, con o sin Express, el panel tiene la misma sección de bots que Competitivo: dificultad (Difícil por defecto) y «Poner bot» o «Quitar bot» en cada jugador. «Reemplazar ausentes por bot» aparece solo en Express; si lo apagás, los turnos del ausente pasan solos. Sin Express nadie queda ausente: un bot entra solo si lo ponés vos. Los bots de Clásico responden los pactos que les ofrecen, y en Difícil también proponen pactos de frontera y los rompen cuando les conviene. Clásico no tiene «Pedir bot».
 
-En la sala de espera de Clásico, el selector «Bots» elige cuántos de los asientos de «Jugadores requeridos» ocupan bots al comenzar, desde uno hasta dejar un solo asiento para una persona; así se puede jugar solo contra bots. Los bots de la mesa reciben un nombre al azar, como en Competitivo, y juegan con la dificultad del panel. En Express, «Quitar bot» libera el asiento de un bot de la mesa: sus turnos pasan solos hasta que una persona lo toma con el enlace de la partida. Sin Express, los bots de la mesa juegan hasta el final.
+En la sala de espera de Clásico, el selector «Bots» elige cuántos de los asientos de «Jugadores requeridos» ocupan bots al comenzar, desde uno hasta dejar un solo asiento para una persona; así se puede jugar solo contra bots. Los bots de la mesa reciben un nombre al azar, como en Competitivo, y juegan con la dificultad del panel. En Express, «Quitar bot» libera el asiento de un bot de la mesa: sus turnos pasan solos hasta que una persona lo toma con el enlace de la partida, con su propio apodo. Sin Express, los bots de la mesa juegan hasta el final.
 
 ## Competitivo
 

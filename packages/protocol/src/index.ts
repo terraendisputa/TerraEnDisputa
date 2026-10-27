@@ -976,7 +976,11 @@ export const assignBotBodySchema = z.strictObject({ enabled: z.boolean() });
 export const confirmGameActionBodySchema = z.strictObject({
   confirmGameId: id,
 });
-export const takeSeatBodySchema = z.strictObject({ playerId: id });
+export const takeSeatBodySchema = z.strictObject({
+  playerId: id,
+  // Required for a table bot's seat: the person plays under their own name.
+  nickname: nicknameSchema(40).optional(),
+});
 
 export interface BootstrapResponse {
   readonly protocolVersion: typeof PROTOCOL_VERSION;

@@ -152,12 +152,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ nickname, color }),
     }),
-  takeSeat: (gameId: string, playerId: string) =>
+  takeSeat: (gameId: string, playerId: string, nickname?: string) =>
     request<{ authenticated: true; playerId: string }>(
       `/api/games/${gameId}/take-seat`,
       {
         method: 'POST',
-        body: JSON.stringify({ playerId }),
+        body: JSON.stringify({ playerId, nickname }),
       },
     ),
   leave: (gameId: string) =>

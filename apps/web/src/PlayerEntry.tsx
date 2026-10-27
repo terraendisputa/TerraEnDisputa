@@ -1,11 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, ApiError } from './api.js';
 import { errorMessage } from './errors.js';
+import { COMPETITIVE_BOT_NAMES } from '@game/game-engine';
 import {
   PLAYER_COLOR_LABELS,
   playerColorLabel,
   playerColorLabelLower,
 } from './colors.js';
+
+const isBotSeat = (name: string) =>
+  (COMPETITIVE_BOT_NAMES as readonly string[]).includes(name);
 
 export function PlayerEntry({
   gameId,
@@ -118,12 +122,39 @@ export function PlayerEntry({
           <section aria-label="Asientos disponibles">
             <h2>Asientos disponibles</h2>
             <p>Continuás con sus países, cartas, objetivo y turno actuales.</p>
+            {/* A table bot's seat takes the name of the person who joins. */}
+            {!entry.canJoin &&
+              entry.seats.some((seat) => isBotSeat(seat.nickname)) && (
+                <label>
+                  Apodo
+                  <input
+                    maxLength={40}
+                    value={nickname}
+                    onChange={(event) => setNickname(event.target.value)}
+                  />
+                </label>
+              )}
             {entry.seats.map((seat) => (
               <button
                 key={seat.id}
                 type="button"
-                disabled={busy}
-                onClick={() => void run(() => api.takeSeat(gameId, seat.id))}
+                disabled={
+                  busy || (isBotSeat(seat.nickname) && !nickname.trim())
+                }
+                title={
+                  isBotSeat(seat.nickname) && !nickname.trim()
+                    ? 'Escribí tu apodo para ocupar el asiento del bot.'
+                    : undefined
+                }
+                onClick={() =>
+                  void run(() =>
+                    api.takeSeat(
+                      gameId,
+                      seat.id,
+                      isBotSeat(seat.nickname) ? nickname : undefined,
+                    ),
+                  )
+                }
               >
                 Ocupar asiento de {seat.nickname} ·{' '}
                 {playerColorLabel(seat.color)}
