@@ -350,6 +350,25 @@ export function GameMap({
           })}
           <MapArtwork definition={snapshot.definition} part="wash" />
           <MapArtwork definition={snapshot.definition} part="ornaments" />
+          {observedCombat && (
+            <g className="observed-combat-outlines" aria-hidden="true">
+              {TERRITORIES.filter(
+                (t) =>
+                  t.id === observedCombat.from || t.id === observedCombat.to,
+              ).map((t) => (
+                <path
+                  key={t.id}
+                  d={t.path}
+                  className={
+                    t.id === observedCombat.from
+                      ? 'combat-attacker'
+                      : 'combat-defender'
+                  }
+                />
+              ))}
+            </g>
+          )}
+          {/* Over the combat outlines, so moves stay readable. */}
           <g className="army-changes" aria-hidden="true">
             {TERRITORIES.filter(({ id }) => armyChanges[id]).map(
               ({ id, x, y }) => {
@@ -372,24 +391,6 @@ export function GameMap({
               },
             )}
           </g>
-          {observedCombat && (
-            <g className="observed-combat-outlines" aria-hidden="true">
-              {TERRITORIES.filter(
-                (t) =>
-                  t.id === observedCombat.from || t.id === observedCombat.to,
-              ).map((t) => (
-                <path
-                  key={t.id}
-                  d={t.path}
-                  className={
-                    t.id === observedCombat.from
-                      ? 'combat-attacker'
-                      : 'combat-defender'
-                  }
-                />
-              ))}
-            </g>
-          )}
         </svg>
       </MapViewport>
       <div className="map-selection-bar">

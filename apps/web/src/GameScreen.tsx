@@ -488,7 +488,10 @@ function GameView({
         setPlacements({});
     }
     const presentation = gamePresentation(snapshot);
-    if (
+    // The result, with the winner's card, opens on its own when the game ends.
+    if (snapshot.status === 'FINISHED' && previous?.status !== 'FINISHED')
+      setInformationPanel('actions');
+    else if (
       changedPhase &&
       presentation.mine &&
       snapshot.turn?.phase === 'end_of_turn_cards' &&
