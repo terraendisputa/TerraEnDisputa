@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createCommandId } from './command-id.js';
 import {
   RECONQUISTA_PROTOCOL,
   reconquistaBoardSchema,
@@ -199,7 +200,7 @@ export function useReconquistaGame(gameId: string) {
       if (!view) return;
       pending.current ??= {
         protocolVersion: RECONQUISTA_PROTOCOL,
-        commandId: crypto.randomUUID(),
+        commandId: createCommandId(),
         revision: view.revision,
         action,
       };
@@ -235,7 +236,7 @@ export function useReconquistaGame(gameId: string) {
         current = reconquistaCommandResultSchema.parse(
           await reconquistaRequest('/games/' + gameId + '/commands', {
             protocolVersion: RECONQUISTA_PROTOCOL,
-            commandId: crypto.randomUUID(),
+            commandId: createCommandId(),
             revision: current.revision,
             action,
           }),

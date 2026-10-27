@@ -267,6 +267,7 @@ export class ReconquistaStore {
       playerCount: number;
       players: number;
       started: boolean;
+      finished: boolean;
     }[]
   > {
     const games = [];
@@ -278,6 +279,9 @@ export class ReconquistaStore {
           playerCount: current.playerCount,
           players: current.players.length,
           started: current.journal !== null,
+          finished:
+            current.journal !== null &&
+            (this.replay(current).state.campaign?.winners.length ?? 0) > 0,
         });
       } catch {
         continue;

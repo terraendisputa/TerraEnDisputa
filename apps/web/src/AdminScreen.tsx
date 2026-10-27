@@ -31,6 +31,7 @@ interface ReconquistaGameSummary {
   readonly playerCount: number;
   readonly players: number;
   readonly started: boolean;
+  readonly finished?: boolean;
 }
 
 const STATUS_LABELS = {
@@ -420,36 +421,40 @@ export function AdminScreen() {
                       </small>
                     </button>
                   ))}
+                {reconquistaGames
+                  .filter(
+                    (game) =>
+                      (game.finished === true) === (group === 'Finalizadas'),
+                  )
+                  .map((game) => (
+                    <button
+                      type="button"
+                      key={game.gameId}
+                      className={
+                        selectedReconquista === game.gameId
+                          ? 'selected-game secondary'
+                          : 'secondary'
+                      }
+                      aria-pressed={selectedReconquista === game.gameId}
+                      onClick={() => {
+                        setSelectedId(undefined);
+                        setSelectedReconquista(game.gameId);
+                      }}
+                    >
+                      <strong>{game.gameId.slice(0, 8)}</strong>
+                      <small>
+                        {game.finished
+                          ? 'Finalizada'
+                          : game.started
+                            ? 'En juego'
+                            : 'Esperando jugadores'}{' '}
+                        · {game.players}/{game.playerCount}
+                      </small>
+                      <small>Reconquista</small>
+                    </button>
+                  ))}
               </section>
             ))}
-            {reconquistaGames.length > 0 && (
-              <section aria-label="Reconquista">
-                <h3>Reconquista</h3>
-                {reconquistaGames.map((game) => (
-                  <button
-                    type="button"
-                    key={game.gameId}
-                    className={
-                      selectedReconquista === game.gameId
-                        ? 'selected-game secondary'
-                        : 'secondary'
-                    }
-                    aria-pressed={selectedReconquista === game.gameId}
-                    onClick={() => {
-                      setSelectedId(undefined);
-                      setSelectedReconquista(game.gameId);
-                    }}
-                  >
-                    <strong>{game.gameId.slice(0, 8)}</strong>
-                    <small>
-                      {game.started ? 'En juego' : 'Esperando jugadores'} ·{' '}
-                      {game.players}/{game.playerCount}
-                    </small>
-                    <small>Reconquista</small>
-                  </button>
-                ))}
-              </section>
-            )}
           </nav>
         </details>
       </aside>
