@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" xmlns:c2pa="http://c2pa.org/manifest">
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="#7d1f24" stroke="#3e0d10" stroke-width="2"/>
+  <rect x="13.5" y="2.5" width="5" height="3" rx="1" fill="#f3d58a"/>
+  <circle cx="16" cy="17.5" r="10" fill="#f6ead0" stroke="#f3d58a" stroke-width="2"/>
+  <path d="M16 9.5 L17.6 15.9 L24 17.5 L17.6 19.1 L16 25.5 L14.4 19.1 L8 17.5 L14.4 15.9 Z" fill="#7d1f24"/>
+  <circle cx="16" cy="17.5" r="1.6" fill="#f3d58a"/>
+</svg>
