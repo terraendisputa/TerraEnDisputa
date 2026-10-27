@@ -18,6 +18,7 @@ import { playerColorLabel } from './colors.js';
 import { redeemAdminLaunch } from './admin-launch.js';
 import { AdminBoxes } from './AdminBoxes.js';
 import { clockText } from './TurnSummary.js';
+import { clockState, durationText } from './admin-clock.js';
 import { ReconquistaAdminDetail } from './ReconquistaAdmin.js';
 import { PHASE_LABELS } from './game-presentation.js';
 import {
@@ -1126,38 +1127,4 @@ export function AdminScreen() {
       </section>
     </main>
   );
-}
-
-/** The Competitive clock's state, naming why it is paused. */
-function clockState(
-  clock: NonNullable<AdminGameView['competitiveClock']>,
-  players: AdminGameView['players'],
-) {
-  if (clock.pauseReason === 'admin') return 'Pausada por el administrador';
-  if (clock.pauseReason === 'restart')
-    return 'Pausada por reinicio del servidor';
-  if (clock.pauseReason === 'disconnection') {
-    const player = players.find(({ id }) => id === clock.disconnectedPlayerId);
-    return (
-      <>
-        Pausada: esperando a{' '}
-        {player && (
-          <>
-            <span className={`color-dot color-${player.color}`} />{' '}
-            <strong>{player.nickname}</strong>
-          </>
-        )}{' '}
-        · Reconexión {clockText(clock.technicalRemainingMs ?? 0)}
-      </>
-    );
-  }
-  return 'En curso';
-}
-
-/** 60 minutes read as 1:00 h, as in the Competitive duration choice. */
-function durationText(ms: number): string {
-  const minutes = ms / 60_000;
-  return minutes >= 60
-    ? `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')} h`
-    : `${minutes} min`;
 }

@@ -98,6 +98,8 @@ export interface Campaign {
   penaltyDebts: Record<string, number>;
   zoneDecisions: { pactId: string; playerId: string }[];
   winners: string[];
+  /** Express ended by the clock; a full tie finishes without winners. */
+  timeLimit?: boolean;
   lastCombat:
     | ({ originId: string; targetId: string; defenderId: string } & ReturnType<
         typeof resolveReconquistaCombat

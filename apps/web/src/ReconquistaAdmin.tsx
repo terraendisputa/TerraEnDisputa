@@ -11,6 +11,9 @@ import {
   reconquistaRequest,
 } from './reconquista-client.js';
 import { RECONQUISTA_NAME, playerColorNames } from './reconquista-labels.js';
+import { reconquistaExpressDurationMs } from '@game/game-engine/reconquista';
+import { clockState, durationText } from './admin-clock.js';
+import { clockText } from './TurnSummary.js';
 
 /** Host detail for a Reconquista game, with the same blocks as Classic's admin detail. */
 export function ReconquistaAdminDetail({
@@ -61,8 +64,10 @@ export function ReconquistaAdminDetail({
   // Everyone who joined is ready: the table shrinks to them on start (user
   // decision 2026-10-24).
   const readyToStart = lobby && missingReady === 0 && entry.players.length >= 2;
-  const configure = (playerCount: number) =>
-    reconquistaRequest(`/games/${gameId}`, { playerCount }, 'PATCH');
+  const configure = (settings: {
+    readonly playerCount?: number;
+    readonly express?: boolean;
+  }) => reconquistaRequest(`/games/${gameId}`, settings, 'PATCH');
   const presentation = view ? reconquistaPresentation(view) : undefined;
   const finished = view?.campaign?.phase === 'finished';
   const nickname = (id: string | undefined) =>
@@ -73,25 +78,50 @@ export function ReconquistaAdminDetail({
       gameId={gameId}
       lobby={lobby}
       seats={
-        <label className="inline-control">
-          Jugadores requeridos
-          <select
-            disabled={busy || !lobby}
-            value={entry.playerCount}
-            onChange={(event) =>
-              void run(async () => {
-                await configure(Number(event.target.value));
-                reload();
-              })
-            }
+        <>
+          <label className="inline-control">
+            Jugadores requeridos
+            <select
+              disabled={busy || !lobby}
+              value={entry.playerCount}
+              onChange={(event) =>
+                void run(async () => {
+                  await configure({ playerCount: Number(event.target.value) });
+                  reload();
+                })
+              }
+            >
+              {[2, 3, 4, 5, 6].map((count) => (
+                <option key={count} disabled={count < entry.players.length}>
+                  {count}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label
+            className="inline-control"
+            title="Express: turnos de 3 minutos y tiempo máximo de juego, después dos rondas finales."
           >
-            {[2, 3, 4, 5, 6].map((count) => (
-              <option key={count} disabled={count < entry.players.length}>
-                {count}
+            Duración
+            <select
+              disabled={busy || !lobby}
+              value={entry.express ? 'express' : 'free'}
+              onChange={(event) =>
+                void run(async () => {
+                  await configure({
+                    express: event.target.value === 'express',
+                  });
+                  reload();
+                })
+              }
+            >
+              <option value="free">Sin límite</option>
+              <option value="express">
+                {`Express: ${durationText(reconquistaExpressDurationMs(entry.playerCount))} + 2 rondas`}
               </option>
-            ))}
-          </select>
-        </label>
+            </select>
+          </label>
+        </>
       }
       start={
         <>
@@ -124,7 +154,7 @@ export function ReconquistaAdminDetail({
                 onClick={() =>
                   void run(async () => {
                     if (entry.players.length !== entry.playerCount)
-                      await configure(entry.players.length);
+                      await configure({ playerCount: entry.players.length });
                     await reconquistaRequest(`/games/${gameId}/start`, {});
                     reload();
                   })
@@ -153,7 +183,10 @@ export function ReconquistaAdminDetail({
                   : 'En juego'}
           </p>
           <h2>Partida {gameId.slice(0, 8)}</h2>
-          <small>{RECONQUISTA_NAME}</small>
+          <small>
+            {RECONQUISTA_NAME}
+            {entry.express ? ' Express' : ''}
+          </small>
           {presentation && !finished && (
             <p className="admin-state-line">
               {[
@@ -176,8 +209,45 @@ export function ReconquistaAdminDetail({
             <section className="objective-box admin-result">
               <p className="eyebrow">Resultado final</p>
               <h3>
-                Ganó {(view?.campaign?.winners ?? []).map(nickname).join(' y ')}
+                {view?.campaign?.winners.length
+                  ? `Ganó ${view.campaign.winners.map(nickname).join(' y ')}`
+                  : 'Empate'}
               </h3>
+            </section>
+          )}
+          {view?.clock && !finished && (
+            <section className="panel admin-clock">
+              <dl>
+                <div>
+                  <dt>Duración de la partida</dt>
+                  <dd>{Math.floor(view.clock.elapsedMs / 60000)} min</dd>
+                </div>
+                <div>
+                  <dt>Turno actual</dt>
+                  <dd>
+                    {clockText(view.clock.activationRemainingMs)} restantes
+                  </dd>
+                </div>
+              </dl>
+              <p className="admin-state-line">
+                {clockState(view.clock, entry.players)}
+              </p>
+              <button
+                type="button"
+                disabled={busy || view.clock.pauseReason === 'disconnection'}
+                onClick={() =>
+                  void run(async () => {
+                    await reconquistaRequest(`/games/${gameId}/pause`, {
+                      paused: !view.clock?.pauseReason,
+                    });
+                    reload();
+                  })
+                }
+              >
+                {view.clock.pauseReason
+                  ? 'Reanudar cuando todos estén disponibles'
+                  : 'Pausar por inconveniente técnico'}
+              </button>
             </section>
           )}
           <ul className="player-list">

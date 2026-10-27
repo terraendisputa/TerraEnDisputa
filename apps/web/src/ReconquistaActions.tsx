@@ -1076,6 +1076,8 @@ function Finished({ view }: { readonly view: ReconquistaView }) {
   const objectives = (view.winnerObjectives ?? []).flatMap((w) =>
     w.objectives.map((o) => o.description),
   );
+  // Express ends by the clock, with Classic's tiebreak.
+  const timeLimit = !!view.campaign?.timeLimit;
   return (
     <section
       className="finished-panel objective-box"
@@ -1086,8 +1088,9 @@ function Finished({ view }: { readonly view: ReconquistaView }) {
           {winners.length > 1 ? 'Victoria compartida' : 'Partida finalizada'}
         </p>
         <h1 id="finished-title">
-          {winners.length > 1 ? 'Ganaron ' : 'Ganó '}
-          {winners.map((p) => p.nickname).join(' y ')}
+          {winners.length === 0
+            ? 'Empate'
+            : `${winners.length > 1 ? 'Ganaron ' : 'Ganó '}${winners.map((p) => p.nickname).join(' y ')}`}
         </h1>
         {winners.map((p) => (
           <p className="winner-color" key={p.id}>
@@ -1100,9 +1103,13 @@ function Finished({ view }: { readonly view: ReconquistaView }) {
       </div>
       <p className="winning-objective">
         <span>
-          {objectives.length
-            ? objectives.join(' ')
-            : 'Cumplió su objetivo secreto.'}
+          {timeLimit
+            ? winners.length
+              ? 'Se terminó el tiempo: ganó por desempate (más países, después tropas, canjes y cartas).'
+              : 'Se terminó el tiempo con empate en países, tropas, canjes y cartas.'
+            : objectives.length
+              ? objectives.join(' ')
+              : 'Cumplió su objetivo secreto.'}
         </span>
         <svg className="victory-crest" aria-hidden="true" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r="20" />

@@ -79,6 +79,23 @@ export const reconquistaCreateSchema = z.strictObject({
     z.literal(6),
   ]),
 });
+/** Host lobby settings: required players and the Express duration. */
+export const reconquistaConfigureSchema = z.strictObject({
+  playerCount: reconquistaCreateSchema.shape.playerCount.optional(),
+  express: z.boolean().optional(),
+});
+/** Express clock as a screen shows it; times are as of the reading. */
+export const reconquistaClockSchema = z.strictObject({
+  durationMs: count,
+  elapsedMs: count,
+  activationRemainingMs: count,
+  finalRound: count.optional(),
+  pauseReason: z.enum(['admin', 'restart', 'disconnection']).optional(),
+  disconnectedPlayerId: identifier.optional(),
+  technicalRemainingMs: count.optional(),
+  absentPlayerIds: z.array(identifier).max(6),
+});
+export type ReconquistaClock = z.infer<typeof reconquistaClockSchema>;
 export const reconquistaJoinSchema = z.strictObject({
   nickname: nicknameSchema(32),
   color: z.enum(['white', 'black', 'red', 'blue', 'yellow', 'green']),
@@ -125,6 +142,8 @@ export const reconquistaViewSchema = z.strictObject({
   gameId: z.string().uuid(),
   revision: count,
   playerCount: reconquistaCreateSchema.shape.playerCount,
+  express: z.literal(true).optional(),
+  clock: reconquistaClockSchema.optional(),
   stage: z.enum([
     'lobby',
     'initial-placement',
@@ -249,6 +268,7 @@ export const reconquistaBoardSchema = z.strictObject({
 export type ReconquistaBoard = z.infer<typeof reconquistaBoardSchema>;
 export const reconquistaEntrySchema = z.strictObject({
   playerCount: reconquistaCreateSchema.shape.playerCount,
+  express: z.literal(true).optional(),
   stage: z.enum(['lobby', 'started']),
   players: z.array(player).max(6),
 });

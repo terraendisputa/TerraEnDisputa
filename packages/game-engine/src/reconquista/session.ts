@@ -1,6 +1,7 @@
 import {
   createCampaign,
   applyCampaign,
+  finishByTime,
   assertCampaign,
   type Campaign,
   type CampaignAction,
@@ -70,6 +71,8 @@ export interface ReconquistaSession {
 }
 export type SetupAction =
   | { readonly kind: 'start-campaign' }
+  /** Express clock: the final rounds are over. Only the server sends it. */
+  | { readonly kind: 'time-limit' }
   | { readonly kind: 'campaign'; readonly action: CampaignAction }
   | HostilityAction
   | {
@@ -239,6 +242,10 @@ export function applyReconquistaSetup(
       state.preparation.territories,
     );
     return { ...state, campaign, hostility: null, stage: 'campaign' };
+  }
+  if (action.kind === 'time-limit') {
+    if (!state.campaign) throw Error('Start full turns first');
+    return { ...state, campaign: finishByTime(state.campaign) };
   }
   if (action.kind === 'campaign') {
     if (!state.campaign) throw Error('Start full turns first');
@@ -533,6 +540,10 @@ function checkedAction(value: unknown): SetupAction {
     if (value.kind === 'finish-attacks') {
       object(value, ['kind']);
       return { kind: 'finish-attacks' };
+    }
+    if (value.kind === 'time-limit') {
+      object(value, ['kind']);
+      return { kind: 'time-limit' };
     }
     if (value.kind === 'campaign') {
       const a = object(value, ['kind', 'action']);

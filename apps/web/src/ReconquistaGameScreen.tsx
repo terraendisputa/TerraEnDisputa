@@ -27,6 +27,7 @@ import {
   SituationCardPopover,
   SituationIndicator,
 } from './ReconquistaPanels.js';
+import { ReconquistaClock } from './ReconquistaClock.js';
 import {
   reconquistaPresentation,
   reconquistaRequest,
@@ -796,6 +797,7 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
                       if (open) setInspected(null);
                     }}
                   />
+                  <ReconquistaClock view={view} />
                 </div>
               </div>
             </div>

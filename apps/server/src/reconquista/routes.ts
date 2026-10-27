@@ -10,6 +10,7 @@ import { z } from 'zod';
 import {
   preparationBoard,
   projectReconquistaSession,
+  reconquistaExpressDurationMs,
   validateReconquistaCatalog,
 } from '@game/game-engine/reconquista';
 import {
@@ -222,6 +223,8 @@ export async function registerReconquista(
     readonly publicOrigin?: string;
     readonly classicStore: FileGameStore;
     readonly randomness?: () => number;
+    /** Tests drive the Express clock by hand. */
+    readonly clockTicks?: boolean;
     readonly writeOptions?: AtomicWriteOptions;
     readonly rateLimitPolicies?: Readonly<
       Record<RateLimitSurface, RateLimitPolicy>
@@ -288,6 +291,27 @@ export async function registerReconquista(
         ? 'Ocupar 45 países.'
         : assets.descriptions.get(o.objectiveId)!,
   });
+  /** The Express clock for screens, without the server's bookkeeping. */
+  const clock = (current: ReconquistaEnvelope) => {
+    const c = current.clock;
+    if (!c) return {};
+    return {
+      clock: {
+        durationMs: reconquistaExpressDurationMs(current.playerCount),
+        elapsedMs: c.elapsedMs,
+        activationRemainingMs: c.activationRemainingMs,
+        ...(c.finalRound !== undefined ? { finalRound: c.finalRound } : {}),
+        ...(c.pauseReason ? { pauseReason: c.pauseReason } : {}),
+        ...(c.disconnectedPlayerId
+          ? { disconnectedPlayerId: c.disconnectedPlayerId }
+          : {}),
+        ...(c.technicalRemainingMs !== undefined
+          ? { technicalRemainingMs: c.technicalRemainingMs }
+          : {}),
+        absentPlayerIds: c.absentPlayerIds,
+      },
+    };
+  };
   function view(
     current: ReconquistaEnvelope,
     viewer: string | null,
@@ -298,6 +322,8 @@ export async function registerReconquista(
       gameId: current.gameId,
       revision: current.revision,
       playerCount: current.playerCount,
+      ...(current.express ? { express: true } : {}),
+      ...clock(current),
     };
     const players = current.players.map(({ id, color, nickname, ready }) => ({
       id,
@@ -396,8 +422,34 @@ export async function registerReconquista(
       }, FOCUS_ANNOUNCE_MS),
     );
   };
+  // Express games run on a clock, ticked every second as Classic's.
+  const ticking = new Set(await store.running());
+  const connected = (gameId: string) => (playerId: string) =>
+    [...(live.get(gameId)?.values() ?? [])].includes(playerId);
+  let ticks = 0;
+  let ticked = Promise.resolve();
+  const clockTimer = setInterval(() => {
+    ticked = ticked
+      .then(async () => {
+        // Games that ended or were removed leave the list now and then.
+        if (++ticks % 30 === 0)
+          for (const id of [...ticking])
+            if (!(await store.running()).includes(id)) ticking.delete(id);
+        for (const id of ticking)
+          if (
+            await store.tick(id, Date.now(), connected(id)).catch(() => false)
+          )
+            notify(id);
+      })
+      .catch(() => {});
+  }, 1_000);
+  clockTimer.unref();
+  if (options.clockTicks === false) clearInterval(clockTimer);
   void server.register((app, _options, done) => {
-    app.addHook('onClose', () => store.close());
+    app.addHook('onClose', () => {
+      clearInterval(clockTimer);
+      return store.close();
+    });
     app.addHook('preClose', (closed) => {
       for (const timer of focusTimers.values()) clearTimeout(timer);
       focusTimers.clear();
@@ -476,6 +528,7 @@ export async function registerReconquista(
       const current = await store.load(params(request));
       return {
         playerCount: current.playerCount,
+        ...(current.express ? { express: true } : {}),
         stage: current.journal ? 'started' : 'lobby',
         players: current.players.map(({ id, nickname, color, ready }) => ({
           id,
@@ -543,8 +596,18 @@ export async function registerReconquista(
       await requireAdmin(request);
       z.strictObject({}).parse(request.body ?? {});
       const started = await store.start(params(request));
+      if (started.express) ticking.add(started.gameId);
       notify(started.gameId);
       return view(started, null);
+    });
+    app.post(prefix + '/games/:gameId/pause', async (request) => {
+      await requireAdmin(request);
+      const { paused } = z
+        .strictObject({ paused: z.boolean() })
+        .parse(request.body);
+      const current = await store.pause(params(request), paused, Date.now());
+      notify(current.gameId);
+      return view(current, null);
     });
     app.get(prefix + '/games/:gameId/state', async (request) => {
       limit(request, 'game-read', params(request));

@@ -10,3 +10,4 @@ export {
 export * from './reconquista/campaign.js';
 export * from './reconquista/cards.js';
 export * from './reconquista/victory.js';
+export * from './reconquista/express.js';

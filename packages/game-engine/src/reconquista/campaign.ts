@@ -1537,6 +1537,39 @@ export function applyCampaign(
   assertCampaign(board, catalog, s);
   return s;
 }
+/**
+ * Express time limit, as in Classic Express: most countries wins, then
+ * armies, exchanges and cards. A full tie finishes without winners.
+ */
+export function finishByTime(before: Campaign): Campaign {
+  if (before.phase === 'finished') reject('Game finished');
+  const s = structuredClone(before);
+  const metrics = (id: string) => {
+    const countries = own(s, id);
+    return [
+      countries.length,
+      countries.reduce((n, t) => n + force(t, id)!.armies, 0),
+      s.cards.exchanges[id] ?? 0,
+      s.cards.hands[id]!.length,
+    ];
+  };
+  const ranked = s.players
+    .filter((p) => !s.eliminations[p.id])
+    .map((p) => ({ id: p.id, m: metrics(p.id) }))
+    .sort((a, b) => {
+      for (let i = 0; i < a.m.length; i++)
+        if (a.m[i] !== b.m[i]) return b.m[i]! - a.m[i]!;
+      return 0;
+    });
+  const [first, second] = ranked;
+  s.winners =
+    first && !(second && second.m.every((v, i) => v === first.m[i]))
+      ? [first.id]
+      : [];
+  s.timeLimit = true;
+  s.phase = 'finished';
+  return s;
+}
 export function assertCampaign(
   board: PreparationBoard,
   catalog: unknown,
@@ -1635,7 +1668,7 @@ export function assertCampaign(
   unique(s.winners);
   if (
     s.winners.some((id) => !playerIds.includes(id) || s.eliminations[id]) ||
-    s.winners.length > 0 !== (s.phase === 'finished')
+    (s.winners.length > 0 || !!s.timeLimit) !== (s.phase === 'finished')
   )
     reject('Invalid winner state');
   for (const [id, credit] of Object.entries(s.eliminations))
@@ -1651,7 +1684,7 @@ export function assertCampaign(
     s.players.map((p) => p.id),
   );
   assertPoliticalIds(s);
-  if (s.phase === 'finished' && s.winners.length === 0)
+  if (s.phase === 'finished' && s.winners.length === 0 && !s.timeLimit)
     reject('Finished without winner');
   void catalog;
 }

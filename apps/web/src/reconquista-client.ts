@@ -74,6 +74,8 @@ export function reconquistaErrorMessage(caught: unknown): string {
       return 'Ese color ya estaba en uso. Elegimos otro libre.';
     case 'NICKNAME_IN_USE':
       return 'Ese nombre ya está en uso. Elegí otro.';
+    case 'GAME_PAUSED':
+      return 'La partida está en pausa.';
     case 'STALE_REVISION':
       return 'Otro jugador actuó antes. Se actualizó la partida.';
     default:

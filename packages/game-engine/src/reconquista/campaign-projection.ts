@@ -33,6 +33,7 @@ export function projectCampaign(
       zoneDecisions: structuredClone(s.zoneDecisions),
       eliminations: { ...s.eliminations },
       winners: [...s.winners],
+      ...(s.timeLimit ? { timeLimit: true } : {}),
       lastCombat: structuredClone(s.lastCombat),
       lastMissile: structuredClone(s.lastMissile),
       lastExchange: structuredClone(s.cards.lastExchange),
