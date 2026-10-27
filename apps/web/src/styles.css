@@ -1755,6 +1755,13 @@ code {
 }
 
 /* Fourth visual pass: stronger continent grouping and dark command dock. */
+/* The textarea a plain HTTP page copies from, kept out of sight. */
+.offscreen-copy {
+  position: fixed;
+  top: 0;
+  left: -9999px;
+  opacity: 0;
+}
 .visually-hidden {
   clip: rect(0 0 0 0);
   clip-path: inset(50%);

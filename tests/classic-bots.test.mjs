@@ -456,6 +456,27 @@ void test('hard offers one border pact a turn to guard its continent', () => {
   );
 });
 
+void test('a border offer is dropped once its countries change hands', () => {
+  const s = untilHostility(3, 555);
+  const { a, b, c } = seats(s);
+  const spec = Object.fromEntries(OCEANIA.map((id) => [id, [a, 2]]));
+  const terms = {
+    kind: 'border_non_aggression',
+    territoryIds: ['australia', 'chile'],
+  };
+  const waiting = offer(board(s, { ...spec, chile: [b, 5] }, c), a, b, terms);
+  const kept = applyCommand(waiting, { type: 'advance_phase', playerId: a });
+  assert.equal(kept.ok, true, JSON.stringify(kept.error));
+  assert.equal(kept.state.pacts.proposals.length, 1);
+  const lost = board(s, { ...spec, chile: [c, 5] }, c);
+  const dropped = applyCommand(
+    { ...lost, pacts: waiting.pacts },
+    { type: 'advance_phase', playerId: a },
+  );
+  assert.equal(dropped.ok, true, JSON.stringify(dropped.error));
+  assert.equal(dropped.state.pacts.proposals.length, 0);
+});
+
 void test('Classic Express lets pacts be broken in the final rounds', () => {
   const s = untilHostility(3, 560);
   const { a, b } = seats(s);

@@ -202,6 +202,12 @@ body:has(.landing) {
   gap: 8px;
   max-width: none;
 }
+/* Inputs fill their row; a checkbox keeps its own size next to its label. */
+.admin-layout input[type='checkbox'] {
+  width: auto;
+  flex: none;
+  padding: 0;
+}
 .admin-layout .admin-bots {
   display: grid;
   gap: 8px;

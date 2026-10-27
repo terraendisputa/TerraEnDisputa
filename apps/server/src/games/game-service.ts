@@ -212,6 +212,12 @@ function clockOnlyChange(before: GameState, after: GameState): boolean {
 }
 
 /**
+ * Time between two bot moves in a game, so everyone can follow them on the
+ * map; a two-minute turn still leaves room for dozens of moves.
+ */
+export const BOT_MOVE_GAP_MS = 2_000;
+
+/**
  * One move per clock tick for a seat the server plays, so everyone can follow
  * it on the map. A rejected move leaves the turn to its timer. In Classic a
  * bot first answers the pact offered to it, even out of turn.
@@ -247,6 +253,8 @@ export class GameService {
     string,
     { first: number; last: number; authGeneration: number }
   >();
+  /** When a bot last moved in each game. */
+  private readonly botMoves = new Map<string, number>();
   constructor(
     private readonly store: CommandGameStore,
     private readonly coordinator = new PerGameCoordinator(),
@@ -322,15 +330,16 @@ export class GameService {
       }
       const actor = competitiveActor(current.state);
       const now = this.now();
-      const state = playBot(
-        tickCompetitiveClock(
-          current.state,
-          now,
-          actor ? this.connected(gameId, actor) : true,
-          secureGameRandomness,
-        ),
+      const ticked = tickCompetitiveClock(
+        current.state,
         now,
+        actor ? this.connected(gameId, actor) : true,
+        secureGameRandomness,
       );
+      const rested =
+        now - (this.botMoves.get(gameId) ?? -Infinity) >= BOT_MOVE_GAP_MS;
+      const state = rested ? playBot(ticked, now) : ticked;
+      if (state !== ticked) this.botMoves.set(gameId, now);
       if (JSON.stringify(state) === JSON.stringify(current.state)) return false;
       const range = this.clockRevisionRanges.get(gameId);
       const measurementsOnly = clockOnlyChange(current.state, state);

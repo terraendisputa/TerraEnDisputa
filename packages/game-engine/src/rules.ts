@@ -694,6 +694,22 @@ export function isPactProposalLegal(
   );
 }
 
+/**
+ * Classic offers wait until answered, so one that no longer fits the board,
+ * such as a border whose country changed hands, is dropped.
+ */
+function dropStaleProposals(s: GameState): GameState {
+  if (s.mode !== 'classic' || s.status !== 'ACTIVE') return s;
+  const proposals = s.pacts.proposals.filter(
+    (p) =>
+      validatePactFormation(s, p.proposerId, p.recipientId, p.terms) ===
+      undefined,
+  );
+  return proposals.length === s.pacts.proposals.length
+    ? s
+    : { ...s, pacts: { ...s.pacts, proposals } };
+}
+
 export function applyCommand(
   state: GameState,
   command: GameplayCommand,
@@ -701,6 +717,20 @@ export function applyCommand(
     readonly dice?: DiceSource;
     readonly shuffle?: ShuffleSource;
   } = {},
+): DomainResult<GameState> {
+  const result = applyGameplayCommand(state, command, dependencies);
+  return result.ok
+    ? { ...result, state: dropStaleProposals(result.state) }
+    : result;
+}
+
+function applyGameplayCommand(
+  state: GameState,
+  command: GameplayCommand,
+  dependencies: {
+    readonly dice?: DiceSource;
+    readonly shuffle?: ShuffleSource;
+  },
 ): DomainResult<GameState> {
   if (state.competitiveClock?.pauseReason) return reject('GAME_PAUSED');
   if (command.type === 'select_inherited_cards')

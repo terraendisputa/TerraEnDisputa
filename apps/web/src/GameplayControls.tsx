@@ -1261,12 +1261,11 @@ export function PactsPanel({
               <strong>{terms(proposal.terms)}</strong>
               {proposal.terms.kind === 'border_non_aggression' &&
                 borderSides(proposal.terms.territoryIds)}
-              {proposal.terms.kind !== 'border_non_aggression' && (
-                <span>
-                  {participant(proposal.proposerId)} →{' '}
-                  {participant(proposal.recipientId)}
-                </span>
-              )}
+              {/* Who offers to whom, since a border shows only its owners. */}
+              <span>
+                {participant(proposal.proposerId)} →{' '}
+                {participant(proposal.recipientId)}
+              </span>
             </span>
             {snapshot.legalActions.pactProposalIdsToAnswer.includes(
               proposal.id,
