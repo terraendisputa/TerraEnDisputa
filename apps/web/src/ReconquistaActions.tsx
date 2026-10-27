@@ -1091,8 +1091,10 @@ function Finished({ view }: { readonly view: ReconquistaView }) {
         </h1>
         {winners.map((p) => (
           <p className="winner-color" key={p.id}>
-            <span className={`color-dot color-${p.color}`} aria-hidden="true" />
-            {playerColorNames[p.color] ?? p.color}
+            <span
+              className={`color-dot color-${p.color}`}
+              title={playerColorNames[p.color] ?? p.color}
+            />
           </p>
         ))}
       </div>

@@ -1050,9 +1050,8 @@ export function FinishedPanel({
           <p className="winner-color">
             <span
               className={`color-dot color-${winner.color}`}
-              aria-hidden="true"
+              title={playerColorLabel(winner.color)}
             />
-            {playerColorLabel(winner.color)}
           </p>
         )}
       </div>
