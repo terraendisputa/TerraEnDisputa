@@ -55,7 +55,19 @@ export function PlayerRoster({
   return (
     <>
       <TurnSound actorId={actor} selfId={snapshot.selfPlayerId} />
-      <MusicToggle mode="classic" />
+      <MusicToggle
+        mode="classic"
+        moment={
+          snapshot.status === 'FINISHED' && snapshot.result?.winnerId
+            ? 'final'
+            : snapshot.pendingAction ||
+                ['attack', 'regroup', 'end_of_turn_cards'].includes(
+                  snapshot.turn?.phase ?? '',
+                )
+              ? 'intense'
+              : 'calm'
+        }
+      />
       <nav className="player-roster" aria-label="Jugadores y turno">
         <a
           className="roster-brand"

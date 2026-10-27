@@ -573,7 +573,19 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
         </div>
       </header>
       <TurnSound actorId={p.actorId} selfId={me} />
-      <MusicToggle mode="reconquista" />
+      <MusicToggle
+        mode="reconquista"
+        moment={
+          view.campaign?.phase === 'finished'
+            ? 'final'
+            : view.stage === 'first-hostility' ||
+                ['attack', 'regroup', 'ally-regroup', 'zone-decision'].includes(
+                  view.campaign?.phase ?? '',
+                )
+              ? 'intense'
+              : 'calm'
+        }
+      />
       <nav className="player-roster" aria-label="Jugadores y turno">
         <span
           className="roster-brand"

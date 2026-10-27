@@ -2,6 +2,16 @@
 
 All tracks are CC0 (public domain) from [OpenGameArt](https://opengameart.org), re-encoded to MP3 (plays in every browser, Safari included). Credits are not required but kept here.
 
+## Moments
+
+Each track belongs to a moment of the game (set in `MusicToggle.tsx`):
+
+- **Calm**, while armies are placed: c02, c06, c11, c12, c16, c20 and r01, r04, r05, r07, r12, r13.
+- **Final**, repeated once someone wins: c18 and r17.
+- **Intense**, during attacks: every other track.
+
+A change of moment starts a track only when none is playing, and one to three minutes of silence follow each track. Only the final track replaces the one playing, with a short fade.
+
 ## Classic and Competitive (`classic/`)
 
 | File                                           | Track                                                                                        | Author        |
