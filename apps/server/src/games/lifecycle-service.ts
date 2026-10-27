@@ -89,6 +89,7 @@ export class GameLifecycleService {
     configuredPlayerCount: 2 | 3 | 4 | 5 | 6,
     competitiveDurationMinutes?: 60 | 80,
     competitiveBotSeats?: 2,
+    competitiveDeciding?: boolean,
   ): Promise<number> {
     return this.coordinator.run(gameId, async () => {
       const current = await this.requireGame(gameId);
@@ -103,7 +104,9 @@ export class GameLifecycleService {
         (competitiveBotSeats !== undefined &&
           (current.state.mode !== 'competitive' ||
             configuredPlayerCount !== 6 ||
-            competitiveDurationMinutes === 60))
+            competitiveDurationMinutes === 60)) ||
+        (competitiveDeciding !== undefined &&
+          current.state.mode !== 'competitive')
       )
         throw new LifecycleOperationError('INVALID_GAME_COMMAND');
       const revision = current.revision + 1;
@@ -111,10 +114,15 @@ export class GameLifecycleService {
       const {
         competitiveBotSeats: _seats,
         competitiveDurationMinutes: _minutes,
+        competitiveDeciding: _deciding,
         ...rest
       } = current.state;
       void _seats;
       void _minutes;
+      // A deciding game plays without bots, so it cannot be a bot table.
+      const deciding = competitiveDeciding ?? _deciding ?? false;
+      if (deciding && competitiveBotSeats)
+        throw new LifecycleOperationError('INVALID_GAME_COMMAND');
       const previousMinutes = competitiveBotSeats
         ? undefined
         : (competitiveDurationMinutes ?? _minutes);
@@ -128,6 +136,7 @@ export class GameLifecycleService {
               ? { competitiveDurationMinutes: previousMinutes }
               : {}),
             ...(competitiveBotSeats ? { competitiveBotSeats } : {}),
+            ...(deciding ? { competitiveDeciding: true as const } : {}),
           },
           revision,
         },
@@ -169,13 +178,18 @@ export class GameLifecycleService {
             current.state.mode,
             current.state.competitiveBotSeats,
           );
-          return current.state.competitiveDurationMinutes
-            ? {
-                ...setup,
-                competitiveDurationMinutes:
-                  current.state.competitiveDurationMinutes,
-              }
-            : setup;
+          return {
+            ...setup,
+            ...(current.state.competitiveDurationMinutes
+              ? {
+                  competitiveDurationMinutes:
+                    current.state.competitiveDurationMinutes,
+                }
+              : {}),
+            ...(current.state.competitiveDeciding
+              ? { competitiveDeciding: true as const }
+              : {}),
+          };
         } catch (error) {
           if (error instanceof SetupDealExhaustedError)
             throw new LifecycleOperationError('SETUP_DEAL_EXHAUSTED');

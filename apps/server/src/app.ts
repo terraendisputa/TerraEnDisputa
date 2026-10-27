@@ -505,6 +505,27 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         return result;
       },
     );
+    server.post(
+      '/api/admin/games/:gameId/players/:playerId/inactive',
+      { preHandler: requireOrigin },
+      async (request, reply) => {
+        const params = gamePlayerParamsSchema.safeParse(request.params);
+        const body = assignBotBodySchema.safeParse(request.body);
+        if (!params.success || !body.success)
+          return reply.code(400).send({ code: 'MALFORMED_MESSAGE' });
+        if (!(await hasAdminAuthority(request)))
+          return reply.code(401).send({ code: 'UNAUTHENTICATED' });
+        const result = await updateBots(reply, params.data.gameId, {
+          playerId: params.data.playerId,
+          inactive: body.data.enabled,
+        });
+        server.log.info(
+          { gameId: params.data.gameId, inactive: body.data.enabled },
+          'Administrator changed an inactive player',
+        );
+        return result;
+      },
+    );
 
     server.post(
       '/api/admin/launch',
@@ -632,6 +653,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
           body.data.configuredPlayerCount as 2 | 3 | 4 | 5 | 6,
           body.data.competitiveDurationMinutes,
           body.data.competitiveBotSeats,
+          body.data.competitiveDeciding,
         );
         await broadcastCurrentGame(params.data.gameId);
         return { gameId: params.data.gameId, revision };

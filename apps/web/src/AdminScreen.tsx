@@ -522,7 +522,10 @@ export function AdminScreen() {
                       {selected.mode === 'competitive' && (
                         <option
                           value="6+2"
-                          disabled={selected.players.length > 4}
+                          disabled={
+                            selected.players.length > 4 ||
+                            !!selected.competitiveDeciding
+                          }
                         >
                           6: 4 jugadores + 2 bots
                         </option>
@@ -565,6 +568,34 @@ export function AdminScreen() {
                           </option>
                         )}
                       </select>
+                    </label>
+                  )}
+                  {selected.mode === 'competitive' && (
+                    <label
+                      className="inline-control"
+                      title="Clasificatorias, semifinales y finales: sin bots. Quien abandona o queda ausente pasa a inactivo, con turnos de 1 minuto."
+                    >
+                      <input
+                        type="checkbox"
+                        disabled={
+                          busy ||
+                          selected.status !== 'LOBBY' ||
+                          !!selected.competitiveBotSeats
+                        }
+                        checked={!!selected.competitiveDeciding}
+                        onChange={(event) =>
+                          void run(() =>
+                            api.configureGame(
+                              selected.gameId,
+                              selected.configuredPlayerCount,
+                              undefined,
+                              undefined,
+                              event.target.checked,
+                            ),
+                          )
+                        }
+                      />
+                      Partida definitoria
                     </label>
                   )}
                 </>
@@ -768,7 +799,16 @@ export function AdminScreen() {
                       </section>
                     )}
                   {selected.mode === 'competitive' &&
-                    selected.status !== 'FINISHED' && (
+                    selected.status !== 'FINISHED' &&
+                    selected.competitiveDeciding && (
+                      <p className="admin-bots">
+                        Partida definitoria: sin bots. Quien abandona o queda
+                        ausente pasa a inactivo, con turnos de 1 minuto.
+                      </p>
+                    )}
+                  {selected.mode === 'competitive' &&
+                    selected.status !== 'FINISHED' &&
+                    !selected.competitiveDeciding && (
                       <section className="admin-bots">
                         <label className="inline-control">
                           <input
@@ -821,6 +861,7 @@ export function AdminScreen() {
                             {player.bot && player.bot !== 'table'
                               ? ' (bot)'
                               : ''}
+                            {player.inactive ? ' (inactivo)' : ''}
                           </strong>
                           <small>
                             {playerColorLabel(player.color)} · Asiento{' '}
@@ -857,6 +898,37 @@ export function AdminScreen() {
                               selected.status === 'ACTIVE') &&
                             !player.eliminated &&
                             !player.disqualified &&
+                            selected.competitiveDeciding && (
+                              <button
+                                type="button"
+                                className="secondary"
+                                disabled={busy}
+                                title={
+                                  player.inactive
+                                    ? `Devolverle los turnos normales a ${player.nickname}`
+                                    : `${player.nickname} abandonó: sus turnos pasan a durar 1 minuto`
+                                }
+                                onClick={() =>
+                                  void run(() =>
+                                    api.markInactive(
+                                      selected.gameId,
+                                      player.id,
+                                      !player.inactive,
+                                    ),
+                                  )
+                                }
+                              >
+                                {player.inactive
+                                  ? 'Quitar inactivo'
+                                  : 'Marcar inactivo'}
+                              </button>
+                            )}
+                          {selected.mode === 'competitive' &&
+                            (selected.status === 'SETUP' ||
+                              selected.status === 'ACTIVE') &&
+                            !player.eliminated &&
+                            !player.disqualified &&
+                            !selected.competitiveDeciding &&
                             player.bot !== 'table' && (
                               <button
                                 type="button"

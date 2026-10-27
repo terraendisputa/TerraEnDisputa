@@ -6,6 +6,7 @@ import {
   pauseCompetitiveClock,
   selectCompetitiveTerritory,
   requestCompetitiveBot,
+  markCompetitiveInactive,
   competitiveActor,
   chooseBotCommand,
   applyBotCommand,
@@ -352,7 +353,8 @@ export class GameService {
           readonly level?: 'easy' | 'normal' | 'hard';
           readonly replaceAbsent?: boolean;
         }
-      | { readonly playerId: string; readonly enabled: boolean },
+      | { readonly playerId: string; readonly enabled: boolean }
+      | { readonly playerId: string; readonly inactive: boolean },
   ): Promise<number> {
     this.clockRevisionRanges.delete(gameId);
     return this.coordinator.run(gameId, async () => {
@@ -370,11 +372,18 @@ export class GameService {
           actor ? this.connected(gameId, actor) : true,
           secureGameRandomness,
         );
-        state = assignCompetitiveBot(
-          state,
-          change.playerId as PlayerId,
-          change.enabled,
-        );
+        state =
+          'inactive' in change
+            ? markCompetitiveInactive(
+                state,
+                change.playerId as PlayerId,
+                change.inactive,
+              )
+            : assignCompetitiveBot(
+                state,
+                change.playerId as PlayerId,
+                change.enabled,
+              );
       } else
         state = {
           ...state,

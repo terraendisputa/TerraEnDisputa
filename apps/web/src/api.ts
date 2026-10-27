@@ -75,6 +75,7 @@ export const api = {
     configuredPlayerCount: number,
     competitiveDurationMinutes?: 60 | 80,
     competitiveBotSeats?: 2,
+    competitiveDeciding?: boolean,
   ) =>
     request<{ gameId: string; revision: number }>(
       `/api/admin/games/${gameId}`,
@@ -84,6 +85,7 @@ export const api = {
           configuredPlayerCount,
           competitiveDurationMinutes,
           competitiveBotSeats,
+          competitiveDeciding,
         }),
       },
     ),
@@ -106,6 +108,11 @@ export const api = {
   assignBot: (gameId: string, playerId: string, enabled: boolean) =>
     request<{ revision: number }>(
       `/api/admin/games/${gameId}/players/${playerId}/bot`,
+      { method: 'POST', body: JSON.stringify({ enabled }) },
+    ),
+  markInactive: (gameId: string, playerId: string, enabled: boolean) =>
+    request<{ revision: number }>(
+      `/api/admin/games/${gameId}/players/${playerId}/inactive`,
       { method: 'POST', body: JSON.stringify({ enabled }) },
     ),
   startGame: (gameId: string) =>

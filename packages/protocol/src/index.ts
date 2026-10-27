@@ -162,6 +162,7 @@ export interface PublicPlayerView {
   readonly disqualified?: boolean;
   readonly absent?: boolean;
   readonly bot?: 'absent' | 'admin' | 'requested' | 'table';
+  readonly inactive?: true;
   readonly cardCount: number;
   readonly completedExchangeCount: number;
 }
@@ -399,6 +400,7 @@ export interface PlayerGameView {
   readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
   readonly competitiveBotsReplaceAbsent?: boolean;
   readonly competitiveBotSeats?: 2;
+  readonly competitiveDeciding?: true;
   readonly selfPlayerId: string;
   /** The viewer may hand their seat to a bot (one country, final rounds). */
   readonly botRequestAvailable?: true;
@@ -499,6 +501,7 @@ export interface AdminGameView {
   readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
   readonly competitiveBotsReplaceAbsent?: boolean;
   readonly competitiveBotSeats?: 2;
+  readonly competitiveDeciding?: true;
   readonly players: readonly PublicPlayerView[];
   readonly readyPlayerIds?: readonly string[];
   readonly setup?: SetupView;
@@ -567,6 +570,7 @@ const publicPlayerViewSchema = z.strictObject({
   disqualified: z.boolean().optional(),
   absent: z.literal(true).optional(),
   bot: z.enum(['absent', 'admin', 'requested', 'table']).optional(),
+  inactive: z.literal(true).optional(),
   cardCount: z.number().int().nonnegative().max(50),
   completedExchangeCount: z.number().int().nonnegative(),
 });
@@ -801,6 +805,7 @@ export const playerGameViewSchema = z.strictObject({
   competitiveBotLevel: z.enum(['easy', 'normal', 'hard']).optional(),
   competitiveBotsReplaceAbsent: z.boolean().optional(),
   competitiveBotSeats: z.literal(2).optional(),
+  competitiveDeciding: z.literal(true).optional(),
   botRequestAvailable: z.literal(true).optional(),
   selfPlayerId: id,
   players: z.array(publicPlayerViewSchema).min(1).max(6),
@@ -946,12 +951,14 @@ export const updateGameConfigurationBodySchema = z
       .union([z.literal(60), z.literal(80)])
       .optional(),
     competitiveBotSeats: z.literal(2).optional(),
+    competitiveDeciding: z.boolean().optional(),
   })
   .refine(
     (body) =>
       !body.competitiveBotSeats ||
       (body.configuredPlayerCount === 6 &&
-        body.competitiveDurationMinutes !== 60),
+        body.competitiveDurationMinutes !== 60 &&
+        !body.competitiveDeciding),
   );
 export const configureBotsBodySchema = z
   .strictObject({

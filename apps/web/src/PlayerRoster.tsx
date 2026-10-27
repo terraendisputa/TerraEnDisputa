@@ -135,13 +135,15 @@ export function PlayerRoster({
                   ? 'Bot de la mesa'
                   : player.bot
                     ? 'Juega un bot'
-                    : player.absent
-                      ? 'Ausente · turnos automáticos'
-                      : player.controller === 'controllerless_reassignment'
-                        ? 'Sin jugador'
-                        : player.id === actor
-                          ? 'Jugando ahora'
-                          : 'En partida'}
+                    : player.inactive
+                      ? 'Inactivo · turnos de 1 minuto'
+                      : player.absent
+                        ? 'Ausente · turnos automáticos'
+                        : player.controller === 'controllerless_reassignment'
+                          ? 'Sin jugador'
+                          : player.id === actor
+                            ? 'Jugando ahora'
+                            : 'En partida'}
           </small>
         </section>
       )}

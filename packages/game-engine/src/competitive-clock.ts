@@ -22,6 +22,8 @@ import { applySetupCommand, skipDisqualifiedSetupActivation } from './setup.js';
 
 export const TURN_MS = 120_000;
 export const FINAL_TURN_MS = 180_000;
+/** Turns of an inactive player in a deciding game. */
+export const INACTIVE_TURN_MS = 60_000;
 /**
  * Superliga waits up to seven minutes for a disconnected player on each
  * activation: five minutes of grace with the game clock stopped, then the two
@@ -51,6 +53,8 @@ function key(s: GameState): string {
     : 'lobby';
 }
 function duration(s: GameState, clock: CompetitiveClockState): number {
+  const actor = competitiveActor(s);
+  if (s.players.find((p) => p.id === actor)?.inactive) return INACTIVE_TURN_MS;
   return s.status === 'ACTIVE' &&
     s.turn.round.kind === 'normal' &&
     clock.finalRoundNumber !== undefined &&
@@ -290,7 +294,7 @@ function expire(s: GameState, random: ShuffleSource): GameState {
   return s.status === 'ACTIVE' ? finishCompetitiveActivation(s) : s;
 }
 export type CompetitiveSeat =
-  'absent' | 'bot-absent' | 'bot-admin' | 'bot-requested';
+  'absent' | 'inactive' | 'bot-absent' | 'bot-admin' | 'bot-requested';
 /**
  * Who plays a seat that its player left. As in the Superliga, a bot takes it
  * and the player's pacts end; with bots off, its turns pass on their own.
@@ -305,18 +309,21 @@ export function setCompetitiveSeat(
     ...s,
     players: s.players.map((p) => {
       if (p.id !== pid) return p;
-      const { absent: _absent, bot: _bot, ...rest } = p;
+      const { absent: _absent, bot: _bot, inactive: _inactive, ...rest } = p;
       void _absent;
+      void _inactive;
       void _bot;
       return seat === 'absent'
         ? { ...rest, absent: true }
-        : seat
-          ? {
-              ...rest,
-              bot: seat.slice(4) as 'absent' | 'admin' | 'requested',
-              botPlayed: true,
-            }
-          : rest;
+        : seat === 'inactive'
+          ? { ...rest, inactive: true }
+          : seat
+            ? {
+                ...rest,
+                bot: seat.slice(4) as 'absent' | 'admin' | 'requested',
+                botPlayed: true,
+              }
+            : rest;
     }),
   } as GameState;
   if (!seat) return next;
@@ -455,11 +462,14 @@ export function tickCompetitiveClock(
       s = setCompetitiveSeat(s, pid, undefined);
     const botPlays =
       seat?.bot !== undefined && (seat.bot !== 'absent' || !connected);
+    // An inactive player's short turn runs without waiting for them.
+    const inactive = seat?.inactive;
     if (!connected && !botPlays) s = resolveInheritance(s, random);
     if (absent && !connected) s = expire(s, random);
     else if (
       !connected &&
       !botPlays &&
+      !inactive &&
       s.status !== 'FINISHED' &&
       (clock.technicalRemainingMs ?? TECHNICAL_WAIT_MS) > 0
     )
@@ -473,12 +483,16 @@ export function tickCompetitiveClock(
         },
       };
     else if (clock.activationRemainingMs === 0) {
-      if (!connected && !botPlays && s.status !== 'FINISHED') {
+      if (!connected && !botPlays && !inactive && s.status !== 'FINISHED') {
         s = resolveInheritance(s, random);
         s = setCompetitiveSeat(
           s,
           pid,
-          s.competitiveBotsReplaceAbsent === false ? 'absent' : 'bot-absent',
+          s.competitiveDeciding
+            ? 'inactive'
+            : s.competitiveBotsReplaceAbsent === false
+              ? 'absent'
+              : 'bot-absent',
         );
       }
       s = expire(s, random);
@@ -537,7 +551,8 @@ export function assignCompetitiveBot(
     !player ||
     player.eliminated ||
     player.disqualified ||
-    player.bot === 'table'
+    player.bot === 'table' ||
+    s.competitiveDeciding
   )
     throw new Error('INVALID_PHASE');
   if (!enabled) return player.bot ? setCompetitiveSeat(s, pid, undefined) : s;
@@ -563,6 +578,49 @@ function botTakesSeat(
     : next;
 }
 /**
+ * In a deciding game the administrator marks a player who left as inactive,
+ * or gives them back normal turns. A current turn shrinks to one minute.
+ */
+export function markCompetitiveInactive(
+  s: GameState,
+  pid: PlayerId,
+  inactive: boolean,
+): GameState {
+  const player = s.players.find((p) => p.id === pid);
+  if (
+    s.mode !== 'competitive' ||
+    !s.competitiveDeciding ||
+    !s.competitiveClock ||
+    (s.status !== 'SETUP' && s.status !== 'ACTIVE') ||
+    !player ||
+    player.eliminated ||
+    player.disqualified
+  )
+    throw new Error('INVALID_PHASE');
+  if (!inactive)
+    return player.inactive || player.absent
+      ? setCompetitiveSeat(s, pid, undefined)
+      : s;
+  const next = setCompetitiveSeat(s, pid, 'inactive');
+  const clock = next.competitiveClock!;
+  if (competitiveActor(next) !== pid) return next;
+  const waiting =
+    clock.pauseReason === 'disconnection' && clock.disconnectedPlayerId === pid;
+  return {
+    ...next,
+    competitiveClock: {
+      ...clock,
+      activationRemainingMs: Math.min(
+        clock.activationRemainingMs,
+        INACTIVE_TURN_MS,
+      ),
+      ...(waiting
+        ? { pauseReason: undefined, disconnectedPlayerId: undefined }
+        : {}),
+    },
+  };
+}
+/**
  * As the Superliga allows, from the second to last round a player left with a
  * single country may hand their seat to a bot for the rest of the game.
  */
@@ -572,6 +630,7 @@ export function canRequestCompetitiveBot(s: GameState, pid: PlayerId): boolean {
   return (
     s.mode === 'competitive' &&
     s.status === 'ACTIVE' &&
+    !s.competitiveDeciding &&
     final !== undefined &&
     s.turn.round.kind === 'normal' &&
     s.turn.round.roundNumber >= final - 1 &&

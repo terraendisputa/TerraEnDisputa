@@ -38,6 +38,8 @@ export interface PlayerState {
   readonly bot?: 'absent' | 'admin' | 'requested' | 'table';
   /** Competitive: a bot played this seat at some point. */
   readonly botPlayed?: true;
+  /** Deciding Competitive game: left or absent, plays one-minute turns. */
+  readonly inactive?: true;
   readonly cards: readonly TerritoryCardPossession[];
   readonly completedExchangeCount: number;
   readonly secretObjectiveId?: SecretObjectiveId;
@@ -308,6 +310,11 @@ interface GameStateBase {
   readonly competitiveBotsReplaceAbsent?: boolean;
   /** Competitive table of six where bots take two seats (Superliga 4 + 2). */
   readonly competitiveBotSeats?: 2;
+  /**
+   * Qualifiers, semifinals and finals: no bots; whoever leaves stays inactive
+   * with one-minute turns.
+   */
+  readonly competitiveDeciding?: true;
   readonly players: readonly PlayerState[];
 }
 export interface LobbyGameState extends GameStateBase {

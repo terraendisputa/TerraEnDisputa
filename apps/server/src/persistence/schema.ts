@@ -44,6 +44,7 @@ const player = z.strictObject({
   absent: z.literal(true).optional(),
   bot: z.enum(['absent', 'admin', 'requested', 'table']).optional(),
   botPlayed: z.literal(true).optional(),
+  inactive: z.literal(true).optional(),
   cards: z.array(
     z.strictObject({
       cardId: z.enum(TERRITORY_IDS),
@@ -241,6 +242,7 @@ const base = {
   competitiveBotLevel: z.enum(['easy', 'normal', 'hard']).optional(),
   competitiveBotsReplaceAbsent: z.boolean().optional(),
   competitiveBotSeats: z.literal(2).optional(),
+  competitiveDeciding: z.literal(true).optional(),
   players: z.array(player),
 };
 const competitiveHistory = z.strictObject({

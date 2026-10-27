@@ -20,6 +20,7 @@ const publicPlayers = (state: GameState): AdminGameView['players'] =>
       : { disqualified: player.disqualified }),
     ...(player.absent ? { absent: true as const } : {}),
     ...(player.bot ? { bot: player.bot } : {}),
+    ...(player.inactive ? { inactive: true as const } : {}),
     cardCount: player.cards.length,
     completedExchangeCount: player.completedExchangeCount,
   }));
@@ -50,6 +51,9 @@ export function projectGameForAdmin(
       : {}),
     ...(state.competitiveBotSeats
       ? { competitiveBotSeats: state.competitiveBotSeats }
+      : {}),
+    ...(state.competitiveDeciding
+      ? { competitiveDeciding: true as const }
       : {}),
     players: publicPlayers(state),
     ...(state.pendingInheritance
@@ -126,6 +130,9 @@ export function projectGameFor(
       : {}),
     ...(state.competitiveBotSeats
       ? { competitiveBotSeats: state.competitiveBotSeats }
+      : {}),
+    ...(state.competitiveDeciding
+      ? { competitiveDeciding: true as const }
       : {}),
     selfPlayerId: playerId,
     ...(canRequestCompetitiveBot(state, playerId)

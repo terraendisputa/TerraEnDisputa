@@ -604,8 +604,21 @@ export function classicInvariantViolations(
     state.players.some((p) => p.bot === 'table')
   )
     errors.push('Table bots belong to a started bot table');
-  if (state.players.some((p) => p.absent && p.bot))
-    errors.push('A seat is either absent or played by a bot');
+  if (
+    state.players.some(
+      (p) => [p.absent, p.bot, p.inactive].filter(Boolean).length > 1,
+    )
+  )
+    errors.push('A seat is either absent, inactive or played by a bot');
+  if (
+    state.competitiveDeciding &&
+    (state.mode !== 'competitive' ||
+      state.competitiveBotSeats ||
+      state.players.some((p) => p.bot))
+  )
+    errors.push('A deciding game is Competitive and has no bots');
+  if (!state.competitiveDeciding && state.players.some((p) => p.inactive))
+    errors.push('Only deciding games have inactive players');
   if (state.mode !== 'competitive' && state.players.some((p) => p.absent))
     errors.push('Only Competitive can have absent players');
   if (state.mode !== 'competitive' && state.competitiveDurationMinutes)
