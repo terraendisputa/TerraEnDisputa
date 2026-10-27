@@ -958,6 +958,9 @@ function advanceTurn(
   random: PreparationRandom,
 ) {
   const actor = turnActor(s);
+  // Regrouped forces are fixed only during the turn that moved them.
+  s.fixedArmies = {};
+  s.fixedMissiles = {};
   s.completedTurns[actor] = (s.completedTurns[actor] ?? 0) + 1;
   s.pacts = s.pacts.filter(
     (p) =>

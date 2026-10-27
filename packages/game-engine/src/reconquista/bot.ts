@@ -112,7 +112,7 @@ function conversions(
         (id) =>
           map.enemies(id, player).length > 0 &&
           total(id) >= MISSILE_ARMIES &&
-          // Armies regrouped there last turn still count as fixed.
+          // Armies regrouped this turn stay fixed until it ends.
           total(id) - 6 >= (fixed[`${player}:${id}`] ?? 0),
       )
       .map((id) => [id, 1]),

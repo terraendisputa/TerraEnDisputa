@@ -38,6 +38,9 @@ function play(levels, seed, rounds = 40) {
   for (;;) {
     const c = loaded.state.campaign;
     if (c?.phase === 'finished' || (c && c.round > rounds)) break;
+    // Forces regrouped in a turn are free again once it ends.
+    if (c?.phase === 'incorporation')
+      assert.deepEqual([c.fixedArmies, c.fixedMissiles], [{}, {}]);
     const actor = reconquistaActor(board, loaded.state);
     const action = chooseReconquistaBotMove(
       board,
