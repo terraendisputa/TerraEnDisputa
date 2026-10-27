@@ -266,7 +266,7 @@
   place-items: center;
   flex: 0 0 auto;
   min-width: 40px;
-  max-width: 88px;
+  max-width: 160px;
   height: 38px;
   min-height: 38px;
   padding: 5px 7px;
@@ -1042,6 +1042,7 @@
   }
   .game-shell.playing-shell .roster-player {
     min-width: 34px;
+    max-width: 88px;
     height: 34px;
     min-height: 34px;
     font-size: 10px;
@@ -1493,6 +1494,7 @@
   grid-template-columns: minmax(0, 1fr) auto auto;
 }
 .game-shell.playing-shell .attack-card > :is(.attack-button, .end-attack) {
+  align-self: end;
   min-width: 36px;
   padding: 5px 8px;
 }
@@ -1799,7 +1801,7 @@ html:not([data-theme='dark']) .game-shell.playing-shell .player-popover {
 .game-shell.playing-shell .army-change text {
   fill: #fff;
   font:
-    700 15px system-ui,
+    700 10px system-ui,
     sans-serif;
   text-anchor: middle;
 }

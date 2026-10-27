@@ -363,8 +363,10 @@ export function GameMap({
                     className={`army-change color-${owner?.color ?? 'none'}`}
                     transform={`translate(${x + 26} ${y + 10})`}
                   >
-                    <rect x="-17" y="-11" width="34" height="22" rx="11" />
-                    <text y="5">{delta > 0 ? `+${delta}` : `−${-delta}`}</text>
+                    <rect x="-12" y="-8" width="24" height="16" rx="8" />
+                    <text y="3.5">
+                      {delta > 0 ? `+${delta}` : `−${-delta}`}
+                    </text>
                   </g>
                 );
               },
