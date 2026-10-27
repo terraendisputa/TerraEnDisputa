@@ -306,9 +306,17 @@ function setupCommand(
   level: BotLevel,
   shuffle?: ShuffleSource,
 ): SetupCommand | undefined {
-  if (s.setup.kind !== 'card_deal_4_to_6') return undefined;
-  const due = s.setup.armiesRemainingInActivation;
-  const counts = s.setup.additionalArmiesByPlayerContinent[pid] ?? {};
+  const setup = s.setup;
+  // Classic with two or three players places its extra armies in one go.
+  const due =
+    setup.kind === 'card_deal_4_to_6'
+      ? setup.armiesRemainingInActivation
+      : (setup.additionalArmiesRemainingByPlayer[pid] ?? 0);
+  if (due <= 0) return undefined;
+  const counts =
+    setup.kind === 'card_deal_4_to_6'
+      ? (setup.additionalArmiesByPlayerContinent[pid] ?? {})
+      : {};
   const owned = TERRITORY_IDS.filter((id) => owner(s, id) === pid);
   const limit = (id: TerritoryId) =>
     s.mode === 'competitive'
@@ -406,7 +414,9 @@ function hardAttack(
  * no move. Easy picks almost at random among reasonable moves, normal follows
  * fixed rules, and hard plays its mission, guards its continents, weighs the
  * real dice odds, saves cards and plays the final rounds for the tiebreak.
- * No level offers pacts.
+ * It plays Classic and Competitive alike: the legal actions keep it within
+ * the pacts in force and make it trade when Classic requires it. No level
+ * offers pacts.
  */
 export function chooseBotCommand(
   s: GameState,
