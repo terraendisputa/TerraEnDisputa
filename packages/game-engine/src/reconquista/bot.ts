@@ -1,14 +1,17 @@
 /**
  * Reconquista bots. One ordinary command at a time, so the journal keeps
- * bot moves like a player's. Easy and Normal follow Classic's bots; the
- * missile rules are the user's decisions of 2026-10-27.
+ * bot moves like a player's. The three levels follow Classic's bots; the
+ * missile and card rules are the user's decisions of 2026-10-27.
  */
 import { campaignLegal, type Campaign } from './campaign.js';
 import { continent, turnActor } from './campaign-politics.js';
 import type { ReconquistaTerritory } from './contracts.js';
 import { reconquistaActor, reconquistaDeclines } from './express.js';
 import { firstHostilityActions } from './hostilities.js';
+import type { InitialSecret } from './objectives.js';
 import type { PreparationBoard, PreparationRandom } from './preparation.js';
+import { combatDice } from './round.js';
+import type { VictoryObjective } from './victory.js';
 import {
   reconquistaLegalActions,
   type ReconquistaSession,
@@ -27,7 +30,61 @@ const EASY_FIRES = 1 / 3;
 /** Normal turns 6 armies into a missile only where a border country has this many. */
 const MISSILE_ARMIES = 13;
 
+/** Chance Hard needs before attacking, as in Classic. */
+const HARD_CHANCE = { target: 0.5, other: 0.65, card: 0.5 };
+/** Countries anyone wins with, whatever the objective. */
+const COMMON_COUNTRIES = 45;
+
 type Territories = readonly Pick<ReconquistaTerritory, 'id' | 'forces'>[];
+
+/** Odds of each loss pair for one roll, by attacker and defender dice. */
+const rolls = new Map<string, readonly (readonly [number, number, number])[]>();
+function rollOutcomes(attack: number, defense: number) {
+  const key = `${attack}:${defense}`;
+  const known = rolls.get(key);
+  if (known) return known;
+  const counts = new Map<string, number>();
+  const total = 6 ** (attack + defense);
+  for (let n = 0; n < total; n++) {
+    const faces = Array.from(
+      { length: attack + defense },
+      (_, i) => (Math.floor(n / 6 ** i) % 6) + 1,
+    );
+    const a = faces.slice(0, attack).sort((x, y) => y - x);
+    const d = faces.slice(attack).sort((x, y) => y - x);
+    let al = 0,
+      dl = 0;
+    for (let i = 0; i < Math.min(attack, defense); i++)
+      if (a[i]! > d[i]!) dl++;
+      else al++;
+    counts.set(`${al}:${dl}`, (counts.get(`${al}:${dl}`) ?? 0) + 1);
+  }
+  const outcomes = [...counts].map(([k, c]) => {
+    const [al, dl] = k.split(':').map(Number) as [number, number];
+    return [al, dl, c / total] as const;
+  });
+  rolls.set(key, outcomes);
+  return outcomes;
+}
+const chances = new Map<string, number>();
+/** Chance of taking a country by rolling until one attacking army is left. */
+function conquestChance(attacker: number, defender: number, situation: string) {
+  const a = Math.min(attacker, 30),
+    d = Math.min(defender, 30);
+  if (d <= 0) return 1;
+  if (a < 2) return 0;
+  const key = `${a}:${d}:${situation}`;
+  const known = chances.get(key);
+  if (known !== undefined) return known;
+  const dice = combatDice(a, d, situation);
+  let chance = 0;
+  for (const [al, dl, p] of rollOutcomes(dice.attack, dice.defense))
+    chance +=
+      p *
+      conquestChance(a - Math.min(al, a - 1), d - Math.min(dl, d), situation);
+  chances.set(key, chance);
+  return chance;
+}
 
 const pick = <T>(items: readonly T[], random: PreparationRandom) =>
   items[Math.min(items.length - 1, Math.floor(random() * items.length))];
@@ -59,7 +116,205 @@ function geography(board: PreparationBoard, territories: Territories) {
       .get(id)!
       .forces.filter((f) => f.playerId !== player)
       .reduce((s, f) => s + f.armies, 0);
-  return { armies, enemies, threat, defenders };
+  const owns = (id: string, player: string) =>
+    !!byId.get(id)?.forces.some((f) => f.playerId === player);
+  return { armies, enemies, threat, defenders, owns };
+}
+type Geography = ReturnType<typeof geography>;
+
+/**
+ * How much Hard wants each country it is not in: what its objectives still
+ * need, the color it must destroy, continents it is about to complete, and
+ * every country once 45 countries are closer than the objectives.
+ */
+function wants(
+  board: PreparationBoard,
+  catalog: unknown,
+  map: Geography,
+  bot: string,
+  secrets: readonly InitialSecret[],
+  eliminations: Readonly<Record<string, string>>,
+): Record<string, number> {
+  const all = (
+    catalog as { objectives: (VictoryObjective & { target?: string })[] }
+  ).objectives;
+  const countries = board.countries;
+  const owned = countries.filter((c) => map.owns(c.id, bot));
+  const ownedIn = (continentId: string) =>
+    owned.filter((c) => c.continentId === continentId).length;
+  const size = (continentId: string) =>
+    countries.filter((c) => c.continentId === continentId).length;
+  const quotas: Record<string, number> = {};
+  let islands = 0,
+    minimum = 0,
+    gap = 0;
+  const targets: string[] = [];
+  for (const secret of secrets) {
+    const o = all.find((o) => o.id === secret.objectiveId);
+    if (!o) continue;
+    if (o.kind === 'destruction') {
+      const credit = secret.targetPlayerId
+        ? eliminations[secret.targetPlayerId]
+        : undefined;
+      // A target someone else destroyed leaves the 45 countries.
+      if (credit === undefined && secret.targetPlayerId) {
+        targets.push(secret.targetPlayerId);
+        gap += countries.filter((c) =>
+          map.owns(c.id, secret.targetPlayerId!),
+        ).length;
+      } else if (credit !== bot) gap += COMMON_COUNTRIES - owned.length;
+      continue;
+    }
+    if (o.minTerritories) {
+      minimum = Math.max(minimum, o.minTerritories);
+      gap += Math.max(0, o.minTerritories - owned.length);
+    }
+    for (const [id, n] of Object.entries(o.requirements ?? {})) {
+      const quota = n === 'all' ? size(id) : n;
+      quotas[id] = Math.max(quotas[id] ?? 0, quota);
+      gap += Math.max(0, quota - ownedIn(id));
+    }
+    if (o.islands) {
+      islands = o.islands.count;
+      gap += Math.max(0, islands - owned.filter((c) => c.island).length);
+    }
+  }
+  const common = COMMON_COUNTRIES - owned.length < gap;
+  const islandsShort = owned.filter((c) => c.island).length < islands;
+  const values: Record<string, number> = {};
+  for (const c of countries) {
+    if (map.owns(c.id, bot)) continue;
+    let value = common ? 3 : 1;
+    if (!common) {
+      if (ownedIn(c.continentId) < (quotas[c.continentId] ?? 0)) value += 4;
+      if (minimum && owned.length < minimum) value += 2;
+      if (islandsShort && c.island) value += 3;
+      if (targets.some((t) => map.owns(c.id, t)))
+        value += 4 + 8 / Math.max(1, gap);
+    }
+    const missing = size(c.continentId) - ownedIn(c.continentId);
+    if (ownedIn(c.continentId) * 2 >= size(c.continentId)) value += 4 / missing;
+    values[c.id] = value;
+  }
+  return values;
+}
+
+/**
+ * Where an army helps Hard most: exposed borders, entries to its continents,
+ * lone armies next to strong enemies, and countries it attacks from next.
+ */
+function guardScore(
+  board: PreparationBoard,
+  map: Geography,
+  bot: string,
+  id: string,
+  values: Record<string, number>,
+  extra = 0,
+) {
+  const enemies = map.enemies(id, bot);
+  if (!enemies.length) return -100;
+  const own = map.armies(id, bot) + extra;
+  const danger = map.threat(id, bot);
+  let score = danger - own;
+  const continentId = continent(board, id);
+  if (
+    board.countries
+      .filter((c) => c.continentId === continentId)
+      .every((c) => map.owns(c.id, bot))
+  )
+    score += 3;
+  if (own <= 1 && danger >= 3) score += 3;
+  return score + 1.5 * Math.max(...enemies.map((t) => values[t] ?? 0));
+}
+
+/**
+ * Hard reinforcements: up to half shore up the countries that need it most,
+ * the rest gather on the country that best attacks what the bot wants.
+ */
+function hardPlacements(
+  board: PreparationBoard,
+  map: Geography,
+  bot: string,
+  choices: readonly string[],
+  total: number,
+  values: Record<string, number>,
+  situation: string,
+): Record<string, number> {
+  if (total <= 0 || !choices.length) return {};
+  const guard = Math.floor(total / 2);
+  const placed: Record<string, number> = {};
+  let used = 0;
+  for (const id of [...choices].sort(
+    (a, b) =>
+      guardScore(board, map, bot, b, values) -
+      guardScore(board, map, bot, a, values),
+  )) {
+    if (used >= guard) break;
+    const need = Math.min(
+      guard - used,
+      Math.max(0, map.threat(id, bot) - map.armies(id, bot)),
+    );
+    if (need > 0 && guardScore(board, map, bot, id, values) > 0) {
+      placed[id] = need;
+      used += need;
+    }
+  }
+  const left = total - used;
+  let best = choices[0]!,
+    score = -Infinity;
+  for (const id of choices) {
+    const own = map.armies(id, bot) + (placed[id] ?? 0) + left;
+    for (const to of map.enemies(id, bot)) {
+      const value =
+        (values[to] ?? 0) *
+        conquestChance(own, map.defenders(to, bot), situation);
+      if (value > score) {
+        best = id;
+        score = value;
+      }
+    }
+  }
+  if (left > 0) placed[best] = (placed[best] ?? 0) + left;
+  return placed;
+}
+
+/** Hard attacks where the odds pay for what it wants; leaving a weak origin costs. */
+function hardAttack<T extends { originId: string; targetId: string }>(
+  map: Geography,
+  bot: string,
+  routes: readonly T[],
+  values: Record<string, number>,
+  situation: string,
+  wantsCard: boolean,
+  defenders: (route: T) => number,
+): T | undefined {
+  let best: T | undefined,
+    score = 0;
+  for (const r of routes) {
+    const chance = conquestChance(
+      map.armies(r.originId, bot),
+      defenders(r),
+      situation,
+    );
+    const value = values[r.targetId] ?? 0;
+    const needed =
+      value >= 4
+        ? HARD_CHANCE.target
+        : wantsCard
+          ? HARD_CHANCE.card
+          : HARD_CHANCE.other;
+    if (chance < needed) continue;
+    const exposure =
+      map.threat(r.originId, bot) - defenders(r) > map.armies(r.originId, bot)
+        ? 1
+        : 0;
+    const total = chance * value - exposure;
+    if (total > score) {
+      best = r;
+      score = total;
+    }
+  }
+  return best;
 }
 
 /**
@@ -158,8 +413,28 @@ function occupying(
   return exposed ? 1 : maximum;
 }
 
+/** Hard keeps its cards unless the hand is large or a continent of its is at risk. */
+function hardExchangesNow(
+  board: PreparationBoard,
+  c: Campaign,
+  map: Geography,
+  bot: string,
+  values: Record<string, number>,
+) {
+  if (c.cards.hands[bot]!.length >= 4) return true;
+  return c.territories.some(
+    (t) =>
+      map.owns(t.id, bot) &&
+      board.countries
+        .filter((x) => x.continentId === continent(board, t.id))
+        .every((x) => map.owns(x.id, bot)) &&
+      guardScore(board, map, bot, t.id, values) > 3,
+  );
+}
+
 function campaignMove(
   board: PreparationBoard,
+  catalog: unknown,
   c: Campaign,
   bot: string,
   level: ReconquistaBotLevel,
@@ -168,6 +443,22 @@ function campaignMove(
   const move = (action: Extract<SetupAction, { kind: 'campaign' }>['action']) =>
     ({ kind: 'campaign', action }) as const;
   const map = geography(board, c.territories);
+  const situation = c.cycle.active!.typeId;
+  const hard = level === 'hard';
+  const values = hard
+    ? wants(
+        board,
+        catalog,
+        map,
+        bot,
+        c.objectives.find((o) => o.playerId === bot)?.objectives ?? [],
+        c.eliminations,
+      )
+    : {};
+  const place = (ids: readonly string[], amount: number) =>
+    hard
+      ? hardPlacements(board, map, bot, ids, amount, values, situation)
+      : placements(map, bot, ids, amount, level, random);
   if (c.phase === 'zone-decision')
     return move({
       kind: 'decide-zone',
@@ -207,7 +498,11 @@ function campaignMove(
       kind: 'claim-continent',
       continentId: legal.continentIds[0],
     });
-  if (legal.canExchange && legal.exchanges.length) {
+  if (
+    legal.canExchange &&
+    legal.exchanges.length &&
+    (!hard || hardExchangesNow(board, c, map, bot, values))
+  ) {
     const choice = [...legal.exchanges].sort(
       (a, b) => a.continentIds.length - b.continentIds.length,
     )[0]!;
@@ -215,20 +510,16 @@ function campaignMove(
   }
   if (legal.canReinforce) {
     const ids = legal.placementCountryIds;
-    const free = placements(map, bot, ids, c.freeBudget, level, random);
+    const free = place(ids, c.freeBudget);
     const byContinent =
       c.phase === 'closing'
         ? {}
         : Object.fromEntries(
             Object.entries(c.continentBudgets).map(([id, armies]) => [
               id,
-              placements(
-                map,
-                bot,
+              place(
                 ids.filter((country) => continent(board, country) === id),
                 armies,
-                level,
-                random,
               ),
             ]),
           );
@@ -248,24 +539,37 @@ function campaignMove(
   if (c.phase === 'attack') {
     const defenders = (r: { targetId: string; defenderId: string }) =>
       map.armies(r.targetId, r.defenderId);
-    const attack = attackChoice(
-      map,
-      bot,
-      legal.attacks,
-      level,
-      random,
-      defenders,
-    );
+    const attack = hard
+      ? hardAttack(
+          map,
+          bot,
+          legal.attacks,
+          values,
+          situation,
+          !c.conquests[bot]?.individual && c.cards.hands[bot]!.length < 5,
+          defenders,
+        )
+      : attackChoice(map, bot, legal.attacks, level, random, defenders);
+    // Hard also fires at the countries its objectives need.
+    const wanted = hard
+      ? [...legal.missileShots]
+          .filter((s) => (values[s.targetId] ?? 0) >= 4)
+          .sort(
+            (a, b) =>
+              (values[b.targetId] ?? 0) * b.damage -
+              (values[a.targetId] ?? 0) * a.damage,
+          )[0]
+      : undefined;
     const shot =
       level === 'easy'
         ? random() < EASY_FIRES
           ? pick(legal.missileShots, random)
           : undefined
-        : legal.missileShots.find(
+        : (legal.missileShots.find(
             (s) =>
               s.targetId === attack?.targetId &&
               s.defenderId === attack.defenderId,
-          );
+          ) ?? wanted);
     if (shot)
       return move({
         kind: 'fire',
@@ -278,11 +582,18 @@ function campaignMove(
   }
   if (c.phase === 'regroup' && level !== 'easy') {
     // Interior forces move to a border country, as Classic's Normal bot.
-    const regroup = legal.regroups.find(
-      (r) =>
-        map.enemies(r.originId, bot).length === 0 &&
-        map.enemies(r.targetId, bot).length > 0,
-    );
+    const regroup = legal.regroups
+      .filter(
+        (r) =>
+          map.enemies(r.originId, bot).length === 0 &&
+          map.enemies(r.targetId, bot).length > 0,
+      )
+      .sort((a, b) =>
+        hard
+          ? guardScore(board, map, bot, b.targetId, values) -
+            guardScore(board, map, bot, a.targetId, values)
+          : 0,
+      )[0];
     if (regroup) return move({ kind: 'regroup-forces', ...regroup });
   }
   if (legal.canFinishRegroup) return move({ kind: 'finish-regroup' });
@@ -314,10 +625,17 @@ export function chooseReconquistaBotMove(
     if (decline) return decline;
   }
   if (reconquistaActor(board, state) !== bot) return null;
-  if (c) return campaignMove(board, c, bot, level, random);
+  if (c) return campaignMove(board, state.catalog, c, bot, level, random);
+  const secrets =
+    state.objectives.secrets.find((o) => o.playerId === bot)?.objectives ?? [];
+  const situation = state.cycle.active?.typeId ?? '';
   if (state.hostility) {
     const h = state.hostility;
     const map = geography(board, h.territories);
+    const values =
+      level === 'hard'
+        ? wants(board, state.catalog, map, bot, secrets, {})
+        : {};
     const legal = firstHostilityActions(
       board,
       h,
@@ -339,9 +657,20 @@ export function chooseReconquistaBotMove(
       };
     if (h.phase === 'attack') {
       // Missiles start with full turns.
-      const attack = attackChoice(map, bot, legal.attacks, level, random, (r) =>
-        map.defenders(r.targetId, bot),
-      );
+      const defenders = (r: { targetId: string }) =>
+        map.defenders(r.targetId, bot);
+      const attack =
+        level === 'hard'
+          ? hardAttack(
+              map,
+              bot,
+              legal.attacks,
+              values,
+              situation,
+              true,
+              defenders,
+            )
+          : attackChoice(map, bot, legal.attacks, level, random, defenders);
       if (attack) return { kind: 'attack', ...attack };
       return { kind: 'finish-attacks' };
     }
@@ -366,14 +695,25 @@ export function chooseReconquistaBotMove(
   const map = geography(board, state.preparation.territories);
   return {
     kind: state.stage === 'initial-placement' ? 'place' : 'extra',
-    placements: placements(
-      map,
-      bot,
-      legal.placementCountryIds,
-      legal.budget,
-      level,
-      random,
-    ),
+    placements:
+      level === 'hard'
+        ? hardPlacements(
+            board,
+            map,
+            bot,
+            legal.placementCountryIds,
+            legal.budget,
+            wants(board, state.catalog, map, bot, secrets, {}),
+            situation,
+          )
+        : placements(
+            map,
+            bot,
+            legal.placementCountryIds,
+            legal.budget,
+            level,
+            random,
+          ),
     conversions: {},
   };
 }

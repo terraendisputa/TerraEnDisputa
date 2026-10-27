@@ -71,6 +71,9 @@ void test('bot tables play Reconquista from the first placement on', () => {
     ['normal', 'normal', 'normal', 'normal'],
     ['easy', 'normal', 'easy', 'normal', 'easy'],
     ['normal', 'normal', 'easy', 'easy', 'normal', 'normal'],
+    ['hard', 'hard'],
+    ['hard', 'normal', 'easy', 'hard'],
+    ['hard', 'normal', 'normal', 'hard', 'easy', 'hard'],
   ];
   let finished = 0;
   tables.forEach((levels, i) => {
@@ -101,6 +104,17 @@ void test('normal bots fire missiles and convert armies on crowded borders', () 
     campaign.some((a) => a.action.kind === 'fire'),
     'some missile was fired',
   );
+});
+
+void test('hard bots play toward their objectives and win against normal ones', () => {
+  let wins = 0;
+  for (const seed of [1, 2, 3, 4]) {
+    const levels =
+      seed % 2 ? ['hard', 'normal', 'normal'] : ['normal', 'normal', 'hard'];
+    const c = play(levels, seed, 60).state.campaign;
+    if (c.winners.some((id) => levels[Number(id.slice(1))] === 'hard')) wins++;
+  }
+  assert(wins >= 2, `hard won ${wins} of 4`);
 });
 
 void test('a bot rejects pacts offered to it', () => {
