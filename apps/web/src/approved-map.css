@@ -166,6 +166,11 @@
   stroke-width: 1.6;
   pointer-events: all;
 }
+/* Names and armies sit above the countries; clicks reach the country below. */
+.game-map .territory-marks,
+.game-map .territory-marks .territory * {
+  pointer-events: none;
+}
 .game-map .territory .army-count {
   fill: white;
   stroke: none;

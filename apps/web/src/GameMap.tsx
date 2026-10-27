@@ -212,6 +212,37 @@ export function GameMap({
                 : hasSetupMapAction
                   ? 'Elegí un territorio señalado'
                   : 'Inspeccioná el tablero';
+  const isActionable = (id: string) =>
+    canSelectTerritory && legal.has(id) && Boolean(onSelect);
+  const legalKind =
+    snapshot.turn?.phase === 'attack' || snapshot.turn?.phase === 'regroup'
+      ? selectedSourceId
+        ? 'legal-target'
+        : 'legal-source'
+      : 'legal-placement';
+  /** Shared by a country and its name and armies, drawn in a later layer. */
+  const territoryClass = (id: string) => {
+    const territory = snapshot.territories?.[id];
+    const owner = territory?.ownerId
+      ? players.get(territory.ownerId)
+      : undefined;
+    const actionable = isActionable(id);
+    return [
+      'territory',
+      owner ? colorClass[owner.color] : 'unoccupied',
+      actionable ? 'legal' : 'passive',
+      actionable ? legalKind : '',
+      selectedTerritoryId === id ? 'selected' : '',
+      selectedSourceId === id ? 'selected-source' : '',
+      selectedSourceId && selectedTargetId === id ? 'selected-target' : '',
+      pendingFrom === id ? 'pending-source' : '',
+      pendingTo === id ? 'pending-target' : '',
+      inspectedId === id && selectedTerritoryId !== id ? 'inspected' : '',
+      snapshot.legalActions.territoryBonusCardIds.includes(id)
+        ? 'bonus-available'
+        : '',
+    ].join(' ');
+  };
   return (
     <section className="map-frame" aria-label="Mapa de territorios">
       {observedCombat && (
@@ -276,46 +307,20 @@ export function GameMap({
               },
             )}
           </g>
-          {TERRITORIES.map(({ id, label, continent, x, y, path }, index) => {
+          {TERRITORIES.map(({ id, label, continent, path }, index) => {
             const territory = snapshot.territories?.[id];
             const displayedArmies =
               (territory?.armies ?? 0) + (pendingPlacements[id] ?? 0);
             const owner = territory?.ownerId
               ? players.get(territory.ownerId)
               : undefined;
-            const actionable =
-              canSelectTerritory && legal.has(id) && Boolean(onSelect);
-            const legalKind =
-              snapshot.turn?.phase === 'attack' ||
-              snapshot.turn?.phase === 'regroup'
-                ? selectedSourceId
-                  ? 'legal-target'
-                  : 'legal-source'
-                : 'legal-placement';
+            const actionable = isActionable(id);
             return (
               <g
                 key={id}
                 data-territory-id={id}
                 data-continent={continent}
-                className={[
-                  'territory',
-                  owner ? colorClass[owner.color] : 'unoccupied',
-                  actionable ? 'legal' : 'passive',
-                  actionable ? legalKind : '',
-                  selectedTerritoryId === id ? 'selected' : '',
-                  selectedSourceId === id ? 'selected-source' : '',
-                  selectedSourceId && selectedTargetId === id
-                    ? 'selected-target'
-                    : '',
-                  pendingFrom === id ? 'pending-source' : '',
-                  pendingTo === id ? 'pending-target' : '',
-                  inspectedId === id && selectedTerritoryId !== id
-                    ? 'inspected'
-                    : '',
-                  snapshot.legalActions.territoryBonusCardIds.includes(id)
-                    ? 'bonus-available'
-                    : '',
-                ].join(' ')}
+                className={territoryClass(id)}
                 role="button"
                 tabIndex={0}
                 aria-pressed={selectedTerritoryId === id || inspectedId === id}
@@ -331,23 +336,44 @@ export function GameMap({
                 }}
               >
                 <path className="territory-fill" d={path} />
-                <text className="territory-label" x={x} y={y}>
-                  {id === 'great_britain' ? 'G. Bretaña' : label}
-                </text>
-                {/* A drawn shadow instead of a filter, so zooming never waits for it. */}
-                <circle className="army-shadow" cx={x} cy={y + 24.2} r="13.6" />
-                <circle className="army-marker" cx={x} cy={y + 23} r="13" />
-                <text className="army-count" x={x} y={y + 28}>
-                  {territory
-                    ? displayedArmies
-                    : snapshot.status === 'SETUP'
-                      ? '—'
-                      : 0}
-                </text>
                 <title>{`${index + 1}. ${label}`}</title>
               </g>
             );
           })}
+          {/* Names and armies over every country, so no neighbor covers them. */}
+          <g className="territory-marks" aria-hidden="true">
+            {TERRITORIES.map(({ id, label, continent, x, y }) => {
+              const territory = snapshot.territories?.[id];
+              const displayedArmies =
+                (territory?.armies ?? 0) + (pendingPlacements[id] ?? 0);
+              return (
+                <g
+                  key={id}
+                  data-continent={continent}
+                  className={territoryClass(id)}
+                >
+                  <text className="territory-label" x={x} y={y}>
+                    {id === 'great_britain' ? 'G. Bretaña' : label}
+                  </text>
+                  {/* A drawn shadow instead of a filter, so zooming never waits for it. */}
+                  <circle
+                    className="army-shadow"
+                    cx={x}
+                    cy={y + 24.2}
+                    r="13.6"
+                  />
+                  <circle className="army-marker" cx={x} cy={y + 23} r="13" />
+                  <text className="army-count" x={x} y={y + 28}>
+                    {territory
+                      ? displayedArmies
+                      : snapshot.status === 'SETUP'
+                        ? '—'
+                        : 0}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
           <MapArtwork definition={snapshot.definition} part="wash" />
           <MapArtwork definition={snapshot.definition} part="ornaments" />
           {observedCombat && (
