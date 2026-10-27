@@ -226,9 +226,7 @@ void test('easy picks among reasonable attacks at random', () => {
   assert.notEqual(b.type, 'attack');
   const c = chooseBotCommand(s, f.a, 'easy', {
     shuffle: (items) =>
-      items.length === 3 && typeof items[0] === 'boolean'
-        ? items
-        : [...items].reverse(),
+      typeof items[0] === 'boolean' ? items : [...items].reverse(),
   });
   assert.equal(c.type, 'attack');
   assert.notEqual(c.to, a.to);

@@ -31,7 +31,8 @@
     "test:security": "node --test tests/security.test.mjs",
     "test:reconquista": "node --test --test-isolation=none tests/reconquista-*.test.mjs",
     "test:integration": "pnpm test:classic && pnpm test:competitive && pnpm test:reconquista && pnpm test:zone-withdrawal && pnpm test:pact-notifications && pnpm test:shortcuts && pnpm test:security && pnpm test:identity",
-    "test:identity": "node --test tests/identity.test.mjs"
+    "test:identity": "node --test tests/identity.test.mjs",
+    "simulate:bots": "node scripts/simulate-bots.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -38,6 +38,8 @@ export const COMPETITIVE_BOT_NAMES = [
 
 /** Armies the attacker needs above the defender (easy and normal). */
 const ATTACK_MARGIN = { easy: 1, normal: 2 } as const;
+/** Easy stops attacking after one roll in six, like a cautious beginner. */
+const EASY_KEEPS_ATTACKING = [true, true, true, true, true, false];
 /** Chance of taking the country the hard bot asks for before attacking. */
 const HARD_CHANCE = { target: 0.5, other: 0.65, card: 0.5, final: 0.8 };
 
@@ -503,8 +505,7 @@ export function chooseBotCommand(
           .map((to) => ({ from, to })),
       );
       if (level === 'easy') {
-        // Easy sometimes stops early, like a cautious beginner.
-        if (options.length && pick([true, true, false], shuffle))
+        if (options.length && pick(EASY_KEEPS_ATTACKING, shuffle))
           best = pick(options, shuffle);
       } else
         best = options.sort(
