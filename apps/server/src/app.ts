@@ -17,6 +17,8 @@ import {
   joinGameBodySchema,
   protocolErrorCodeSchema,
   updateGameConfigurationBodySchema,
+  configureBotsBodySchema,
+  assignBotBodySchema,
 } from '@game/protocol';
 import Fastify, {
   type FastifyInstance,
@@ -441,6 +443,65 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
             server.log.warn({ err: error }, 'Technical pause failed');
           return reply.code(409).send({ code });
         }
+      },
+    );
+
+    const updateBots = async (
+      reply: FastifyReply,
+      gameId: string,
+      change: Parameters<GameService['updateBots']>[1],
+    ) => {
+      try {
+        const revision = await games.updateBots(gameId, change);
+        await broadcastCurrentGame(gameId);
+        return { revision };
+      } catch (error) {
+        const code =
+          error instanceof Error && error.message === 'GAME_NOT_FOUND'
+            ? 'GAME_NOT_FOUND'
+            : 'INVALID_PHASE';
+        if (code === 'INVALID_PHASE')
+          server.log.warn({ err: error }, 'Bot change failed');
+        return reply.code(code === 'GAME_NOT_FOUND' ? 404 : 409).send({ code });
+      }
+    };
+    server.patch(
+      '/api/admin/games/:gameId/bots',
+      { preHandler: requireOrigin },
+      async (request, reply) => {
+        const params = gameIdParamsSchema.safeParse(request.params);
+        const body = configureBotsBodySchema.safeParse(request.body);
+        if (!params.success || !body.success)
+          return reply.code(400).send({ code: 'MALFORMED_MESSAGE' });
+        if (!(await hasAdminAuthority(request)))
+          return reply.code(401).send({ code: 'UNAUTHENTICATED' });
+        return updateBots(reply, params.data.gameId, {
+          ...(body.data.level ? { level: body.data.level } : {}),
+          ...(body.data.replaceAbsent !== undefined
+            ? { replaceAbsent: body.data.replaceAbsent }
+            : {}),
+        });
+      },
+    );
+    server.post(
+      '/api/admin/games/:gameId/players/:playerId/bot',
+      { preHandler: requireOrigin },
+      async (request, reply) => {
+        const params = gamePlayerParamsSchema.safeParse(request.params);
+        const body = assignBotBodySchema.safeParse(request.body);
+        if (!params.success || !body.success)
+          return reply.code(400).send({ code: 'MALFORMED_MESSAGE' });
+        if (!(await hasAdminAuthority(request)))
+          return reply.code(401).send({ code: 'UNAUTHENTICATED' });
+        const result = await updateBots(reply, params.data.gameId, {
+          playerId: params.data.playerId,
+          enabled: body.data.enabled,
+        });
+        server.log.info(
+          { gameId: params.data.gameId, enabled: body.data.enabled },
+          'Administrator changed a bot seat',
+        );
+        return result;
       },
     );
 

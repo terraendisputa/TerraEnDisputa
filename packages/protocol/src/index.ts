@@ -145,6 +145,7 @@ export const protocolErrorCodeSchema = z.enum([
   'DUPLICATE_PACT',
   'PACT_NOT_FOUND',
   'PACT_LIMIT',
+  'BOT_CONTROLLED',
   'PACT_COOLDOWN',
   'INTERNATIONAL_ZONE_OBLIGATION',
 ]);
@@ -159,6 +160,7 @@ export interface PublicPlayerView {
   readonly eliminated: boolean;
   readonly disqualified?: boolean;
   readonly absent?: boolean;
+  readonly bot?: 'absent' | 'admin';
   readonly cardCount: number;
   readonly completedExchangeCount: number;
 }
@@ -393,6 +395,8 @@ export interface PlayerGameView {
   readonly mode: 'classic' | 'competitive';
   readonly configuredPlayerCount: number;
   readonly competitiveDurationMinutes?: 60 | 80;
+  readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
+  readonly competitiveBotsReplaceAbsent?: boolean;
   readonly selfPlayerId: string;
   readonly players: readonly PublicPlayerView[];
   readonly readyPlayerIds?: readonly string[];
@@ -487,6 +491,8 @@ export interface AdminGameView {
   readonly mode: 'classic' | 'competitive';
   readonly configuredPlayerCount: number;
   readonly competitiveDurationMinutes?: 60 | 80;
+  readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
+  readonly competitiveBotsReplaceAbsent?: boolean;
   readonly players: readonly PublicPlayerView[];
   readonly readyPlayerIds?: readonly string[];
   readonly setup?: SetupView;
@@ -554,6 +560,7 @@ const publicPlayerViewSchema = z.strictObject({
   eliminated: z.boolean(),
   disqualified: z.boolean().optional(),
   absent: z.literal(true).optional(),
+  bot: z.enum(['absent', 'admin']).optional(),
   cardCount: z.number().int().nonnegative().max(50),
   completedExchangeCount: z.number().int().nonnegative(),
 });
@@ -785,6 +792,8 @@ export const playerGameViewSchema = z.strictObject({
   competitiveDurationMinutes: z
     .union([z.literal(60), z.literal(80)])
     .optional(),
+  competitiveBotLevel: z.enum(['easy', 'normal', 'hard']).optional(),
+  competitiveBotsReplaceAbsent: z.boolean().optional(),
   selfPlayerId: id,
   players: z.array(publicPlayerViewSchema).min(1).max(6),
   readyPlayerIds: z.array(id).max(6).optional(),
@@ -928,6 +937,15 @@ export const updateGameConfigurationBodySchema = z.strictObject({
     .union([z.literal(60), z.literal(80)])
     .optional(),
 });
+export const configureBotsBodySchema = z
+  .strictObject({
+    level: z.enum(['easy', 'normal', 'hard']).optional(),
+    replaceAbsent: z.boolean().optional(),
+  })
+  .refine(
+    (body) => body.level !== undefined || body.replaceAbsent !== undefined,
+  );
+export const assignBotBodySchema = z.strictObject({ enabled: z.boolean() });
 export const confirmGameActionBodySchema = z.strictObject({
   confirmGameId: id,
 });

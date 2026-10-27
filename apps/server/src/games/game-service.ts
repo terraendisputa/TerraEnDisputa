@@ -6,6 +6,9 @@ import {
   pauseCompetitiveClock,
   selectCompetitiveTerritory,
   competitiveActor,
+  chooseBotCommand,
+  applyBotCommand,
+  assignCompetitiveBot,
   type GameState,
   type GameplayCommand,
   type PlayerId,
@@ -122,6 +125,11 @@ function execute(
       ok: false as const,
       error: { code: 'PLAYER_DISQUALIFIED', message: 'Player is disqualified' },
     };
+  if (state.players.find((p) => p.id === playerId)?.bot)
+    return {
+      ok: false as const,
+      error: { code: 'BOT_CONTROLLED', message: 'A bot plays this seat' },
+    };
   if (payload.type === 'set_ready') {
     if (state.status !== 'LOBBY')
       return {
@@ -185,6 +193,30 @@ function clockOnlyChange(before: GameState, after: GameState): boolean {
     return { ...s, competitiveClock: clock };
   };
   return JSON.stringify(context(before)) === JSON.stringify(context(after));
+}
+
+/**
+ * One move per clock tick for a seat the server plays, so everyone can follow
+ * it on the map. A rejected move leaves the turn to its timer.
+ */
+function playBot(state: GameState, now: number): GameState {
+  if (state.mode !== 'competitive' || state.competitiveClock?.pauseReason)
+    return state;
+  const actor = competitiveActor(state);
+  if (!actor || !state.players.find((p) => p.id === actor)?.bot) return state;
+  const command = chooseBotCommand(
+    state,
+    actor,
+    state.competitiveBotLevel ?? 'hard',
+  );
+  if (!command) return state;
+  const result = applyBotCommand(state, command, {
+    dice: secureGameRandomness,
+    shuffle: secureGameRandomness,
+  });
+  return result.ok
+    ? synchronizeCompetitiveClock(state, result.state, now)
+    : state;
 }
 
 export class GameService {
@@ -266,11 +298,15 @@ export class GameService {
         return false;
       }
       const actor = competitiveActor(current.state);
-      const state = tickCompetitiveClock(
-        current.state,
-        this.now(),
-        actor ? this.connected(gameId, actor) : true,
-        secureGameRandomness,
+      const now = this.now();
+      const state = playBot(
+        tickCompetitiveClock(
+          current.state,
+          now,
+          actor ? this.connected(gameId, actor) : true,
+          secureGameRandomness,
+        ),
+        now,
       );
       if (JSON.stringify(state) === JSON.stringify(current.state)) return false;
       const range = this.clockRevisionRanges.get(gameId);
@@ -293,6 +329,52 @@ export class GameService {
       return true;
     });
   }
+  /** Administrator changes to the bots of a Competitive game. */
+  async updateBots(
+    gameId: string,
+    change:
+      | {
+          readonly level?: 'easy' | 'normal' | 'hard';
+          readonly replaceAbsent?: boolean;
+        }
+      | { readonly playerId: string; readonly enabled: boolean },
+  ): Promise<number> {
+    this.clockRevisionRanges.delete(gameId);
+    return this.coordinator.run(gameId, async () => {
+      const current = await this.store.loadGame(gameId);
+      if (!current) throw new Error('GAME_NOT_FOUND');
+      let state = current.state;
+      if (state.mode !== 'competitive' || state.status === 'FINISHED')
+        throw new Error('INVALID_PHASE');
+      if ('playerId' in change) {
+        const now = this.now();
+        const actor = competitiveActor(state);
+        state = tickCompetitiveClock(
+          state,
+          now,
+          actor ? this.connected(gameId, actor) : true,
+          secureGameRandomness,
+        );
+        state = assignCompetitiveBot(
+          state,
+          change.playerId as PlayerId,
+          change.enabled,
+        );
+      } else
+        state = {
+          ...state,
+          ...(change.level ? { competitiveBotLevel: change.level } : {}),
+          ...(change.replaceAbsent !== undefined
+            ? { competitiveBotsReplaceAbsent: change.replaceAbsent }
+            : {}),
+        };
+      await this.store.commitGame(
+        { ...current, state, revision: current.revision + 1 },
+        { authGeneration: current.auth.generation, revision: current.revision },
+      );
+      return current.revision + 1;
+    });
+  }
   async pause(gameId: string, paused: boolean): Promise<number> {
     this.clockRevisionRanges.delete(gameId);
     return this.coordinator.run(gameId, async () => {
@@ -313,6 +395,7 @@ export class GameService {
             !p.eliminated &&
             !p.disqualified &&
             !p.absent &&
+            !p.bot &&
             !this.connected(gameId, p.id),
         )
       )
@@ -417,7 +500,8 @@ export class GameService {
         initial.players.some(
           (p, i) =>
             p.disqualified !== timed.players[i]?.disqualified ||
-            p.absent !== timed.players[i]?.absent,
+            p.absent !== timed.players[i]?.absent ||
+            p.bot !== timed.players[i]?.bot,
         ) ||
         !!initial.pendingInheritance !== !!timed.pendingInheritance;
       if (temporalBoundary) {

@@ -29,6 +29,11 @@ export interface PlayerState {
   readonly disqualified?: boolean;
   /** Competitive: disconnected past the wait; turns pass on their own. */
   readonly absent?: boolean;
+  /**
+   * Competitive: the server plays this seat. `absent` replaces a disconnected
+   * player until they return; `admin` was put by the administrator.
+   */
+  readonly bot?: 'absent' | 'admin';
   readonly cards: readonly TerritoryCardPossession[];
   readonly completedExchangeCount: number;
   readonly secretObjectiveId?: SecretObjectiveId;
@@ -291,6 +296,10 @@ interface GameStateBase {
   readonly configuredPlayerCount: 2 | 3 | 4 | 5 | 6;
   /** Competitive with five or six players may be the 60 minute Express game. */
   readonly competitiveDurationMinutes?: 60 | 80;
+  /** Competitive bot difficulty; hard when unset, as in the Superliga. */
+  readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
+  /** False keeps automatic turns for absent players instead of a bot. */
+  readonly competitiveBotsReplaceAbsent?: boolean;
   readonly players: readonly PlayerState[];
 }
 export interface LobbyGameState extends GameStateBase {

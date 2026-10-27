@@ -90,6 +90,22 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ paused }),
     }),
+  configureBots: (
+    gameId: string,
+    change: {
+      readonly level?: 'easy' | 'normal' | 'hard';
+      readonly replaceAbsent?: boolean;
+    },
+  ) =>
+    request<{ revision: number }>(`/api/admin/games/${gameId}/bots`, {
+      method: 'PATCH',
+      body: JSON.stringify(change),
+    }),
+  assignBot: (gameId: string, playerId: string, enabled: boolean) =>
+    request<{ revision: number }>(
+      `/api/admin/games/${gameId}/players/${playerId}/bot`,
+      { method: 'POST', body: JSON.stringify({ enabled }) },
+    ),
   startGame: (gameId: string) =>
     request<{ gameId: string; revision: number }>(
       `/api/admin/games/${gameId}/start`,

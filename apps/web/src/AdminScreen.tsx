@@ -742,6 +742,47 @@ export function AdminScreen() {
                         </button>
                       </section>
                     )}
+                  {selected.mode === 'competitive' &&
+                    selected.status !== 'FINISHED' && (
+                      <section className="admin-bots">
+                        <label className="inline-control">
+                          <input
+                            type="checkbox"
+                            disabled={busy}
+                            checked={
+                              selected.competitiveBotsReplaceAbsent !== false
+                            }
+                            onChange={(event) =>
+                              void run(() =>
+                                api.configureBots(selected.gameId, {
+                                  replaceAbsent: event.target.checked,
+                                }),
+                              )
+                            }
+                          />
+                          Reemplazar ausentes por bot
+                        </label>
+                        <label className="inline-control">
+                          Dificultad de los bots
+                          <select
+                            disabled={busy}
+                            value={selected.competitiveBotLevel ?? 'hard'}
+                            onChange={(event) =>
+                              void run(() =>
+                                api.configureBots(selected.gameId, {
+                                  level: event.target.value as
+                                    'easy' | 'normal' | 'hard',
+                                }),
+                              )
+                            }
+                          >
+                            <option value="easy">Fácil</option>
+                            <option value="normal">Normal</option>
+                            <option value="hard">Difícil</option>
+                          </select>
+                        </label>
+                      </section>
+                    )}
                   <ul className="player-list">
                     {selected.players.map((player) => (
                       <li key={player.id}>
@@ -750,7 +791,10 @@ export function AdminScreen() {
                           aria-hidden="true"
                         />
                         <span className="admin-player-copy">
-                          <strong>{player.nickname}</strong>
+                          <strong>
+                            {player.nickname}
+                            {player.bot ? ' (bot)' : ''}
+                          </strong>
                           <small>
                             {playerColorLabel(player.color)} · Asiento{' '}
                             {player.seatIndex + 1} ·{' '}
@@ -779,6 +823,33 @@ export function AdminScreen() {
                           )}
                         </span>
                         <div className="row-actions">
+                          {selected.mode === 'competitive' &&
+                            (selected.status === 'SETUP' ||
+                              selected.status === 'ACTIVE') &&
+                            !player.eliminated &&
+                            !player.disqualified && (
+                              <button
+                                type="button"
+                                className="secondary"
+                                disabled={busy}
+                                title={
+                                  player.bot
+                                    ? `Devolverle el lugar a ${player.nickname}`
+                                    : `Poner un bot en lugar de ${player.nickname}`
+                                }
+                                onClick={() =>
+                                  void run(() =>
+                                    api.assignBot(
+                                      selected.gameId,
+                                      player.id,
+                                      !player.bot,
+                                    ),
+                                  )
+                                }
+                              >
+                                {player.bot ? 'Quitar bot' : 'Poner bot'}
+                              </button>
+                            )}
                           {selected.status === 'LOBBY' && (
                             <button
                               type="button"

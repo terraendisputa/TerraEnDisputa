@@ -304,6 +304,7 @@ function borderTerms(s, a, b) {
 }
 void test('after grace and turn time the player is absent: pacts end, turns pass alone until reconnection', () => {
   let { s, now, a } = fixture();
+  s = { ...s, competitiveBotsReplaceAbsent: false };
   const b = s.players.find(
     (p) =>
       p.id !== a &&
@@ -364,6 +365,7 @@ void test('after grace and turn time the player is absent: pacts end, turns pass
 });
 void test('absence during initial setup places troops automatically and completes legal preparation', () => {
   let { s, now, a } = fixture(4, false);
+  s = { ...s, competitiveBotsReplaceAbsent: false };
   s = tickCompetitiveClock(s, now, false, rng);
   s = tickCompetitiveClock(s, (now += TECHNICAL_WAIT_MS), false, rng);
   s = tickCompetitiveClock(s, now + 120000, false, rng);
@@ -797,7 +799,7 @@ void test('HTTP admin pause authorization and real WebSocket presence drive sche
   const directory = await mkdtemp(join(tmpdir(), 'ted-clock-http-'));
   const store = await FileGameStore.open(directory);
   const tokens = s.players.map(() => randomBytes(32).toString('base64url'));
-  const initial = durable(s);
+  const initial = durable({ ...s, competitiveBotsReplaceAbsent: false });
   initial.auth.players = Object.fromEntries(
     s.players.map((p, i) => [
       p.id,
@@ -1083,6 +1085,7 @@ void test('shutdown checkpoint failure preserves confirmed state and still close
 
 void test('reconnections share the grace of one activation, including admin pause and persistence', () => {
   let { s, now, a } = fixture();
+  s = { ...s, competitiveBotsReplaceAbsent: false };
   s = tickCompetitiveClock(s, ++now, false, rng);
   now += TECHNICAL_WAIT_MS - 1000;
   s = tickCompetitiveClock(s, now, false, rng);

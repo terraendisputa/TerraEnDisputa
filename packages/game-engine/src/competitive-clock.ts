@@ -289,27 +289,32 @@ function expire(s: GameState, random: ShuffleSource): GameState {
   }
   return s.status === 'ACTIVE' ? finishCompetitiveActivation(s) : s;
 }
+export type CompetitiveSeat = 'absent' | 'bot-absent' | 'bot-admin';
 /**
- * Where Superliga brings in a bot, the absent player's turns pass on their own
- * until they reconnect. Their pacts end, as when a bot takes the seat.
+ * Who plays a seat that its player left. As in the Superliga, a bot takes it
+ * and the player's pacts end; with bots off, its turns pass on their own.
+ * Without a seat value the player plays again.
  */
-function markAbsent(
+export function setCompetitiveSeat(
   s: GameState,
   pid: PlayerId,
-  absent: boolean,
-  random: ShuffleSource,
+  seat: CompetitiveSeat | undefined,
 ): GameState {
-  if (absent) s = resolveInheritance(s, random);
   const next = {
     ...s,
     players: s.players.map((p) => {
       if (p.id !== pid) return p;
-      const { absent: _absent, ...rest } = p;
+      const { absent: _absent, bot: _bot, ...rest } = p;
       void _absent;
-      return absent ? { ...rest, absent: true } : rest;
+      void _bot;
+      return seat === 'absent'
+        ? { ...rest, absent: true }
+        : seat
+          ? { ...rest, bot: seat === 'bot-admin' ? 'admin' : 'absent' }
+          : rest;
     }),
-  };
-  if (!absent) return next;
+  } as GameState;
+  if (!seat) return next;
   if (!('pacts' in next)) return next;
   return {
     ...next,
@@ -438,12 +443,18 @@ export function tickCompetitiveClock(
             : 0) + 2,
       };
     s = { ...s, competitiveClock: clock };
-    const absent = s.players.find((p) => p.id === pid)?.absent;
-    if (absent && connected) s = markAbsent(s, pid, false, random);
-    if (!connected) s = resolveInheritance(s, random);
+    const seat = s.players.find((p) => p.id === pid);
+    const absent = seat?.absent;
+    // A returning player takes back a seat a bot kept for them.
+    if ((absent || seat?.bot === 'absent') && connected)
+      s = setCompetitiveSeat(s, pid, undefined);
+    const botPlays =
+      seat?.bot === 'admin' || (seat?.bot === 'absent' && !connected);
+    if (!connected && !botPlays) s = resolveInheritance(s, random);
     if (absent && !connected) s = expire(s, random);
     else if (
       !connected &&
+      !botPlays &&
       s.status !== 'FINISHED' &&
       (clock.technicalRemainingMs ?? TECHNICAL_WAIT_MS) > 0
     )
@@ -457,8 +468,14 @@ export function tickCompetitiveClock(
         },
       };
     else if (clock.activationRemainingMs === 0) {
-      if (!connected && s.status !== 'FINISHED')
-        s = markAbsent(s, pid, true, random);
+      if (!connected && !botPlays && s.status !== 'FINISHED') {
+        s = resolveInheritance(s, random);
+        s = setCompetitiveSeat(
+          s,
+          pid,
+          s.competitiveBotsReplaceAbsent === false ? 'absent' : 'bot-absent',
+        );
+      }
       s = expire(s, random);
     }
   }
@@ -500,6 +517,37 @@ export function pauseCompetitiveClock(
       technicalRemainingMs: clock.technicalRemainingMs,
     },
   };
+}
+/** The administrator puts a bot in a seat, or gives it back to its player. */
+export function assignCompetitiveBot(
+  s: GameState,
+  pid: PlayerId,
+  enabled: boolean,
+): GameState {
+  const player = s.players.find((p) => p.id === pid);
+  if (
+    s.mode !== 'competitive' ||
+    !s.competitiveClock ||
+    (s.status !== 'SETUP' && s.status !== 'ACTIVE') ||
+    !player ||
+    player.eliminated ||
+    player.disqualified
+  )
+    throw new Error('INVALID_PHASE');
+  if (!enabled) return player.bot ? setCompetitiveSeat(s, pid, undefined) : s;
+  const next = setCompetitiveSeat(s, pid, 'bot-admin');
+  const clock = next.competitiveClock!;
+  return clock.pauseReason === 'disconnection' &&
+    clock.disconnectedPlayerId === pid
+    ? {
+        ...next,
+        competitiveClock: {
+          ...clock,
+          pauseReason: undefined,
+          disconnectedPlayerId: undefined,
+        },
+      }
+    : next;
 }
 export function selectCompetitiveTerritory(
   s: GameState,

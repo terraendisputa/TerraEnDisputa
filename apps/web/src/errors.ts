@@ -53,6 +53,8 @@ export const errorMessage = (code: ProtocolErrorCode): string =>
     DUPLICATE_PACT: 'Ese pacto ya existe.',
     PACT_NOT_FOUND: 'El pacto ya no existe.',
     PACT_LIMIT: 'Ya tenés un pacto con ese jugador.',
+    BOT_CONTROLLED:
+      'Un bot está jugando en tu lugar. Pedile al administrador que lo quite.',
     PACT_COOLDOWN:
       'Ese jugador rechazó tu pacto. Esperá 5 minutos para volver a proponerle.',
     INTERNATIONAL_ZONE_OBLIGATION:

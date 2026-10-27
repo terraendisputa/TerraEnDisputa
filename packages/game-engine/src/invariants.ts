@@ -567,6 +567,15 @@ export function classicInvariantViolations(
       ))
   )
     errors.push('invalid competitive clock');
+  if (
+    state.mode !== 'competitive' &&
+    (state.players.some((p) => p.absent || p.bot) ||
+      state.competitiveBotLevel ||
+      state.competitiveBotsReplaceAbsent !== undefined)
+  )
+    errors.push('Only Competitive can have bots');
+  if (state.players.some((p) => p.absent && p.bot))
+    errors.push('A seat is either absent or played by a bot');
   if (state.mode !== 'competitive' && state.players.some((p) => p.absent))
     errors.push('Only Competitive can have absent players');
   if (state.mode !== 'competitive' && state.competitiveDurationMinutes)

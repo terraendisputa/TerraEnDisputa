@@ -637,6 +637,8 @@ function validatePactFormation(
     recipient.disqualified ||
     proposer.absent ||
     recipient.absent ||
+    proposer.bot ||
+    recipient.bot ||
     proposerId === recipientId
   )
     return 'INVALID_PACT';

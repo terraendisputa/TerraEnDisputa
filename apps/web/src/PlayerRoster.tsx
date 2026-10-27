@@ -80,10 +80,13 @@ export function PlayerRoster({
               aria-current={p.id === actor ? 'true' : undefined}
               aria-expanded={inspected === p.id}
               aria-label={`Ver información de ${p.nickname}${p.id === actor ? ', turno actual' : ''}`}
-              title={p.nickname}
+              title={`${p.nickname}${p.bot ? ' (bot)' : ''}`}
               onClick={() => setInspected(inspected === p.id ? null : p.id)}
             >
-              <span className="roster-name">{p.nickname}</span>
+              <span className="roster-name">
+                {p.nickname}
+                {p.bot ? ' (bot)' : ''}
+              </span>
               <span className="turn-alert" aria-hidden="true">
                 !
               </span>
@@ -99,6 +102,7 @@ export function PlayerRoster({
           <header>
             <strong>
               {player.nickname}
+              {player.bot ? ' (bot)' : ''}
               {player.id === snapshot.selfPlayerId ? ' · vos' : ''}
             </strong>
             <button
@@ -127,13 +131,15 @@ export function PlayerRoster({
               ? 'Descalificado'
               : player.eliminated
                 ? 'Eliminado'
-                : player.absent
-                  ? 'Ausente · turnos automáticos'
-                  : player.controller === 'controllerless_reassignment'
-                    ? 'Sin jugador'
-                    : player.id === actor
-                      ? 'Jugando ahora'
-                      : 'En partida'}
+                : player.bot
+                  ? 'Juega un bot'
+                  : player.absent
+                    ? 'Ausente · turnos automáticos'
+                    : player.controller === 'controllerless_reassignment'
+                      ? 'Sin jugador'
+                      : player.id === actor
+                        ? 'Jugando ahora'
+                        : 'En partida'}
           </small>
         </section>
       )}

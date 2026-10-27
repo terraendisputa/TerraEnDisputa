@@ -217,6 +217,7 @@ export function deriveLegalActions(
               !player.eliminated &&
               !player.disqualified &&
               !player.absent &&
+              !player.bot &&
               player.id !== playerId,
           )
           .map(({ id }) => id)

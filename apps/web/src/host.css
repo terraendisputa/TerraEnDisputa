@@ -202,6 +202,11 @@ body:has(.landing) {
   gap: 8px;
   max-width: none;
 }
+.admin-layout .admin-bots {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+}
 .admin-layout .admin-player-copy {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
