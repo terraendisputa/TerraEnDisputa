@@ -104,7 +104,7 @@ function play(levels, variant) {
       : undefined;
     if (!command) {
       // Without a clock nothing moves the turn on: the game is stuck.
-      if (!timed) break;
+      if (!timed) return { stuck: true, noMove: true, minutes: 0, pacts };
       continue;
     }
     const result = applyBotCommand(s, command, {
@@ -183,6 +183,7 @@ for (const table of tables) {
   const wins = Object.fromEntries(BOT_LEVELS.map((l) => [l, 0]));
   const reasons = {};
   let stuck = 0,
+    noMove = 0,
     minutes = 0,
     rounds = 0,
     finished = 0,
@@ -197,6 +198,7 @@ for (const table of tables) {
     for (const type of PACT_MOVES) pacts[type] += result.pacts[type];
     if (result.stuck) {
       stuck++;
+      if (result.noMove) noMove++;
       continue;
     }
     finished++;
@@ -229,7 +231,7 @@ for (const table of tables) {
       .map(([k, n]) => `${REASONS[k] ?? k} ${percent(n, finished)}`)
       .join(
         ', ',
-      )}. Empates: ${draws}. Duración media: ${length}. Trabadas: ${stuck}.`,
+      )}. Empates: ${draws}. Duración media: ${length}. Trabadas: ${stuck}${noMove ? ` (${noMove} sin jugada posible)` : ''}.`,
   );
   if (table.variant !== 'competitive') {
     const games = gamesPerTable;
