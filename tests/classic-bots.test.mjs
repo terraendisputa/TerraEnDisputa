@@ -17,7 +17,19 @@ import {
   tickCompetitiveClock,
   synchronizeCompetitiveClock,
   deriveLegalActions,
+  assignCompetitiveBot,
 } from '../packages/game-engine/dist/index.js';
+import { emptyGameAuthState } from '../apps/server/dist/auth/types.js';
+import { GameService } from '../apps/server/dist/games/game-service.js';
+import { projectGameFor } from '../apps/server/dist/games/projection.js';
+import {
+  encodeGame,
+  decodeGame,
+} from '../apps/server/dist/persistence/schema.js';
+import {
+  PROTOCOL_VERSION,
+  serverMessageSchema,
+} from '../packages/protocol/dist/index.js';
 
 const players = (count) =>
   Array.from({ length: count }, (_, seatIndex) => ({
@@ -444,4 +456,171 @@ void test('Classic Express lets pacts be broken in the final rounds', () => {
     b,
   );
   assert.equal(deriveLegalActions(final, a).pactIdsToWithdraw.length, 1);
+});
+
+function auth(list) {
+  return {
+    ...emptyGameAuthState(),
+    players: Object.fromEntries(
+      list.map((p) => [
+        p.id,
+        {
+          playerId: p.id,
+          session: {
+            verifier: { algorithm: 'sha256', digest: 'a'.repeat(64) },
+            transportClass: 'HTTP',
+            expiresAt: '2099-01-01T00:00:00.000Z',
+            lastActiveAt: '2026-10-13T00:00:00.000Z',
+          },
+        },
+      ]),
+    ),
+  };
+}
+/** A GameService over one game kept in memory. */
+function served(state, connected = () => true) {
+  const game = {
+    record: {
+      state,
+      revision: 0,
+      recentCommands: [],
+      auth: auth(state.players),
+    },
+    timestamp: 5_000_000,
+  };
+  const store = {
+    loadGame: () => Promise.resolve(game.record),
+    commitGame: (candidate) => {
+      game.record = candidate;
+      return Promise.resolve({ outcome: 'COMMITTED' });
+    },
+  };
+  game.service = new GameService(
+    store,
+    undefined,
+    () => game.timestamp,
+    connected,
+  );
+  return game;
+}
+
+void test('without Express the administrator puts a bot that plays and keeps the pacts', async () => {
+  let s = untilHostility(3, 600);
+  const { a, b } = seats(s);
+  const proposalId = randomUUID();
+  for (const command of [
+    {
+      type: 'propose_pact',
+      playerId: a,
+      recipientId: b,
+      proposalId,
+      terms: general,
+    },
+    { type: 'accept_pact', playerId: b, proposalId, pactId: randomUUID() },
+  ])
+    s = applyCommand(s, command).state;
+  const game = served(s);
+  await game.service.updateBots(s.id, { playerId: a, enabled: true });
+  assert.equal(game.record.state.players.find((p) => p.id === a).bot, 'admin');
+  assert.equal(game.record.state.pacts.active.length, 1);
+  assert.equal(game.record.state.competitiveClock, undefined);
+  const refused = await game.service.process(s.id, a, {
+    type: 'COMMAND',
+    protocolVersion: PROTOCOL_VERSION,
+    commandId: randomUUID(),
+    baseRevision: game.record.revision,
+    command: { type: 'advance_phase' },
+  });
+  assert.equal(refused.code, 'BOT_CONTROLLED');
+  for (let i = 0; i < 300 && game.record.state.turn.playerId === a; i++) {
+    game.timestamp += 1000;
+    await game.service.tick(s.id);
+  }
+  assert.notEqual(game.record.state.turn.playerId, a);
+  assertClassicInvariants(game.record.state);
+  serverMessageSchema.parse({
+    type: 'STATE',
+    protocolVersion: PROTOCOL_VERSION,
+    state: projectGameFor(game.record.state, 1, b),
+  });
+  assert.equal(
+    decodeGame(encodeGame(game.record)).game.state.players.find(
+      (p) => p.id === a,
+    ).bot,
+    'admin',
+  );
+  // Others can offer it pacts, and the administrator gives the seat back.
+  const botSeat = assignCompetitiveBot(s, a, true);
+  assert.ok(
+    deriveLegalActions(
+      { ...botSeat, turn: { ...botSeat.turn, playerId: b } },
+      b,
+    ).pactRecipientIds.includes(a),
+  );
+  await game.service.updateBots(s.id, { playerId: a, enabled: false });
+  assert.equal(
+    game.record.state.players.find((p) => p.id === a).bot,
+    undefined,
+  );
+  await assert.rejects(
+    game.service.updateBots(s.id, { playerId: a, inactive: true }),
+  );
+});
+
+void test('the server lets a bot answer a pact offered out of its turn', async () => {
+  const s = untilHostility(3, 610);
+  const { a, c } = seats(s);
+  const withBot = assignCompetitiveBot(s, c, true);
+  const proposalId = randomUUID();
+  const offered = applyCommand(withBot, {
+    type: 'propose_pact',
+    playerId: a,
+    recipientId: c,
+    proposalId,
+    terms: general,
+  });
+  assert.equal(offered.ok, true, JSON.stringify(offered.error));
+  const game = served(offered.state);
+  game.timestamp += 1000;
+  await game.service.tick(s.id);
+  assert.equal(game.record.state.pacts.proposals.length, 0);
+  assert.equal(game.record.state.turn.playerId, a);
+  assertClassicInvariants(game.record.state);
+});
+
+void test('in Express an absent player gets a bot that leaves when they return', async () => {
+  const random = seeded(620);
+  let s = classic(3, random, true);
+  let now = 0;
+  while (s.status === 'SETUP') {
+    now += s.competitiveClock.activationRemainingMs;
+    s = tickCompetitiveClock(s, now, true, random);
+  }
+  const a = s.turn.playerId;
+  let online = false;
+  const game = served(s, (_, id) => id !== a || online);
+  game.timestamp = now;
+  for (
+    let i = 0;
+    i < 100 && !game.record.state.players.find((p) => p.id === a).bot;
+    i++
+  ) {
+    game.timestamp += 10_000;
+    await game.service.tick(s.id);
+  }
+  assert.equal(game.record.state.players.find((p) => p.id === a).bot, 'absent');
+  assertClassicInvariants(game.record.state);
+  online = true;
+  for (
+    let i = 0;
+    i < 2000 && game.record.state.players.find((p) => p.id === a).bot;
+    i++
+  ) {
+    game.timestamp += 1000;
+    await game.service.tick(s.id);
+  }
+  assert.equal(
+    game.record.state.players.find((p) => p.id === a).bot,
+    undefined,
+  );
 });

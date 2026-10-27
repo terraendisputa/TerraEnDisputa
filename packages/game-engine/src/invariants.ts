@@ -593,12 +593,17 @@ export function classicInvariantViolations(
     errors.push('invalid competitive clock');
   if (
     state.mode !== 'competitive' &&
-    (state.players.some((p) => p.bot) ||
-      state.competitiveBotLevel ||
-      state.competitiveBotsReplaceAbsent !== undefined ||
+    (state.players.some(
+      (p) =>
+        p.bot === 'requested' ||
+        p.bot === 'table' ||
+        (p.bot === 'absent' && !hasGameClock(state)),
+    ) ||
       state.competitiveBotSeats)
   )
-    errors.push('Only Competitive can have bots');
+    errors.push(
+      "Classic bots are the administrator's or replace absents in Express",
+    );
   if (
     state.competitiveBotSeats &&
     (state.configuredPlayerCount !== 6 ||

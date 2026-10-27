@@ -233,46 +233,51 @@ void test('a full tie at the time limit has no winner', () => {
   );
 });
 
-void test('a disconnected player is awaited, then their turns pass alone; Classic pacts stay', () => {
-  let s = express(4);
-  while (s.status === 'SETUP' || s.turn.round.kind !== 'normal')
-    s = expireTurn(s);
-  while (s.turn.round.pass !== 'hostility') s = expireTurn(s);
-  const a = s.turn.playerId;
-  const b = s.players.find((p) => p.id !== a).id;
-  const proposalId = randomUUID();
-  let now = s.competitiveClock.updatedAtMs;
-  for (const command of [
-    {
-      type: 'propose_pact',
-      playerId: a,
-      recipientId: b,
-      proposalId,
-      terms: { kind: 'general_non_aggression' },
-    },
-    { type: 'accept_pact', playerId: b, proposalId, pactId: randomUUID() },
-  ]) {
-    const result = applyCommand(s, command);
-    assert.equal(result.ok, true, JSON.stringify(result.error));
-    s = synchronizeCompetitiveClock(s, result.state, now);
+void test('a disconnected player is awaited, then a bot or nobody plays; Classic pacts stay', () => {
+  for (const replaceAbsent of [true, false]) {
+    let s = express(4);
+    if (!replaceAbsent) s = { ...s, competitiveBotsReplaceAbsent: false };
+    while (s.status === 'SETUP' || s.turn.round.kind !== 'normal')
+      s = expireTurn(s);
+    while (s.turn.round.pass !== 'hostility') s = expireTurn(s);
+    const a = s.turn.playerId;
+    const b = s.players.find((p) => p.id !== a).id;
+    const proposalId = randomUUID();
+    let now = s.competitiveClock.updatedAtMs;
+    for (const command of [
+      {
+        type: 'propose_pact',
+        playerId: a,
+        recipientId: b,
+        proposalId,
+        terms: { kind: 'general_non_aggression' },
+      },
+      { type: 'accept_pact', playerId: b, proposalId, pactId: randomUUID() },
+    ]) {
+      const result = applyCommand(s, command);
+      assert.equal(result.ok, true, JSON.stringify(result.error));
+      s = synchronizeCompetitiveClock(s, result.state, now);
+    }
+    const pacts = s.pacts.active.length;
+    s = tickCompetitiveClock(s, ++now, false, rng);
+    assert.equal(s.competitiveClock.pauseReason, 'disconnection');
+    const elapsed = s.competitiveClock.elapsedMs;
+    s = tickCompetitiveClock(s, (now += TECHNICAL_WAIT_MS), false, rng);
+    // The pause does not count as game time.
+    assert.equal(s.competitiveClock.elapsedMs, elapsed);
+    s = tickCompetitiveClock(s, now + TURN_MS, false, rng);
+    const seat = s.players.find((p) => p.id === a);
+    // A bot takes the seat by default; without one, its turns pass alone.
+    assert.equal(seat.absent, replaceAbsent ? undefined : true);
+    assert.equal(seat.bot, replaceAbsent ? 'absent' : undefined);
+    assert.equal(s.pacts.active.length, pacts);
+    assertClassicInvariants(s);
+    // Back online, they play again.
+    for (let i = 0; i < 20 && s.turn.playerId !== a; i++) s = expireTurn(s);
+    s = tickCompetitiveClock(s, s.competitiveClock.updatedAtMs + 1, true, rng);
+    assert.equal(s.players.find((p) => p.id === a).absent, undefined);
+    assert.equal(s.players.find((p) => p.id === a).bot, undefined);
   }
-  const pacts = s.pacts.active.length;
-  s = tickCompetitiveClock(s, ++now, false, rng);
-  assert.equal(s.competitiveClock.pauseReason, 'disconnection');
-  const elapsed = s.competitiveClock.elapsedMs;
-  s = tickCompetitiveClock(s, (now += TECHNICAL_WAIT_MS), false, rng);
-  // The pause does not count as game time.
-  assert.equal(s.competitiveClock.elapsedMs, elapsed);
-  s = tickCompetitiveClock(s, now + TURN_MS, false, rng);
-  const seat = s.players.find((p) => p.id === a);
-  assert.equal(seat.absent, true);
-  assert.equal(seat.bot, undefined);
-  assert.equal(s.pacts.active.length, pacts);
-  assertClassicInvariants(s);
-  // Back online, they play again.
-  for (let i = 0; i < 20 && s.turn.playerId !== a; i++) s = expireTurn(s);
-  s = tickCompetitiveClock(s, s.competitiveClock.updatedAtMs + 1, true, rng);
-  assert.equal(s.players.find((p) => p.id === a).absent, undefined);
 });
 
 void test('the administrator pauses Express and commands wait', () => {

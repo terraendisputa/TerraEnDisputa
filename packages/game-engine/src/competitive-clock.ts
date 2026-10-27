@@ -576,7 +576,7 @@ export function tickCompetitiveClock(
           pid,
           s.competitiveDeciding
             ? 'inactive'
-            : s.mode === 'classic' || s.competitiveBotsReplaceAbsent === false
+            : s.competitiveBotsReplaceAbsent === false
               ? 'absent'
               : 'bot-absent',
         );
@@ -631,8 +631,8 @@ export function assignCompetitiveBot(
 ): GameState {
   const player = s.players.find((p) => p.id === pid);
   if (
-    s.mode !== 'competitive' ||
-    !s.competitiveClock ||
+    // Classic takes bots with or without Express; Competitive has its clock.
+    (s.mode === 'competitive' && !s.competitiveClock) ||
     (s.status !== 'SETUP' && s.status !== 'ACTIVE') ||
     !player ||
     player.eliminated ||
@@ -650,8 +650,8 @@ function botTakesSeat(
   seat: 'bot-admin' | 'bot-requested',
 ): GameState {
   const next = setCompetitiveSeat(s, pid, seat);
-  const clock = next.competitiveClock!;
-  return clock.pauseReason === 'disconnection' &&
+  const clock = next.competitiveClock;
+  return clock?.pauseReason === 'disconnection' &&
     clock.disconnectedPlayerId === pid
     ? {
         ...next,

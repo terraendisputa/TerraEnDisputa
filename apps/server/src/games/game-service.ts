@@ -213,13 +213,19 @@ function clockOnlyChange(before: GameState, after: GameState): boolean {
 
 /**
  * One move per clock tick for a seat the server plays, so everyone can follow
- * it on the map. A rejected move leaves the turn to its timer.
+ * it on the map. A rejected move leaves the turn to its timer. In Classic a
+ * bot first answers the pact offered to it, even out of turn.
  */
 function playBot(state: GameState, now: number): GameState {
-  if (state.mode !== 'competitive' || state.competitiveClock?.pauseReason)
-    return state;
-  const actor = competitiveActor(state);
-  if (!actor || !state.players.find((p) => p.id === actor)?.bot) return state;
+  if (state.competitiveClock?.pauseReason) return state;
+  const plays = (id: PlayerId | undefined) =>
+    !!id && !!state.players.find((p) => p.id === id)?.bot;
+  const offered =
+    state.status === 'ACTIVE'
+      ? state.pacts.proposals.find((p) => plays(p.recipientId))?.recipientId
+      : undefined;
+  const actor = offered ?? competitiveActor(state);
+  if (!actor || !plays(actor)) return state;
   const command = chooseBotCommand(
     state,
     actor,
@@ -346,7 +352,7 @@ export class GameService {
       return true;
     });
   }
-  /** Administrator changes to the bots of a Competitive game. */
+  /** Administrator changes to the bots of a Classic or Competitive game. */
   async updateBots(
     gameId: string,
     change:
@@ -362,7 +368,10 @@ export class GameService {
       const current = await this.store.loadGame(gameId);
       if (!current) throw new Error('GAME_NOT_FOUND');
       let state = current.state;
-      if (state.mode !== 'competitive' || state.status === 'FINISHED')
+      if (
+        state.status === 'FINISHED' ||
+        ('inactive' in change && state.mode !== 'competitive')
+      )
         throw new Error('INVALID_PHASE');
       if ('playerId' in change) {
         const now = this.now();

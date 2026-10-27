@@ -271,15 +271,7 @@ void test('the administrator puts a bot in a seat and gives it back; pacts end',
   s = assignCompetitiveBot(s, a, false);
   assert.equal(s.players.find((p) => p.id === a).bot, undefined);
   assertClassicInvariants(s);
-  const classic = createClassicSetup(
-    randomUUID(),
-    players(4),
-    seeded(3),
-    'classic',
-  );
-  assert.throws(() =>
-    assignCompetitiveBot(classic, classic.players[0].id, true),
-  );
+  // Classic bots are covered in classic-bots.test.mjs.
 });
 
 void test('the server plays one bot move per tick and refuses commands from that seat', async () => {

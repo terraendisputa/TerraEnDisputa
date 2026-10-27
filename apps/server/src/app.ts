@@ -375,7 +375,9 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
       const discovered = await store.discoverGames();
       for (const [id, durable] of discovered.games)
         if (
-          hasGameClock(durable.state) &&
+          // Classic without Express still ticks while a bot plays a seat.
+          (hasGameClock(durable.state) ||
+            durable.state.players.some((p) => p.bot)) &&
           durable.state.status !== 'LOBBY' &&
           (durable.state.status !== 'FINISHED' ||
             durable.state.pendingInheritance)
@@ -454,6 +456,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
     ) => {
       try {
         const revision = await games.updateBots(gameId, change);
+        timedGames.add(gameId);
         await broadcastCurrentGame(gameId);
         return { revision };
       } catch (error) {

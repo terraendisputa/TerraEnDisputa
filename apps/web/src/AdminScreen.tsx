@@ -846,27 +846,30 @@ export function AdminScreen() {
                         ausente pasa a inactivo, con turnos de 1 minuto.
                       </p>
                     )}
-                  {selected.mode === 'competitive' &&
-                    selected.status !== 'FINISHED' &&
+                  {selected.status !== 'FINISHED' &&
                     !selected.competitiveDeciding && (
                       <section className="admin-bots">
-                        <label className="inline-control">
-                          <input
-                            type="checkbox"
-                            disabled={busy}
-                            checked={
-                              selected.competitiveBotsReplaceAbsent !== false
-                            }
-                            onChange={(event) =>
-                              void run(() =>
-                                api.configureBots(selected.gameId, {
-                                  replaceAbsent: event.target.checked,
-                                }),
-                              )
-                            }
-                          />
-                          Reemplazar ausentes por bot
-                        </label>
+                        {/* Without Express nobody turns absent: bots come in by hand. */}
+                        {(selected.mode === 'competitive' ||
+                          selected.classicExpress) && (
+                          <label className="inline-control">
+                            <input
+                              type="checkbox"
+                              disabled={busy}
+                              checked={
+                                selected.competitiveBotsReplaceAbsent !== false
+                              }
+                              onChange={(event) =>
+                                void run(() =>
+                                  api.configureBots(selected.gameId, {
+                                    replaceAbsent: event.target.checked,
+                                  }),
+                                )
+                              }
+                            />
+                            Reemplazar ausentes por bot
+                          </label>
+                        )}
                         <label className="inline-control">
                           Dificultad de los bots
                           <select
@@ -963,9 +966,8 @@ export function AdminScreen() {
                                   : 'Marcar inactivo'}
                               </button>
                             )}
-                          {selected.mode === 'competitive' &&
-                            (selected.status === 'SETUP' ||
-                              selected.status === 'ACTIVE') &&
+                          {(selected.status === 'SETUP' ||
+                            selected.status === 'ACTIVE') &&
                             !player.eliminated &&
                             !player.disqualified &&
                             !selected.competitiveDeciding &&
