@@ -637,10 +637,23 @@ export function assignCompetitiveBot(
     !player ||
     player.eliminated ||
     player.disqualified ||
-    player.bot === 'table' ||
+    // Classic Express frees a table bot's seat; elsewhere table bots stay.
+    (player.bot === 'table' && (enabled || !s.classicExpress)) ||
     s.competitiveDeciding
   )
     throw new Error('INVALID_PHASE');
+  if (player.bot === 'table') {
+    // Its turns pass on their own until someone takes the free seat.
+    const freed = setCompetitiveSeat(s, pid, 'absent');
+    return {
+      ...freed,
+      players: freed.players.map((p) =>
+        p.id === pid
+          ? { ...p, controller: 'controllerless_reassignment' as const }
+          : p,
+      ),
+    };
+  }
   if (!enabled) return player.bot ? setCompetitiveSeat(s, pid, undefined) : s;
   return botTakesSeat(s, pid, 'bot-admin');
 }

@@ -85,11 +85,14 @@ export function classicInvariantViolations(
       errors.push('lobby exceeds configured player count');
     if (
       state.competitiveBotSeats &&
-      (state.mode !== 'competitive' ||
-        state.configuredPlayerCount !== 6 ||
-        state.competitiveDurationMinutes === 60)
+      (state.mode === 'competitive'
+        ? state.configuredPlayerCount !== 6 ||
+          state.competitiveBotSeats !== 2 ||
+          state.competitiveDurationMinutes === 60
+        : !Number.isInteger(state.competitiveBotSeats) ||
+          state.competitiveBotSeats >= state.configuredPlayerCount)
     )
-      errors.push('A bot table is six seats with two bots and no Express');
+      errors.push('A bot table leaves seats for people');
     const readyIds = new Set<PlayerId>();
     for (const id of state.readyPlayerIds) {
       if (!playerIds.has(id)) errors.push(`invalid ready player ${id}`);
@@ -595,16 +598,15 @@ export function classicInvariantViolations(
     state.mode !== 'competitive' &&
     (state.players.some(
       (p) =>
-        p.bot === 'requested' ||
-        p.bot === 'table' ||
-        (p.bot === 'absent' && !hasGameClock(state)),
+        p.bot === 'requested' || (p.bot === 'absent' && !hasGameClock(state)),
     ) ||
-      state.competitiveBotSeats)
+      (state.competitiveBotSeats ?? 0) >= state.configuredPlayerCount)
   )
     errors.push(
       "Classic bots are the administrator's or replace absents in Express",
     );
   if (
+    state.mode === 'competitive' &&
     state.competitiveBotSeats &&
     (state.configuredPlayerCount !== 6 ||
       state.competitiveDurationMinutes === 60 ||
@@ -612,6 +614,12 @@ export function classicInvariantViolations(
         state.competitiveBotSeats)
   )
     errors.push('A bot table is six seats with two bots and no Express');
+  if (
+    state.mode === 'classic' &&
+    state.players.filter((p) => p.bot === 'table').length >
+      (state.competitiveBotSeats ?? 0)
+  )
+    errors.push('A Classic table has at most the bots chosen in the lobby');
   if (
     !state.competitiveBotSeats &&
     state.players.some((p) => p.bot === 'table')

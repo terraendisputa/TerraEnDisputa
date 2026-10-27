@@ -88,7 +88,7 @@ export class GameLifecycleService {
     gameId: string,
     configuredPlayerCount: 2 | 3 | 4 | 5 | 6,
     competitiveDurationMinutes?: 60 | 80,
-    competitiveBotSeats?: 2,
+    competitiveBotSeats?: number,
     competitiveDeciding?: boolean,
     classicExpress?: boolean,
   ): Promise<number> {
@@ -96,14 +96,21 @@ export class GameLifecycleService {
       const current = await this.requireGame(gameId);
       if (current.state.status !== 'LOBBY')
         throw new LifecycleOperationError('INVALID_LIFECYCLE_STATE');
+      const classic = current.state.mode === 'classic';
+      // Classic keeps its bots when another option changes; zero takes them
+      // off. Competitive sets its four plus two table each time.
+      const botSeats = classic
+        ? (competitiveBotSeats ?? current.state.competitiveBotSeats ?? 0)
+        : (competitiveBotSeats ?? 0);
       if (
         !validPlayerCount(current.state.mode, configuredPlayerCount) ||
-        humanSeats({ configuredPlayerCount, competitiveBotSeats }) <
-          current.state.players.length ||
+        humanSeats({ configuredPlayerCount, competitiveBotSeats: botSeats }) <
+          Math.max(1, current.state.players.length) ||
         (competitiveDurationMinutes !== undefined &&
           current.state.mode !== 'competitive') ||
-        (competitiveBotSeats !== undefined &&
-          (current.state.mode !== 'competitive' ||
+        (!classic &&
+          botSeats > 0 &&
+          (botSeats !== 2 ||
             configuredPlayerCount !== 6 ||
             competitiveDurationMinutes === 60)) ||
         (competitiveDeciding !== undefined &&
@@ -125,11 +132,12 @@ export class GameLifecycleService {
       void _minutes;
       // A deciding game plays without bots, so it cannot be a bot table.
       const deciding = competitiveDeciding ?? _deciding ?? false;
-      if (deciding && competitiveBotSeats)
+      if (deciding && botSeats)
         throw new LifecycleOperationError('INVALID_GAME_COMMAND');
-      const previousMinutes = competitiveBotSeats
-        ? undefined
-        : (competitiveDurationMinutes ?? _minutes);
+      const previousMinutes =
+        !classic && botSeats
+          ? undefined
+          : (competitiveDurationMinutes ?? _minutes);
       await this.store.commitGame(
         {
           ...current,
@@ -139,7 +147,7 @@ export class GameLifecycleService {
             ...(previousMinutes
               ? { competitiveDurationMinutes: previousMinutes }
               : {}),
-            ...(competitiveBotSeats ? { competitiveBotSeats } : {}),
+            ...(botSeats ? { competitiveBotSeats: botSeats } : {}),
             ...(deciding ? { competitiveDeciding: true as const } : {}),
             ...(express ? { classicExpress: true as const } : {}),
           },
@@ -170,6 +178,7 @@ export class GameLifecycleService {
         ...this.tableBots(
           current.state.players,
           current.state.competitiveBotSeats ?? 0,
+          current.state.configuredPlayerCount,
         ),
       ];
       const state = (() => {
@@ -220,12 +229,13 @@ export class GameLifecycleService {
   }
 
   /**
-   * The bots that complete a four plus two table: free seats and colors, and
-   * names from the list at random that no person at the table uses.
+   * The bots that complete a table: free seats and colors, and names from the
+   * list at random that no person at the table uses.
    */
   private tableBots(
     people: readonly PlayerState[],
     count: number,
+    seatCount: number,
   ): PlayerState[] {
     if (!count) return [];
     const names = this.randomness
@@ -235,7 +245,7 @@ export class GameLifecycleService {
       .shuffle(PLAYER_COLORS)
       .filter((color) => !people.some((p) => p.color === color));
     const seats = [0, 1, 2, 3, 4, 5].filter(
-      (seat) => !people.some((p) => p.seatIndex === seat),
+      (seat) => seat < seatCount && !people.some((p) => p.seatIndex === seat),
     );
     return Array.from({ length: count }, (_, i) => ({
       id: randomUUID() as PlayerId,

@@ -74,7 +74,7 @@ export const api = {
     gameId: string,
     configuredPlayerCount: number,
     competitiveDurationMinutes?: 60 | 80,
-    competitiveBotSeats?: 2,
+    competitiveBotSeats?: number,
     competitiveDeciding?: boolean,
     classicExpress?: boolean,
   ) =>

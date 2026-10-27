@@ -149,7 +149,7 @@ export function createClassicSetup(
   players: readonly PlayerState[],
   rng: SetupRandomness,
   mode: GameMode = 'classic',
-  botSeats?: 2,
+  botSeats?: number,
 ): SetupGameState {
   if (
     !validPlayerCount(mode, players.length) ||
@@ -178,6 +178,7 @@ export function createClassicSetup(
       mode,
       status: 'SETUP',
       configuredPlayerCount: players.length as 2 | 3,
+      ...(botSeats ? { competitiveBotSeats: botSeats } : {}),
       players,
       territories: board,
       cardDeck: { drawPile, discardPile: [] },

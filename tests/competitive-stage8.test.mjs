@@ -34,7 +34,6 @@ import { projectGameFor } from '../apps/server/dist/games/projection.js';
 import {
   PROTOCOL_VERSION,
   serverMessageSchema,
-  updateGameConfigurationBodySchema,
 } from '../packages/protocol/dist/index.js';
 
 const rng = { shuffle: (items) => [...items].reverse() };
@@ -107,23 +106,13 @@ async function seat(store, id, humans) {
 void test('the lobby offers six with four players and two bots, always 1:20 h', async () => {
   const { directory, store, lifecycle, id } = await table();
   try {
-    assert.equal(
-      updateGameConfigurationBodySchema.safeParse({
-        configuredPlayerCount: 5,
-        competitiveBotSeats: 2,
-      }).success,
-      false,
-    );
-    assert.equal(
-      updateGameConfigurationBodySchema.safeParse({
-        configuredPlayerCount: 6,
-        competitiveDurationMinutes: 60,
-        competitiveBotSeats: 2,
-      }).success,
-      false,
-    );
+    // Competitive bot tables are six seats with two bots, never Express;
+    // Classic tables choose their own number of bots.
+    await assert.rejects(lifecycle.configure(id, 5, undefined, 2));
+    await assert.rejects(lifecycle.configure(id, 6, 60, 2));
+    await assert.rejects(lifecycle.configure(id, 6, undefined, 3));
     const classic = await lifecycle.create(4, 'classic');
-    await assert.rejects(lifecycle.configure(classic, 6, undefined, 2));
+    await lifecycle.configure(classic, 6, undefined, 2);
     await lifecycle.configure(id, 6, 60);
     await lifecycle.configure(id, 6, undefined, 2);
     let lobby = (await store.loadGame(id)).state;

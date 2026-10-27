@@ -18,8 +18,15 @@ import {
   synchronizeCompetitiveClock,
   deriveLegalActions,
   assignCompetitiveBot,
+  COMPETITIVE_BOT_NAMES,
 } from '../packages/game-engine/dist/index.js';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { emptyGameAuthState } from '../apps/server/dist/auth/types.js';
+import { FileGameStore } from '../apps/server/dist/persistence/file-game-store.js';
+import { GameLifecycleService } from '../apps/server/dist/games/lifecycle-service.js';
+import { PerGameCoordinator } from '../apps/server/dist/games/per-game-coordinator.js';
 import { GameService } from '../apps/server/dist/games/game-service.js';
 import { projectGameFor } from '../apps/server/dist/games/projection.js';
 import {
@@ -29,6 +36,7 @@ import {
 import {
   PROTOCOL_VERSION,
   serverMessageSchema,
+  updateGameConfigurationBodySchema,
 } from '../packages/protocol/dist/index.js';
 
 const players = (count) =>
@@ -622,5 +630,136 @@ void test('in Express an absent player gets a bot that leaves when they return',
   assert.equal(
     game.record.state.players.find((p) => p.id === a).bot,
     undefined,
+  );
+});
+
+/** A lobby on disk, with these people seated and ready. */
+async function lobby(fn) {
+  const directory = await mkdtemp(join(tmpdir(), 'classic-bots-'));
+  const store = await FileGameStore.open(directory);
+  const random = seeded(700);
+  const lifecycle = new GameLifecycleService(
+    store,
+    new PerGameCoordinator(),
+    random,
+    randomUUID,
+    () => 5_000,
+  );
+  const seat = async (id, count) => {
+    const current = await store.loadGame(id);
+    const seated = players(count);
+    await store.commitGame(
+      {
+        ...current,
+        state: {
+          ...current.state,
+          players: seated,
+          readyPlayerIds: seated.map((p) => p.id),
+        },
+        auth: { ...auth(seated), generation: current.auth.generation + 1 },
+        revision: current.revision + 1,
+      },
+      { authGeneration: current.auth.generation, revision: current.revision },
+    );
+    return seated;
+  };
+  try {
+    await fn({ store, lifecycle, seat });
+  } finally {
+    await store.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
+void test('the lobby chooses how many bots join a Classic table', async () => {
+  await lobby(async ({ store, lifecycle, seat }) => {
+    const id = await lifecycle.create(4, 'classic');
+    await lifecycle.configure(id, 3, undefined, 2);
+    // Other options keep the bots; zero takes them off.
+    await lifecycle.configure(id, 3, undefined, undefined, undefined, true);
+    assert.equal((await store.loadGame(id)).state.competitiveBotSeats, 2);
+    await lifecycle.configure(id, 3, undefined, 0);
+    assert.equal(
+      (await store.loadGame(id)).state.competitiveBotSeats,
+      undefined,
+    );
+    // At least one seat stays for a person.
+    await assert.rejects(lifecycle.configure(id, 3, undefined, 3));
+    await lifecycle.configure(id, 3, undefined, 2);
+    const people = await seat(id, 1);
+    await lifecycle.start(id);
+    const s = (await store.loadGame(id)).state;
+    assert.equal(s.status, 'SETUP');
+    assert.equal(s.classicExpress, true);
+    assert.equal(s.players.length, 3);
+    const bots = s.players.filter((p) => p.bot === 'table');
+    assert.equal(bots.length, 2);
+    assert.ok(bots.every((b) => COMPETITIVE_BOT_NAMES.includes(b.nickname)));
+    assert.ok(s.players.every((p) => p.seatIndex < 3));
+    assert.equal(s.players.find((p) => p.id === people[0].id).bot, undefined);
+    assertClassicInvariants(s);
+    assert.equal(
+      decodeGame(encodeGame(await store.loadGame(id))).game.state
+        .competitiveBotSeats,
+      2,
+    );
+    serverMessageSchema.parse({
+      type: 'STATE',
+      protocolVersion: PROTOCOL_VERSION,
+      state: projectGameFor(s, 1, people[0].id),
+    });
+    // The bots play their setup on their own.
+    const service = new GameService(store, undefined, () => 6_000);
+    for (let i = 0; i < 20; i++) await service.tick(id);
+    const after = (await store.loadGame(id)).state;
+    assert.ok(
+      after.status !== 'SETUP' ||
+        !bots.some((b) => b.id === after.setup.currentPlayerId),
+    );
+    // In Express the administrator frees a table bot's seat for a person.
+    await service.updateBots(id, { playerId: bots[0].id, enabled: false });
+    const freed = await store.loadGame(id);
+    const seatState = freed.state.players.find((p) => p.id === bots[0].id);
+    assert.equal(seatState.bot, undefined);
+    assert.equal(seatState.absent, true);
+    assert.equal(seatState.controller, 'controllerless_reassignment');
+    assert.deepEqual(freed.auth.players[bots[0].id], { playerId: bots[0].id });
+    assertClassicInvariants(freed.state);
+    decodeGame(encodeGame(freed));
+  });
+});
+
+void test('a Classic table without Express seats four people and two bots', async () => {
+  await lobby(async ({ store, lifecycle, seat }) => {
+    const id = await lifecycle.create(6, 'classic');
+    await lifecycle.configure(id, 6, undefined, 2);
+    // Six people no longer fit with two bots.
+    await seat(id, 4);
+    await assert.rejects(lifecycle.configure(id, 6, undefined, 3));
+    await lifecycle.start(id);
+    const s = (await store.loadGame(id)).state;
+    assert.equal(s.players.filter((p) => p.bot === 'table').length, 2);
+    assert.equal(s.competitiveClock, undefined);
+    assertClassicInvariants(s);
+    // Without Express the table bots stay to the end.
+    const service = new GameService(store, undefined, () => 6_000);
+    const bot = s.players.find((p) => p.bot === 'table');
+    await assert.rejects(
+      service.updateBots(id, { playerId: bot.id, enabled: false }),
+    );
+  });
+  assert.equal(
+    updateGameConfigurationBodySchema.safeParse({
+      configuredPlayerCount: 3,
+      competitiveBotSeats: 3,
+    }).success,
+    false,
+  );
+  assert.equal(
+    updateGameConfigurationBodySchema.safeParse({
+      configuredPlayerCount: 3,
+      competitiveBotSeats: 0,
+    }).success,
+    true,
   );
 });

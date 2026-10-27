@@ -310,8 +310,11 @@ interface GameStateBase {
   readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
   /** False keeps automatic turns for absent players instead of a bot. */
   readonly competitiveBotsReplaceAbsent?: boolean;
-  /** Competitive table of six where bots take two seats (Superliga 4 + 2). */
-  readonly competitiveBotSeats?: 2;
+  /**
+   * Seats bots take at the start: two of six in Competitive (Superliga 4 + 2),
+   * from one up to all but one in Classic.
+   */
+  readonly competitiveBotSeats?: number;
   /**
    * Qualifiers, semifinals and finals: no bots; whoever leaves stays inactive
    * with one-minute turns.

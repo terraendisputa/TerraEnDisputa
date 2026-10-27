@@ -706,7 +706,9 @@ function GameView({
               {snapshot.configuredPlayerCount -
                 (snapshot.competitiveBotSeats ?? 0)}{' '}
               jugadores
-              {snapshot.competitiveBotSeats ? ' + 2 bots' : ''}
+              {snapshot.competitiveBotSeats
+                ? ` + ${snapshot.competitiveBotSeats} ${snapshot.competitiveBotSeats === 1 ? 'bot' : 'bots'}`
+                : ''}
             </h1>
             <ul className="player-list">
               {snapshot.players.map((player) => (

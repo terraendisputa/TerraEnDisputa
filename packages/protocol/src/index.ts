@@ -399,7 +399,7 @@ export interface PlayerGameView {
   readonly competitiveDurationMinutes?: 60 | 80;
   readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
   readonly competitiveBotsReplaceAbsent?: boolean;
-  readonly competitiveBotSeats?: 2;
+  readonly competitiveBotSeats?: number;
   readonly competitiveDeciding?: true;
   readonly classicExpress?: true;
   readonly selfPlayerId: string;
@@ -501,7 +501,7 @@ export interface AdminGameView {
   readonly competitiveDurationMinutes?: 60 | 80;
   readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
   readonly competitiveBotsReplaceAbsent?: boolean;
-  readonly competitiveBotSeats?: 2;
+  readonly competitiveBotSeats?: number;
   readonly competitiveDeciding?: true;
   readonly classicExpress?: true;
   readonly players: readonly PublicPlayerView[];
@@ -806,7 +806,7 @@ export const playerGameViewSchema = z.strictObject({
     .optional(),
   competitiveBotLevel: z.enum(['easy', 'normal', 'hard']).optional(),
   competitiveBotsReplaceAbsent: z.boolean().optional(),
-  competitiveBotSeats: z.literal(2).optional(),
+  competitiveBotSeats: z.number().int().min(1).max(5).optional(),
   competitiveDeciding: z.literal(true).optional(),
   classicExpress: z.literal(true).optional(),
   botRequestAvailable: z.literal(true).optional(),
@@ -953,15 +953,15 @@ export const updateGameConfigurationBodySchema = z
     competitiveDurationMinutes: z
       .union([z.literal(60), z.literal(80)])
       .optional(),
-    competitiveBotSeats: z.literal(2).optional(),
+    // Zero takes the bots off a Classic table.
+    competitiveBotSeats: z.number().int().min(0).max(5).optional(),
     competitiveDeciding: z.boolean().optional(),
     classicExpress: z.boolean().optional(),
   })
   .refine(
     (body) =>
       !body.competitiveBotSeats ||
-      (body.configuredPlayerCount === 6 &&
-        body.competitiveDurationMinutes !== 60 &&
+      (body.competitiveBotSeats < body.configuredPlayerCount &&
         !body.competitiveDeciding),
   );
 export const configureBotsBodySchema = z

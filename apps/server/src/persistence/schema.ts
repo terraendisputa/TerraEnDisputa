@@ -242,7 +242,7 @@ const base = {
     .optional(),
   competitiveBotLevel: z.enum(['easy', 'normal', 'hard']).optional(),
   competitiveBotsReplaceAbsent: z.boolean().optional(),
-  competitiveBotSeats: z.literal(2).optional(),
+  competitiveBotSeats: z.number().int().min(1).max(5).optional(),
   competitiveDeciding: z.literal(true).optional(),
   classicExpress: z.literal(true).optional(),
   players: z.array(player),

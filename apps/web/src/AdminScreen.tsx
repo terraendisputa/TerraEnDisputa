@@ -269,7 +269,7 @@ export function AdminScreen() {
     );
 
   const selected = games.find(({ gameId }) => gameId === selectedId);
-  // A four plus two table waits for four people; the bots sit at the start.
+  // A table with bots waits for its people; the bots sit at the start.
   const humanSeats = selected
     ? selected.configuredPlayerCount - (selected.competitiveBotSeats ?? 0)
     : 0;
@@ -284,12 +284,16 @@ export function AdminScreen() {
     : 0;
   // Everyone who joined is ready and the mode's minimum is met: the table
   // shrinks to them on start.
+  const bots = selected?.competitiveBotSeats ?? 0;
+  // Classic with bots can start with a single person.
   const readyToStart =
     selected?.status === 'LOBBY' &&
     missingReady === 0 &&
-    (selected.competitiveBotSeats
-      ? missingPlayers === 0
-      : selected.players.length >= (selected.mode === 'competitive' ? 4 : 2));
+    (selected.mode === 'competitive'
+      ? bots
+        ? missingPlayers === 0
+        : selected.players.length >= 4
+      : selected.players.length >= (bots ? 1 : 2));
   return (
     <main className="admin-layout">
       <header className="topbar">
@@ -491,6 +495,7 @@ export function AdminScreen() {
                     <select
                       disabled={busy || selected.status !== 'LOBBY'}
                       value={
+                        selected.mode === 'competitive' &&
                         selected.competitiveBotSeats
                           ? '6+2'
                           : selected.configuredPlayerCount
@@ -499,13 +504,25 @@ export function AdminScreen() {
                         void run(() =>
                           event.target.value === '6+2'
                             ? api.configureGame(selected.gameId, 6, 80, 2)
-                            : api.configureGame(
-                                selected.gameId,
-                                Number(event.target.value),
-                                selected.competitiveBotSeats
-                                  ? undefined
-                                  : selected.competitiveDurationMinutes,
-                              ),
+                            : selected.mode === 'classic'
+                              ? api.configureGame(
+                                  selected.gameId,
+                                  Number(event.target.value),
+                                  undefined,
+                                  // Fewer seats keep room for who joined.
+                                  Math.min(
+                                    bots,
+                                    Number(event.target.value) -
+                                      Math.max(1, selected.players.length),
+                                  ),
+                                )
+                              : api.configureGame(
+                                  selected.gameId,
+                                  Number(event.target.value),
+                                  selected.competitiveBotSeats
+                                    ? undefined
+                                    : selected.competitiveDurationMinutes,
+                                ),
                         )
                       }
                     >
@@ -515,7 +532,10 @@ export function AdminScreen() {
                       ).map((count) => (
                         <option
                           key={count}
-                          disabled={count < selected.players.length}
+                          disabled={
+                            count < selected.players.length ||
+                            (selected.mode === 'classic' && count < 2)
+                          }
                         >
                           {count}
                         </option>
@@ -533,6 +553,44 @@ export function AdminScreen() {
                       )}
                     </select>
                   </label>
+                  {selected.mode === 'classic' && (
+                    <label
+                      className="inline-control"
+                      title="Asientos que ocupan bots al comenzar. Siempre queda al menos uno para una persona."
+                    >
+                      Bots
+                      <select
+                        disabled={busy || selected.status !== 'LOBBY'}
+                        value={bots}
+                        onChange={(event) =>
+                          void run(() =>
+                            api.configureGame(
+                              selected.gameId,
+                              selected.configuredPlayerCount,
+                              undefined,
+                              Number(event.target.value),
+                            ),
+                          )
+                        }
+                      >
+                        {Array.from(
+                          { length: selected.configuredPlayerCount },
+                          (_, n) => (
+                            <option
+                              key={n}
+                              value={n}
+                              disabled={
+                                selected.configuredPlayerCount - n <
+                                selected.players.length
+                              }
+                            >
+                              {n === 0 ? 'Sin bots' : n}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    </label>
+                  )}
                   {selected.mode === 'classic' && (
                     <label
                       className="inline-control"
@@ -649,9 +707,11 @@ export function AdminScreen() {
                             : 'Todos están listos. Podés comenzar.'}{' '}
                       Listos: {selected.readyPlayerIds?.length ?? 0}/
                       {humanSeats}.
-                      {selected.competitiveBotSeats
-                        ? ' Los 2 bots se suman al comenzar.'
-                        : ''}
+                      {bots === 1
+                        ? ' El bot se suma al comenzar.'
+                        : bots
+                          ? ` Los ${bots} bots se suman al comenzar.`
+                          : ''}
                     </p>
                   )}
                   <div className="button-row">
@@ -669,7 +729,7 @@ export function AdminScreen() {
                             if (selected.players.length !== humanSeats)
                               await api.configureGame(
                                 selected.gameId,
-                                selected.players.length,
+                                selected.players.length + bots,
                               );
                             return api.startGame(selected.gameId);
                           })
@@ -971,15 +1031,19 @@ export function AdminScreen() {
                             !player.eliminated &&
                             !player.disqualified &&
                             !selected.competitiveDeciding &&
-                            player.bot !== 'table' && (
+                            // Express frees a table bot's seat for a person.
+                            (player.bot !== 'table' ||
+                              !!selected.classicExpress) && (
                               <button
                                 type="button"
                                 className="secondary"
                                 disabled={busy}
                                 title={
-                                  player.bot
-                                    ? `Devolverle el lugar a ${player.nickname}`
-                                    : `Poner un bot en lugar de ${player.nickname}`
+                                  player.bot === 'table'
+                                    ? `Liberar el asiento de ${player.nickname}: sus turnos pasan solos hasta que lo tome una persona`
+                                    : player.bot
+                                      ? `Devolverle el lugar a ${player.nickname}`
+                                      : `Poner un bot en lugar de ${player.nickname}`
                                 }
                                 onClick={() =>
                                   void run(() =>

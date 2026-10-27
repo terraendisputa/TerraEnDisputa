@@ -402,8 +402,26 @@ export class GameService {
             ? { competitiveBotsReplaceAbsent: change.replaceAbsent }
             : {}),
         };
+      // A freed table seat needs the open record anyone can take it with.
+      const freed = state.players.filter(
+        (p) =>
+          p.controller === 'controllerless_reassignment' &&
+          !current.auth.players[p.id],
+      );
+      const auth = freed.length
+        ? {
+            ...current.auth,
+            generation: current.auth.generation + 1,
+            players: {
+              ...current.auth.players,
+              ...Object.fromEntries(
+                freed.map((p) => [p.id, { playerId: p.id }]),
+              ),
+            },
+          }
+        : current.auth;
       await this.store.commitGame(
-        { ...current, state, revision: current.revision + 1 },
+        { ...current, state, auth, revision: current.revision + 1 },
         { authGeneration: current.auth.generation, revision: current.revision },
       );
       return current.revision + 1;
