@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from 'react';
 import type { AdminGameView } from '@game/protocol';
+import { gameClockDurationMs } from '@game/game-engine';
 
 import { competitiveRoundLabel } from './competitive-results.js';
 import { CompetitiveResultsPanel } from './CompetitiveResultsPanel.js';
@@ -532,6 +533,35 @@ export function AdminScreen() {
                       )}
                     </select>
                   </label>
+                  {selected.mode === 'classic' && (
+                    <label
+                      className="inline-control"
+                      title="Express: turnos de 2 minutos y tiempo máximo de juego, después dos rondas finales. Sin puntaje."
+                    >
+                      Duración
+                      <select
+                        disabled={busy || selected.status !== 'LOBBY'}
+                        value={selected.classicExpress ? 'express' : 'free'}
+                        onChange={(event) =>
+                          void run(() =>
+                            api.configureGame(
+                              selected.gameId,
+                              selected.configuredPlayerCount,
+                              undefined,
+                              undefined,
+                              undefined,
+                              event.target.value === 'express',
+                            ),
+                          )
+                        }
+                      >
+                        <option value="free">Sin límite</option>
+                        <option value="express">
+                          {`Express: ${durationText(gameClockDurationMs(selected))} + 2 rondas`}
+                        </option>
+                      </select>
+                    </label>
+                  )}
                   {selected.mode === 'competitive' && (
                     <label className="inline-control">
                       Duración
@@ -671,7 +701,9 @@ export function AdminScreen() {
                   <small>
                     {selected.mode === 'competitive'
                       ? 'Competitivo'
-                      : 'Clásico'}
+                      : selected.classicExpress
+                        ? 'Clásico Express'
+                        : 'Clásico'}
                   </small>
                   {selected.setup && (
                     <p className="admin-state-line">
@@ -706,27 +738,35 @@ export function AdminScreen() {
                       );
                       const reason = selected.result.victoryReason;
                       const reasonText =
-                        reason.kind === 'time_limit'
-                          ? 'Se completaron las dos rondas finales.'
-                          : reason.kind === 'no_competitors'
-                            ? 'No quedan jugadores habilitados.'
-                            : reason.kind === 'control_all_territories'
-                              ? 'Conquistó los 50 territorios.'
-                              : reason.kind === 'control_territories'
-                                ? 'Controló 30 territorios.'
-                                : reason.kind === 'secret_objective'
-                                  ? objectiveText(
-                                      reason.objectiveId,
-                                      reason.effectiveDestructionTargetColor,
-                                    )
-                                  : 'Partida finalizada';
+                        reason.kind === 'time_limit' &&
+                        selected.mode === 'classic'
+                          ? winner
+                            ? 'Se terminó el tiempo: ganó por desempate (más países, después tropas, canjes y cartas).'
+                            : 'Se terminó el tiempo con empate en países, tropas, canjes y cartas.'
+                          : reason.kind === 'time_limit'
+                            ? 'Se completaron las dos rondas finales.'
+                            : reason.kind === 'no_competitors'
+                              ? 'No quedan jugadores habilitados.'
+                              : reason.kind === 'control_all_territories'
+                                ? 'Conquistó los 50 territorios.'
+                                : reason.kind === 'control_territories'
+                                  ? 'Controló 30 territorios.'
+                                  : reason.kind === 'secret_objective'
+                                    ? objectiveText(
+                                        reason.objectiveId,
+                                        reason.effectiveDestructionTargetColor,
+                                      )
+                                    : 'Partida finalizada';
                       return (
                         <section className="objective-box admin-result">
                           <p className="eyebrow">Resultado final</p>
                           <h3>
                             {winner
                               ? `Ganó ${winner.nickname}`
-                              : 'Partida cerrada'}
+                              : reason.kind === 'time_limit' &&
+                                  selected.mode === 'classic'
+                                ? 'Empate'
+                                : 'Partida cerrada'}
                           </h3>
                           {selected.result?.scoringEligible === false && (
                             <p>
@@ -1041,4 +1081,12 @@ function clockState(
     );
   }
   return 'En curso';
+}
+
+/** 60 minutes read as 1:00 h, as in the Competitive duration choice. */
+function durationText(ms: number): string {
+  const minutes = ms / 60_000;
+  return minutes >= 60
+    ? `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')} h`
+    : `${minutes} min`;
 }

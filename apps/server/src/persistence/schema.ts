@@ -243,6 +243,7 @@ const base = {
   competitiveBotsReplaceAbsent: z.boolean().optional(),
   competitiveBotSeats: z.literal(2).optional(),
   competitiveDeciding: z.literal(true).optional(),
+  classicExpress: z.literal(true).optional(),
   players: z.array(player),
 };
 const competitiveHistory = z.strictObject({

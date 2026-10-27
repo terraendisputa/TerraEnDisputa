@@ -1,5 +1,5 @@
 import type { PlayerGameView } from '@game/protocol';
-import { competitiveDurationMs } from '@game/game-engine';
+import { gameClockDurationMs } from '@game/game-engine';
 import { gameContextSummary, gamePresentation } from './game-presentation.js';
 
 export function TurnSummary({
@@ -86,10 +86,7 @@ export function TurnSummary({
                 {`Partida: ${Math.max(
                   0,
                   Math.ceil(
-                    (competitiveDurationMs(
-                      snapshot.configuredPlayerCount,
-                      snapshot.competitiveDurationMinutes,
-                    ) -
+                    (gameClockDurationMs(snapshot) -
                       snapshot.competitiveClock.elapsedMs) /
                       60000,
                   ),
@@ -105,7 +102,11 @@ export function TurnSummary({
             </span>
           )}
           {snapshot.competitiveClock.finalRoundNumber !== undefined && (
-            <span>Rondas finales anunciadas · No se pueden romper pactos</span>
+            <span>
+              {snapshot.mode === 'competitive'
+                ? 'Rondas finales anunciadas · No se pueden romper pactos'
+                : 'Rondas finales anunciadas'}
+            </span>
           )}
         </>
       )}

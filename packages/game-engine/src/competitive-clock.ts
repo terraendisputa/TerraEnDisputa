@@ -16,6 +16,7 @@ import {
   isActiveInternationalZone,
   selectInheritedCards,
   finishCompetitiveActivation,
+  isLegalExchange,
   type ShuffleSource,
 } from './rules.js';
 import { applySetupCommand, skipDisqualifiedSetupActivation } from './setup.js';
@@ -35,6 +36,58 @@ export const competitiveDurationMs = (
   count: number,
   minutes?: 60 | 80,
 ): number => (count === 4 ? 60 : (minutes ?? 80)) * 60_000;
+/** Competitive and Classic Express run on the game clock. */
+export const hasGameClock = (s: {
+  readonly mode: GameState['mode'];
+  readonly classicExpress?: true | undefined;
+}): boolean => s.mode === 'competitive' || s.classicExpress === true;
+/**
+ * Game time before the two final rounds. Classic Express follows Competitive
+ * and gives 40 minutes to two or three players.
+ */
+export const gameClockDurationMs = (s: {
+  readonly mode: GameState['mode'];
+  readonly configuredPlayerCount: number;
+  readonly competitiveDurationMinutes?: 60 | 80 | undefined;
+}): number =>
+  s.mode === 'classic' && s.configuredPlayerCount <= 3
+    ? 40 * 60_000
+    : competitiveDurationMs(
+        s.configuredPlayerCount,
+        s.mode === 'competitive' ? s.competitiveDurationMinutes : undefined,
+      );
+/**
+ * Who wins when Classic Express runs out of time: most countries, then
+ * armies, exchanges and cards. A full tie has no winner.
+ */
+export function timeLimitWinner(s: GameState): PlayerId | undefined {
+  if (s.status === 'LOBBY') return undefined;
+  const metrics = (pid: PlayerId) => {
+    const owned = TERRITORY_IDS.filter(
+      (id) => s.territories[id].ownerId === pid,
+    );
+    const p = s.players.find((x) => x.id === pid)!;
+    return [
+      owned.length,
+      owned.reduce((n, id) => n + s.territories[id].armies, 0),
+      p.completedExchangeCount,
+      p.cards.length,
+    ];
+  };
+  const ranked = s.players
+    .filter((p) => !p.eliminated && !p.disqualified)
+    .map((p) => ({ id: p.id, m: metrics(p.id) }))
+    .sort((a, b) => {
+      for (let i = 0; i < a.m.length; i++)
+        if (a.m[i] !== b.m[i]) return b.m[i]! - a.m[i]!;
+      return 0;
+    });
+  const [first, second] = ranked;
+  if (!first) return undefined;
+  return second && second.m.every((v, i) => v === first.m[i])
+    ? undefined
+    : first.id;
+}
 export function competitiveActor(s: GameState): PlayerId | undefined {
   return (
     s.pendingInheritance?.playerId ??
@@ -68,7 +121,7 @@ export function startCompetitiveClock(
   restart = false,
 ): GameState {
   if (
-    s.mode !== 'competitive' ||
+    !hasGameClock(s) ||
     s.status === 'LOBBY' ||
     (s.status === 'FINISHED' && !s.pendingInheritance)
   )
@@ -99,7 +152,7 @@ export function synchronizeCompetitiveClock(
   after: GameState,
   now: number,
 ): GameState {
-  if (after.mode !== 'competitive' || !before.competitiveClock) return after;
+  if (!hasGameClock(after) || !before.competitiveClock) return after;
   now = Math.max(
     now,
     before.competitiveClock.updatedAtMs,
@@ -127,14 +180,19 @@ export function synchronizeCompetitiveClock(
     clock.finalRoundNumber !== undefined &&
     before.turn.round.roundNumber >= clock.finalRoundNumber
   ) {
+    const winnerId =
+      after.mode === 'classic' ? timeLimitWinner(after) : undefined;
     return {
       ...after,
       status: 'FINISHED',
       turn: before.turn,
       competitiveClock: clock,
       result: {
+        ...(winnerId ? { winnerId } : {}),
         victoryReason: { kind: 'time_limit' },
-        scoringEligible: clock.completedRounds >= 6,
+        ...(after.mode === 'competitive'
+          ? { scoringEligible: clock.completedRounds >= 6 }
+          : {}),
       },
     };
   }
@@ -146,7 +204,7 @@ export function synchronizeCompetitiveClock(
       selectedTerritoryId: undefined,
       technicalRemainingMs: undefined,
     };
-  if (after.status === 'FINISHED')
+  if (after.status === 'FINISHED' && after.mode === 'competitive')
     return {
       ...after,
       competitiveClock: clock,
@@ -189,7 +247,9 @@ function allocation(
       : choices;
   const placements: Record<string, number> = {};
   const counts =
-    s.status === 'SETUP' && s.setup.kind === 'card_deal_4_to_6'
+    s.mode === 'competitive' &&
+    s.status === 'SETUP' &&
+    s.setup.kind === 'card_deal_4_to_6'
       ? { ...(s.setup.additionalArmiesByPlayerContinent[pid] ?? {}) }
       : undefined;
   for (const id of order) {
@@ -206,18 +266,44 @@ function allocation(
     throw new Error('No legal competitive initial allocation');
   return placements;
 }
+function classicForcedExchange(s: ActiveGameState): GameState {
+  const hand = s.players.find((p) => p.id === s.turn.playerId)?.cards ?? [];
+  if (
+    s.mode !== 'classic' ||
+    s.turn.phase !== 'ordinary_exchange' ||
+    hand.length <= 5
+  )
+    return s;
+  const ids = hand.map((c) => c.cardId);
+  for (let a = 0; a < ids.length; a++)
+    for (let b = a + 1; b < ids.length; b++)
+      for (let c = b + 1; c < ids.length; c++) {
+        const cardIds = [ids[a]!, ids[b]!, ids[c]!] as const;
+        if (!isLegalExchange(cardIds)) continue;
+        const result = applyCommand(s, {
+          type: 'exchange_cards',
+          playerId: s.turn.playerId,
+          cardIds,
+        });
+        if (result.ok) return result.state;
+      }
+  return s;
+}
 function expire(s: GameState, random: ShuffleSource): GameState {
   s = resolveInheritance(s, random);
   if (s.status === 'FINISHED' || s.status === 'LOBBY') return s;
   if (s.status === 'SETUP') {
-    if (s.setup.kind !== 'card_deal_4_to_6')
-      throw new Error('Invalid competitive setup');
     if (s.players.find((p) => p.id === competitiveActor(s))?.disqualified)
       return skipDisqualifiedSetupActivation(s);
+    const due =
+      s.setup.kind === 'card_deal_4_to_6'
+        ? s.setup.armiesRemainingInActivation
+        : (s.setup.additionalArmiesRemainingByPlayer[competitiveActor(s)!] ??
+          0);
     const result = applySetupCommand(s, {
       type: 'place_setup_armies',
       playerId: competitiveActor(s)!,
-      placements: allocation(s, s.setup.armiesRemainingInActivation, random),
+      placements: allocation(s, due, random),
     });
     if (!result.ok) throw new Error(result.error.message);
     return result.state;
@@ -234,7 +320,10 @@ function expire(s: GameState, random: ShuffleSource): GameState {
     s.turn.round.kind === 'normal' &&
     s.turn.round.pass === 'incorporation'
   ) {
-    // No exchange is invented. Unspent ordinary and continent pools are placed legally.
+    // Classic requires a trade above five cards before placing; Competitive
+    // invents no exchange. Unspent ordinary and continent pools are placed legally.
+    s = classicForcedExchange(s);
+    if (s.status !== 'ACTIVE') return s;
     let lost = 0;
     const ordinary = s.turn.reinforcementArmiesRemaining ?? 0;
     if (ordinary > 0) {
@@ -326,7 +415,8 @@ export function setCompetitiveSeat(
             : rest;
     }),
   } as GameState;
-  if (!seat) return next;
+  // Classic Express keeps Classic's pacts for players who are away.
+  if (!seat || next.mode !== 'competitive') return next;
   if (!('pacts' in next)) return next;
   return {
     ...next,
@@ -394,7 +484,7 @@ export function tickCompetitiveClock(
   random: ShuffleSource,
 ): GameState {
   if (
-    s.mode !== 'competitive' ||
+    !hasGameClock(s) ||
     s.status === 'LOBBY' ||
     (s.status === 'FINISHED' && !s.pendingInheritance)
   )
@@ -441,11 +531,7 @@ export function tickCompetitiveClock(
     };
     if (
       clock.finalRoundNumber === undefined &&
-      elapsed >=
-        competitiveDurationMs(
-          s.configuredPlayerCount,
-          s.competitiveDurationMinutes,
-        )
+      elapsed >= gameClockDurationMs(s)
     )
       clock = {
         ...clock,
@@ -490,7 +576,7 @@ export function tickCompetitiveClock(
           pid,
           s.competitiveDeciding
             ? 'inactive'
-            : s.competitiveBotsReplaceAbsent === false
+            : s.mode === 'classic' || s.competitiveBotsReplaceAbsent === false
               ? 'absent'
               : 'bot-absent',
         );
@@ -517,7 +603,7 @@ export function pauseCompetitiveClock(
   paused: boolean,
 ): GameState {
   if (
-    s.mode !== 'competitive' ||
+    !hasGameClock(s) ||
     !s.competitiveClock ||
     s.status === 'LOBBY' ||
     (s.status === 'FINISHED' && !s.pendingInheritance)
@@ -651,7 +737,7 @@ export function selectCompetitiveTerritory(
   territoryId: TerritoryId,
 ): GameState {
   if (
-    s.mode !== 'competitive' ||
+    !hasGameClock(s) ||
     (s.status !== 'SETUP' && s.status !== 'ACTIVE') ||
     !s.competitiveClock ||
     s.competitiveClock.pauseReason ||

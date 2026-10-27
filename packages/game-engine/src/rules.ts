@@ -323,7 +323,7 @@ function finishIfWon(
         result: {
           winnerId: id,
           victoryReason: reason,
-          ...(state.competitiveClock
+          ...(state.competitiveClock && state.mode === 'competitive'
             ? { scoringEligible: state.competitiveClock.completedRounds >= 6 }
             : {}),
         },
@@ -1695,7 +1695,8 @@ export function selectInheritedCards(
 
 /** Server-authorized expiry/skip, never a client gameplay command. */
 export function finishCompetitiveActivation(s: ActiveGameState): GameState {
-  if (s.mode !== 'competitive') throw new Error('Competitive expiry only');
+  if (s.mode !== 'competitive' && !s.classicExpress)
+    throw new Error('Clock expiry only');
   const incorporating =
     s.turn.round.kind === 'normal' && s.turn.round.pass === 'incorporation';
   const result = incorporating

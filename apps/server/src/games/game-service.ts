@@ -6,6 +6,7 @@ import {
   pauseCompetitiveClock,
   selectCompetitiveTerritory,
   requestCompetitiveBot,
+  hasGameClock,
   markCompetitiveInactive,
   competitiveActor,
   chooseBotCommand,
@@ -188,7 +189,7 @@ function execute(
 // remain part of the comparison. Ranges are volatile: restart fails closed.
 function clockOnlyChange(before: GameState, after: GameState): boolean {
   if (
-    before.mode !== 'competitive' ||
+    !hasGameClock(before) ||
     !before.competitiveClock ||
     !after.competitiveClock
   )
@@ -289,7 +290,7 @@ export class GameService {
     this.clockRevisionRanges.delete(gameId);
     await this.coordinator.run(gameId, async () => {
       const current = await this.store.loadGame(gameId);
-      if (!current || current.state.mode !== 'competitive') return;
+      if (!current || !hasGameClock(current.state)) return;
       const now = this.now();
       const actor = competitiveActor(current.state);
       const accounted = tickCompetitiveClock(
@@ -491,7 +492,7 @@ export class GameService {
             };
       const range = this.clockRevisionRanges.get(gameId);
       const clockOnlyRevision =
-        current.state.mode === 'competitive' &&
+        hasGameClock(current.state) &&
         range?.last === current.revision &&
         range.authGeneration === current.auth.generation &&
         command.baseRevision >= range.first &&

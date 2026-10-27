@@ -90,6 +90,7 @@ export class GameLifecycleService {
     competitiveDurationMinutes?: 60 | 80,
     competitiveBotSeats?: 2,
     competitiveDeciding?: boolean,
+    classicExpress?: boolean,
   ): Promise<number> {
     return this.coordinator.run(gameId, async () => {
       const current = await this.requireGame(gameId);
@@ -106,7 +107,8 @@ export class GameLifecycleService {
             configuredPlayerCount !== 6 ||
             competitiveDurationMinutes === 60)) ||
         (competitiveDeciding !== undefined &&
-          current.state.mode !== 'competitive')
+          current.state.mode !== 'competitive') ||
+        (classicExpress !== undefined && current.state.mode !== 'classic')
       )
         throw new LifecycleOperationError('INVALID_GAME_COMMAND');
       const revision = current.revision + 1;
@@ -115,8 +117,10 @@ export class GameLifecycleService {
         competitiveBotSeats: _seats,
         competitiveDurationMinutes: _minutes,
         competitiveDeciding: _deciding,
+        classicExpress: _express,
         ...rest
       } = current.state;
+      const express = classicExpress ?? _express ?? false;
       void _seats;
       void _minutes;
       // A deciding game plays without bots, so it cannot be a bot table.
@@ -137,6 +141,7 @@ export class GameLifecycleService {
               : {}),
             ...(competitiveBotSeats ? { competitiveBotSeats } : {}),
             ...(deciding ? { competitiveDeciding: true as const } : {}),
+            ...(express ? { classicExpress: true as const } : {}),
           },
           revision,
         },
@@ -188,6 +193,9 @@ export class GameLifecycleService {
               : {}),
             ...(current.state.competitiveDeciding
               ? { competitiveDeciding: true as const }
+              : {}),
+            ...(current.state.classicExpress
+              ? { classicExpress: true as const }
               : {}),
           };
         } catch (error) {

@@ -1034,7 +1034,11 @@ export function FinishedPanel({
       <div className="finished-summary">
         <p className="eyebrow">Partida finalizada</p>
         <h1 id="finished-title">
-          {winner ? `Ganó ${winner.nickname}` : 'Partida cerrada'}
+          {winner
+            ? `Ganó ${winner.nickname}`
+            : reason?.kind === 'time_limit' && snapshot.mode === 'classic'
+              ? 'Empate'
+              : 'Partida cerrada'}
         </h1>
         {snapshot.result?.scoringEligible === false && (
           <p>
@@ -1058,16 +1062,20 @@ export function FinishedPanel({
             ? 'Conquistó los 50 territorios.'
             : reason?.kind === 'control_territories'
               ? 'Controló 30 territorios.'
-              : reason?.kind === 'time_limit'
-                ? 'Se completaron las dos rondas finales. El administrador puede consultar la clasificación.'
-                : reason?.kind === 'no_competitors'
-                  ? 'No quedan jugadores habilitados para continuar.'
-                  : reason?.kind === 'secret_objective'
-                    ? objectiveText(
-                        reason.objectiveId,
-                        reason.effectiveDestructionTargetColor,
-                      )
-                    : 'Cumplió su objetivo secreto.'}
+              : reason?.kind === 'time_limit' && snapshot.mode === 'classic'
+                ? winner
+                  ? 'Se terminó el tiempo: ganó por desempate (más países, después tropas, canjes y cartas).'
+                  : 'Se terminó el tiempo con empate en países, tropas, canjes y cartas.'
+                : reason?.kind === 'time_limit'
+                  ? 'Se completaron las dos rondas finales. El administrador puede consultar la clasificación.'
+                  : reason?.kind === 'no_competitors'
+                    ? 'No quedan jugadores habilitados para continuar.'
+                    : reason?.kind === 'secret_objective'
+                      ? objectiveText(
+                          reason.objectiveId,
+                          reason.effectiveDestructionTargetColor,
+                        )
+                      : 'Cumplió su objetivo secreto.'}
         </span>
         <svg className="victory-crest" aria-hidden="true" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r="20" />

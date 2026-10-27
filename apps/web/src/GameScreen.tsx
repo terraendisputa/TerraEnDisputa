@@ -639,7 +639,11 @@ function GameView({
         >
           <span>{GAME_SHORT_NAME}</span>
           <small className="mode-label">
-            {snapshot.mode === 'competitive' ? 'Competitivo' : 'Clásico'}
+            {snapshot.mode === 'competitive'
+              ? 'Competitivo'
+              : snapshot.classicExpress
+                ? 'Clásico Express'
+                : 'Clásico'}
           </small>
         </a>
         {snapshot.status === 'LOBBY' ? (

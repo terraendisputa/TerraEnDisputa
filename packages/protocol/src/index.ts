@@ -401,6 +401,7 @@ export interface PlayerGameView {
   readonly competitiveBotsReplaceAbsent?: boolean;
   readonly competitiveBotSeats?: 2;
   readonly competitiveDeciding?: true;
+  readonly classicExpress?: true;
   readonly selfPlayerId: string;
   /** The viewer may hand their seat to a bot (one country, final rounds). */
   readonly botRequestAvailable?: true;
@@ -502,6 +503,7 @@ export interface AdminGameView {
   readonly competitiveBotsReplaceAbsent?: boolean;
   readonly competitiveBotSeats?: 2;
   readonly competitiveDeciding?: true;
+  readonly classicExpress?: true;
   readonly players: readonly PublicPlayerView[];
   readonly readyPlayerIds?: readonly string[];
   readonly setup?: SetupView;
@@ -806,6 +808,7 @@ export const playerGameViewSchema = z.strictObject({
   competitiveBotsReplaceAbsent: z.boolean().optional(),
   competitiveBotSeats: z.literal(2).optional(),
   competitiveDeciding: z.literal(true).optional(),
+  classicExpress: z.literal(true).optional(),
   botRequestAvailable: z.literal(true).optional(),
   selfPlayerId: id,
   players: z.array(publicPlayerViewSchema).min(1).max(6),
@@ -952,6 +955,7 @@ export const updateGameConfigurationBodySchema = z
       .optional(),
     competitiveBotSeats: z.literal(2).optional(),
     competitiveDeciding: z.boolean().optional(),
+    classicExpress: z.boolean().optional(),
   })
   .refine(
     (body) =>

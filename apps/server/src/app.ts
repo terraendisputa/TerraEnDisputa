@@ -3,7 +3,7 @@ import cookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
 import type { PlayerId, PlayerState } from '@game/game-engine';
-import { humanSeats } from '@game/game-engine';
+import { hasGameClock, humanSeats } from '@game/game-engine';
 import {
   MAX_WEBSOCKET_MESSAGE_BYTES,
   PROTOCOL_VERSION,
@@ -375,7 +375,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
       const discovered = await store.discoverGames();
       for (const [id, durable] of discovered.games)
         if (
-          durable.state.mode === 'competitive' &&
+          hasGameClock(durable.state) &&
           durable.state.status !== 'LOBBY' &&
           (durable.state.status !== 'FINISHED' ||
             durable.state.pendingInheritance)
@@ -654,6 +654,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
           body.data.competitiveDurationMinutes,
           body.data.competitiveBotSeats,
           body.data.competitiveDeciding,
+          body.data.classicExpress,
         );
         await broadcastCurrentGame(params.data.gameId);
         return { gameId: params.data.gameId, revision };

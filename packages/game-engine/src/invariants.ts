@@ -16,6 +16,7 @@ import {
 } from './classic-data.js';
 import type { ActivePact, GameState, PlayerId } from './domain.js';
 import { victoryReason } from './rules.js';
+import { hasGameClock, timeLimitWinner } from './competitive-clock.js';
 
 /** Pure, Classic-specific structural validation used at engine boundaries and in tests. */
 export function classicInvariantViolations(
@@ -517,8 +518,13 @@ export function classicInvariantViolations(
     ['time_limit', 'no_competitors'].includes(state.result.victoryReason.kind)
   ) {
     if (
-      state.mode !== 'competitive' ||
-      state.result.winnerId !== undefined ||
+      (state.mode !== 'competitive' &&
+        !(
+          state.classicExpress &&
+          state.result.victoryReason.kind === 'time_limit'
+        )) ||
+      state.result.winnerId !==
+        (state.mode === 'classic' ? timeLimitWinner(state) : undefined) ||
       (state.result.victoryReason.kind === 'time_limit' &&
         (!state.competitiveClock?.finalRoundNumber ||
           state.competitiveClock.completedRounds <
@@ -553,12 +559,14 @@ export function classicInvariantViolations(
   if (
     clock &&
     state.status === 'FINISHED' &&
-    state.result.scoringEligible !== clock.completedRounds >= 6
+    (state.mode === 'competitive'
+      ? state.result.scoringEligible !== clock.completedRounds >= 6
+      : state.result.scoringEligible !== undefined)
   )
     errors.push('invalid scoring eligibility');
   if (
     clock &&
-    (state.mode !== 'competitive' ||
+    (!hasGameClock(state) ||
       ![
         clock.updatedAtMs,
         clock.elapsedMs,
@@ -585,7 +593,7 @@ export function classicInvariantViolations(
     errors.push('invalid competitive clock');
   if (
     state.mode !== 'competitive' &&
-    (state.players.some((p) => p.absent || p.bot) ||
+    (state.players.some((p) => p.bot) ||
       state.competitiveBotLevel ||
       state.competitiveBotsReplaceAbsent !== undefined ||
       state.competitiveBotSeats)
@@ -619,8 +627,10 @@ export function classicInvariantViolations(
     errors.push('A deciding game is Competitive and has no bots');
   if (!state.competitiveDeciding && state.players.some((p) => p.inactive))
     errors.push('Only deciding games have inactive players');
-  if (state.mode !== 'competitive' && state.players.some((p) => p.absent))
-    errors.push('Only Competitive can have absent players');
+  if (!hasGameClock(state) && state.players.some((p) => p.absent))
+    errors.push('Only games with a clock can have absent players');
+  if (state.classicExpress && state.mode !== 'classic')
+    errors.push('Express is a Classic option');
   if (state.mode !== 'competitive' && state.competitiveDurationMinutes)
     errors.push('Only Competitive can choose its duration');
   if (state.mode === 'classic' && state.players.some((p) => p.disqualified))

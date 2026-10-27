@@ -76,6 +76,7 @@ export const api = {
     competitiveDurationMinutes?: 60 | 80,
     competitiveBotSeats?: 2,
     competitiveDeciding?: boolean,
+    classicExpress?: boolean,
   ) =>
     request<{ gameId: string; revision: number }>(
       `/api/admin/games/${gameId}`,
@@ -86,6 +87,7 @@ export const api = {
           competitiveDurationMinutes,
           competitiveBotSeats,
           competitiveDeciding,
+          classicExpress,
         }),
       },
     ),

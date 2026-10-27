@@ -23,7 +23,7 @@
     "release": "pnpm release:build && pnpm release:smoke",
     "typecheck": "tsc -b",
     "test": "pnpm typecheck && pnpm build && pnpm test:integration",
-    "test:classic": "node --test --test-isolation=none tests/classic-reference.test.mjs tests/edition-compatibility.test.mjs",
+    "test:classic": "node --test --test-isolation=none tests/classic-reference.test.mjs tests/edition-compatibility.test.mjs tests/classic-express.test.mjs",
     "test:competitive": "node --test tests/competitive-stage*.test.mjs",
     "test:zone-withdrawal": "node --test tests/international-zone-withdrawal.test.mjs",
     "test:pact-notifications": "node --test tests/pact-notifications.test.mjs",
