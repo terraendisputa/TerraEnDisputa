@@ -55,7 +55,7 @@ function byMoment(
 const CLASSIC = byMoment(CLASSIC_TRACKS);
 const RECONQUISTA = byMoment(RECONQUISTA_TRACKS);
 const STORAGE_KEY = 'ted-music';
-const VOLUME = 0.35;
+const VOLUME = 0.18;
 const FADE_MS = 1500;
 const silence = () => 60_000 + Math.random() * 120_000;
 

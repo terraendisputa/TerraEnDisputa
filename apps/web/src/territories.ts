@@ -12,6 +12,7 @@ interface TerritoryPresentation {
   readonly x: number;
   readonly y: number;
   readonly path: string;
+  readonly scale?: number;
 }
 
 /** Approved image geometry; canonical IDs, names, continents and graph stay in the engine. */

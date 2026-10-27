@@ -342,7 +342,7 @@ export function GameMap({
           })}
           {/* Names and armies over every country, so no neighbor covers them. */}
           <g className="territory-marks" aria-hidden="true">
-            {TERRITORIES.map(({ id, label, continent, x, y }) => {
+            {TERRITORIES.map(({ id, label, continent, x, y, scale }) => {
               const territory = snapshot.territories?.[id];
               const displayedArmies =
                 (territory?.armies ?? 0) + (pendingPlacements[id] ?? 0);
@@ -351,6 +351,11 @@ export function GameMap({
                   key={id}
                   data-continent={continent}
                   className={territoryClass(id)}
+                  transform={
+                    scale
+                      ? `translate(${x} ${y}) scale(${scale}) translate(${-x} ${-y})`
+                      : undefined
+                  }
                 >
                   <text className="territory-label" x={x} y={y}>
                     {id === 'great_britain' ? 'G. Bretaña' : label}

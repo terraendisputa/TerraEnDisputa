@@ -1487,7 +1487,9 @@
 }
 
 /* Classic's menus use Reconquista's icon buttons. */
-.game-shell.playing-shell :is(.attack-card, .regroup-card) > .action-title {
+.game-shell.playing-shell
+  :is(.attack-card, .regroup-card)
+  > :is(.action-title, .muted-copy) {
   grid-column: 1 / -1;
 }
 .game-shell.playing-shell .contextual-panel-host .attack-card {
