@@ -1065,6 +1065,66 @@ void test('D51: blockade is per occupant and a shared neighbor breaks the single
   assert.equal(blockedCountry(board, s, 'a', 'ucrania'), false);
 });
 
+void test('A blocked country that is the only one left takes reinforcements when its incorporation comes (manual p. 18)', () => {
+  let s = game();
+  const ids = board.connections
+    .filter((e) => e.endpoints.includes('ucrania'))
+    .map((e) => e.endpoints.find((id) => id !== 'ucrania'));
+  const rest = s.territories.filter(
+    (t) => !['ucrania', 'islandia', ...ids].includes(t.id),
+  );
+  // a and c share the rest of the map.
+  rest.forEach((t, i) => set(s, t.id, i % 2 ? 'c' : 'a', 1));
+  for (const id of ids) set(s, id, 'c', 2);
+  set(s, 'ucrania', 'b', 1);
+  set(s, 'islandia', 'b', 1);
+  s = close(s, 'a');
+  s = close(s, 'b');
+  // b loses its other country after its own turn: one blocked country left.
+  set(s, 'islandia', 'c', 1);
+  s = close(s, 'c');
+  const legal = campaignLegal(board, s, 'b');
+  assert(legal.canReinforce);
+  assert.deepEqual(legal.placementCountryIds, ['ucrania']);
+});
+void test('Reinforcements are lost when every country is blocked', () => {
+  let s = game();
+  const near = (id) =>
+    board.connections
+      .filter((e) => e.endpoints.includes(id))
+      .map((e) => e.endpoints.find((other) => other !== id));
+  const ids = [...near('ucrania'), ...near('brasil')];
+  const rest = s.territories.filter(
+    (t) => !['ucrania', 'brasil', ...ids].includes(t.id),
+  );
+  rest.forEach((t, i) => set(s, t.id, i % 2 ? 'c' : 'a', 1));
+  for (const id of ids) set(s, id, 'c', 2);
+  set(s, 'ucrania', 'b', 1);
+  set(s, 'brasil', 'b', 1);
+  s = close(s, 'a');
+  s = close(s, 'b');
+  s = close(s, 'c');
+  const legal = campaignLegal(board, s, 'b');
+  assert(legal.canReinforce);
+  assert.deepEqual(legal.placementCountryIds, []);
+  assert.throws(() =>
+    go(s, 'b', {
+      kind: 'reinforce',
+      placements: { ucrania: legal.freeBudget },
+      conversions: {},
+      continentPlacements: {},
+    }),
+  );
+  s = go(s, 'b', {
+    kind: 'reinforce',
+    placements: {},
+    conversions: {},
+    continentPlacements: {},
+  });
+  assert.notEqual(campaignLegal(board, s, 'b').canReinforce, true);
+  for (const id of ['ucrania', 'brasil'])
+    assert.equal(s.territories.find((t) => t.id === id).forces[0].armies, 1);
+});
 void test('Ordinary regroup fixes army and missile arrivals independently and cannot relay them through another country', () => {
   let s = game();
   set(s, 'argentina', 'a', 4, 2);

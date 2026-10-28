@@ -111,11 +111,16 @@ function claimEligible(s: Campaign, player: string): boolean {
       c.joint >= 2)
   );
 }
-/** Opens one player's hostility turn: attack, regroup and closing, with per-turn counters reset. */
-function hostilityTurnStarted(s: Campaign): void {
+/** A player whose turn finds a single country left is no longer blocked there (manual p. 18). */
+function liberateLastCountry(s: Campaign): void {
   const actor = turnActor(s);
   if (own(s, actor).length === 1 && !s.lastCountryLiberated.includes(actor))
     s.lastCountryLiberated.push(actor);
+}
+/** Opens one player's hostility turn: attack, regroup and closing, with per-turn counters reset. */
+function hostilityTurnStarted(s: Campaign): void {
+  const actor = turnActor(s);
+  liberateLastCountry(s);
   s.pacts = s.pacts.filter(
     (p) =>
       !p.untilStart ||
@@ -142,6 +147,8 @@ function hostilityTurnStarted(s: Campaign): void {
 }
 /** Ordinary incorporation is a pass of all players before the hostility pass, as in Classic (D75). */
 function incorporationStarted(board: PreparationBoard, s: Campaign): void {
+  // Incorporation is part of the player's turn too.
+  liberateLastCountry(s);
   const summary = occupationSummary(board, s.territories, turnActor(s));
   s.freeBudget = summary.countryReinforcements;
   s.continentBudgets = Object.fromEntries(
@@ -537,18 +544,7 @@ export function campaignLegal(
         .filter((p) => p.id !== actor && !s.eliminations[p.id])
         .map((p) => [p.id, pactScopes(board, s, actor, p.id)]),
     ),
-    placementCountryIds: own(s, actor)
-      .filter(
-        (t) =>
-          !blockedCountry(board, s, actor, t.id) &&
-          !s.pacts.some(
-            (p) =>
-              p.status === 'active' &&
-              p.kind === 'zone' &&
-              p.countryIds.includes(t.id),
-          ),
-      )
-      .map((t) => t.id),
+    placementCountryIds: placementIds(board, s, actor),
   };
 }
 function refreshContinents(board: PreparationBoard, s: Campaign) {
@@ -929,15 +925,13 @@ function condominio(s: Campaign, id: string, a: string, b: string) {
     fulfilled: false,
   });
 }
-function placeForces(
+/** Own countries that can take armies: not blocked and outside zone pacts. */
+function placementIds(
   board: PreparationBoard,
   s: Campaign,
   actor: string,
-  placements: Record<string, number>,
-  conversions: Record<string, number>,
-  budget: number,
-) {
-  const legalIds = own(s, actor)
+): string[] {
+  return own(s, actor)
     .filter(
       (t) =>
         !blockedCountry(board, s, actor, t.id) &&
@@ -949,6 +943,17 @@ function placeForces(
         ),
     )
     .map((t) => t.id);
+}
+/** Armies with no country to receive them are lost (decision 2026-10-28). */
+function placeForces(
+  board: PreparationBoard,
+  s: Campaign,
+  actor: string,
+  placements: Record<string, number>,
+  conversions: Record<string, number>,
+  budget: number,
+) {
+  const legalIds = placementIds(board, s, actor);
   let sum = 0;
   for (const [id, n] of Object.entries(placements)) {
     if (!legalIds.includes(id)) reject('Blocked or foreign reinforcement');
@@ -1316,14 +1321,20 @@ export function applyCampaign(
       actor,
       action.placements,
       action.conversions,
-      s.freeBudget,
+      placementIds(board, s, actor).length ? s.freeBudget : 0,
     );
     s.freeBudget = 0;
   } else if (action.kind === 'reinforce') {
     if (!legal().canReinforce) reject('Not incorporation turn');
     const combined = { ...action.placements };
     unique(Object.keys(action.continentPlacements));
-    for (const [cont, budget] of Object.entries(s.continentBudgets)) {
+    const ids = placementIds(board, s, actor);
+    let total = ids.length ? s.freeBudget : 0;
+    for (const [cont, bonus] of Object.entries(s.continentBudgets)) {
+      const budget = ids.some((id) => continent(board, id) === cont)
+        ? bonus
+        : 0;
+      total += budget;
       const placements = action.continentPlacements[cont] ?? {};
       if (
         Object.entries(placements).reduce((sum, [id, n]) => {
@@ -1342,9 +1353,6 @@ export function applyCampaign(
       )
     )
       reject('Unknown continent budget');
-    const total =
-      s.freeBudget +
-      Object.values(s.continentBudgets).reduce((a, b) => a + b, 0);
     placeForces(board, s, actor, combined, action.conversions, total);
     s.freeBudget = 0;
     s.continentBudgets = {};

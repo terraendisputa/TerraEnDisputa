@@ -76,15 +76,14 @@ export function reconquistaActivationMs(
     : RECONQUISTA_TURN_MS;
 }
 
-/** Spreads armies one by one over random countries. */
+/** Spreads armies one by one over random countries; with none they are lost. */
 function spread(
   ids: readonly string[],
   amount: number,
   random: PreparationRandom,
 ): Record<string, number> {
-  if (amount > 0 && !ids.length) throw new Error('No country to reinforce');
   const placed: Record<string, number> = {};
-  for (let i = 0; i < amount; i++) {
+  for (let i = 0; ids.length && i < amount; i++) {
     const id =
       ids[Math.min(ids.length - 1, Math.floor(random() * ids.length))]!;
     placed[id] = (placed[id] ?? 0) + 1;

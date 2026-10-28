@@ -1,6 +1,6 @@
 // Plays games with bots only, without a server, and reports how each
 // difficulty does. Build first (pnpm build), then:
-//   node scripts/simulate-bots.mjs [--mode competitive|classic] [--games 100] [--seed 1]
+//   node scripts/simulate-bots.mjs [--mode competitive|classic|reconquista] [--games 100] [--seed 1]
 // Classic plays every table in Express and without a time limit. Mixed
 // tables rotate the levels across seats, so every level sits in every
 // position. Each bot move takes one second of game time, as on the server,
@@ -28,6 +28,11 @@ const { values } = parseArgs({
   },
 });
 const gamesPerTable = Math.max(1, Number(values.games));
+if (values.mode === 'reconquista') {
+  const { simulateReconquista } =
+    await import('./simulate-reconquista-bots.mjs');
+  process.exit(simulateReconquista(gamesPerTable, Number(values.seed)));
+}
 let seed = Number(values.seed) >>> 0;
 const next = () => {
   seed = (1664525 * seed + 1013904223) >>> 0;
