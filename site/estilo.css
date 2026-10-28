@@ -147,7 +147,7 @@ section h2 {
 
 .modos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
   gap: 20px;
 }
 
@@ -172,6 +172,35 @@ section h2 {
 .tarjeta p {
   margin: 0;
   color: var(--suave);
+}
+
+/* The main mode takes the whole row, icon beside the text. */
+.tarjeta.principal {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 4px 20px;
+  border: 2px solid var(--acento);
+}
+
+.tarjeta.principal img {
+  width: 72px;
+  height: 72px;
+  margin: 0;
+  grid-row: span 3;
+}
+
+.tarjeta.principal p + p {
+  margin-top: 8px;
+}
+
+.etiqueta-modo {
+  margin: 0;
+  color: var(--acento);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .lista {
@@ -273,6 +302,15 @@ footer p {
 
   .galeria figure:last-child img {
     max-width: 260px;
+  }
+
+  .tarjeta.principal {
+    grid-template-columns: 1fr;
+  }
+
+  .tarjeta.principal img {
+    grid-row: auto;
+    margin-bottom: 8px;
   }
 
   .captura-principal {

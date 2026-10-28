@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tutorial del Clásico · Terra en disputa</title>
+    <meta
+      name="description"
+      content="Tutorial de Terra en disputa: tu primera partida Clásica contra bots, paso a paso y con capturas."
+    />
+    <link rel="icon" type="image/svg+xml" href="../img/ted-clasico.svg" />
+    <link
+      rel="alternate"
+      hreflang="es"
+      href="https://unlisted3954.github.io/TerraEnDisputa/wiki/tutorial-clasico.html"
+    />
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://unlisted3954.github.io/TerraEnDisputa/en/wiki/classic-tutorial.html"
+    />
+    <meta property="og:type" content="article" />
+    <meta
+      property="og:title"
+      content="Tutorial del Clásico · Terra en disputa"
+    />
+    <meta
+      property="og:description"
+      content="Tutorial de Terra en disputa: tu primera partida Clásica contra bots, paso a paso y con capturas."
+    />
+    <meta
+      property="og:image"
+      content="https://unlisted3954.github.io/TerraEnDisputa/img/vista-previa.jpg"
+    />
+    <meta property="og:locale" content="es_AR" />
+    <link rel="stylesheet" href="../estilo.css" />
+  </head>
+  <body>
+    <header class="wiki-cabecera">
+      <div class="contenedor">
+        <nav class="barra">
+          <a class="marca" href="../">TED</a>
+          <span class="barra-enlaces">
+            <a href="../">Inicio</a>
+            <a href="https://github.com/unlisted3954/TerraEnDisputa/releases"
+              >Descargar</a
+            >
+            <a href="../en/wiki/classic-tutorial.html" hreflang="en" lang="en"
+              >English</a
+            >
+          </span>
+        </nav>
+      </div>
+    </header>
+    <div class="contenedor wiki">
+      <nav class="wiki-indice" aria-label="Cómo jugar">
+        <p>Cómo jugar</p>
+        <ul>
+          <li><a href="./">Cómo jugar</a></li>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li>
+            <a href="tutorial-clasico.html" aria-current="page"
+              >Tutorial del Clásico</a
+            >
+          </li>
+          <li><a href="partidas.html">Crear y unirse</a></li>
+          <li><a href="reconquista.html">Reconquista</a></li>
+          <li><a href="clasico.html">Clásico</a></li>
+          <li><a href="competitivo.html">Competitivo</a></li>
+        </ul>
+      </nav>
+      <main class="articulo">
+        <h1>Tutorial del Clásico</h1>
+        <p class="bajada">
+          Una partida Clásica de cuatro jugadores: vos y tres bots. En diez
+          minutos vas a ver todo lo que pasa en un turno.
+        </p>
+
+        <section id="crear">
+          <h2>1. Crear la mesa</h2>
+          <p>
+            Abrí el juego (<code>ted.cmd</code> en Windows,
+            <code>./ted</code> en Linux) y entrá al panel del anfitrión. En
+            <strong>Crear una partida</strong> elegí <strong>Clásico</strong>, 4
+            jugadores, y tocá <strong>Crear partida</strong>.
+          </p>
+          <p>
+            En el recuadro <strong>Invitá a tus amigos</strong>, elegí 3 en
+            <strong>Bots</strong> y dejá la duración en
+            <strong>Sin límite</strong>. Después tocá
+            <strong>Yo también voy a jugar</strong>.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/crear-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Panel del anfitrión con una partida Clásica de 4 jugadores y 3 bots"
+            />
+            <figcaption>Una mesa de 4: vos y 3 bots.</figcaption>
+          </figure>
+        </section>
+
+        <section id="entrar">
+          <h2>2. Entrar a la mesa</h2>
+          <p>
+            Escribí tu apodo, elegí un color y tocá <strong>Unirme</strong>. En
+            la sala de espera tocá <strong>Estoy listo</strong>.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/entrar-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Pantalla para entrar a la mesa con apodo y color"
+            />
+            <figcaption>Tu apodo y tu color.</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="../img/wiki/sala-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Sala de espera con un jugador y tres bots"
+            />
+            <figcaption>
+              La sala de espera. Los bots se suman al comenzar.
+            </figcaption>
+          </figure>
+          <p>
+            Volvé al panel del anfitrión y tocá
+            <strong>Comenzar partida</strong>. Con amigos es igual: cada uno
+            abre el enlace de invitación, entra y marca que está listo.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/comenzar-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Panel del anfitrión con la mesa completa y el botón Comenzar partida"
+            />
+            <figcaption>
+              Cuando todos están listos, se habilita Comenzar partida.
+            </figcaption>
+          </figure>
+        </section>
+
+        <section id="colocar">
+          <h2>3. Colocar los primeros ejércitos</h2>
+          <p>
+            Los países ya están repartidos, con un ejército en cada uno. Abajo a
+            la izquierda se abre el menú <strong>Distribución</strong>: elegí un
+            país en <strong>Destino</strong>, sumá ejércitos con
+            <strong>+</strong> y repetí hasta que la reserva llegue a cero.
+            Después confirmá con el botón de la derecha o con <kbd>Enter</kbd>.
+          </p>
+          <p>
+            Primero colocás 5 ejércitos y, en una segunda vuelta, 3 más. Un
+            consejo: juntá tus ejércitos en pocos países, cerca de un continente
+            que te interese.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/colocar-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Menú de distribución con ejércitos repartidos entre dos países"
+            />
+            <figcaption>Repartí la reserva entre tus países.</figcaption>
+          </figure>
+        </section>
+
+        <section id="objetivo">
+          <h2>4. Mirar tu objetivo</h2>
+          <p>
+            Tocá el primer botón de la barra de abajo o la tecla <kbd>O</kbd>.
+            Tu objetivo es secreto: además de cumplirlo, también ganás si llegás
+            a controlar 30 países.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/objetivo-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Panel del objetivo secreto abierto"
+            />
+            <figcaption>Tu objetivo secreto, siempre a mano.</figcaption>
+          </figure>
+        </section>
+
+        <section id="atacar">
+          <h2>5. Atacar</h2>
+          <p>
+            Cuando todos colocaron, empieza la primera ronda de ataques. Abrí el
+            menú <strong>Ataque</strong>, elegí un país tuyo con 2 ejércitos o
+            más en <strong>Origen</strong> y un vecino enemigo en
+            <strong>Destino</strong>. Después tocá el botón de la espada o
+            <kbd>Enter</kbd>.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/atacar-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Menú de ataque con origen y destino elegidos"
+            />
+            <figcaption>Elegí desde dónde y a quién atacar.</figcaption>
+          </figure>
+          <p>
+            Los dados aparecen abajo a la derecha: rojos para el ataque y azules
+            para la defensa. Se comparan de mayor a menor y los empates los gana
+            el defensor. Si el país enemigo se queda sin ejércitos, lo
+            conquistás y elegís cuántos ejércitos pasar, de 1 a 3.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/dados-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Dados del combate y menú para trasladar ejércitos al país conquistado"
+            />
+            <figcaption>Conquista: elegí cuántos ejércitos entran.</figcaption>
+          </figure>
+          <p>
+            Podés seguir atacando todo lo que quieras. Cuando termines, tocá el
+            botón de la bandera, <strong>Terminar ataques</strong>.
+          </p>
+        </section>
+
+        <section id="reagrupar">
+          <h2>6. Reagrupar</h2>
+          <p>
+            En el menú <strong>Traslado / Reagrupamiento</strong> podés mover
+            ejércitos entre tus países vecinos para reforzar las fronteras.
+            Confirmá cada movimiento y, al final, tocá
+            <strong>Terminar reagrupamiento</strong>.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/reagrupar-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Menú de reagrupamiento entre dos países propios"
+            />
+            <figcaption>Mové ejércitos hacia donde hagan falta.</figcaption>
+          </figure>
+        </section>
+
+        <section id="carta">
+          <h2>7. Pedir tu carta y terminar el turno</h2>
+          <p>
+            Si conquistaste al menos un país, en el panel
+            <strong>Cartas</strong> (tecla <kbd>C</kbd>) tocá
+            <strong>Pedir carta</strong>. Juntando tres cartas del mismo
+            símbolo, o de los tres símbolos distintos, después podés canjearlas
+            por ejércitos. Para cerrar, tocá el botón de la bandera de la barra,
+            <strong>Terminar turno</strong>.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/carta-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Panel de cartas con una carta nueva"
+            />
+            <figcaption>Tu primera carta.</figcaption>
+          </figure>
+          <p>
+            Mientras juegan los demás, el mapa marca cada ataque: el país
+            atacante con borde rojo y el defensor con borde azul.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/turno-ajeno-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Ataque de un bot marcado en el mapa"
+            />
+            <figcaption>Así se ve el turno de otro jugador.</figcaption>
+          </figure>
+        </section>
+
+        <section id="incorporar">
+          <h2>8. La ronda de incorporación</h2>
+          <p>
+            A partir de ahora, cada ronda empieza con la incorporación. Recibís
+            la mitad de tus países en ejércitos, más los extras de los
+            continentes que controlás. Si tenés tres cartas que se pueden
+            canjear, el canje suma más ejércitos. Colocalos igual que al
+            principio.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/incorporar-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Menú de canje y refuerzos con la reserva repartida"
+            />
+            <figcaption>La incorporación de cada ronda.</figcaption>
+          </figure>
+          <p>
+            Después vuelve la ronda de ataques, y así hasta que alguien gane.
+          </p>
+        </section>
+
+        <section id="pactos">
+          <h2>9. Pactos</h2>
+          <p>
+            En tu turno de ataque, el panel <strong>Pactos</strong> (tecla
+            <kbd>P</kbd>) te deja proponer acuerdos, como no atacarse a través
+            de una frontera. La vista previa muestra lo que vas a proponer antes
+            de enviarlo.
+          </p>
+          <figure>
+            <img
+              src="../img/wiki/pacto-es.webp"
+              width="1120"
+              height="700"
+              loading="lazy"
+              alt="Panel de pactos con la vista previa de un pacto de frontera"
+            />
+            <figcaption>
+              Proponer un pacto de no agresión en una frontera.
+            </figcaption>
+          </figure>
+        </section>
+
+        <section id="siguiente">
+          <h2>¿Y ahora?</h2>
+          <ul>
+            <li>
+              Las reglas completas están en <a href="clasico.html">Clásico</a>.
+            </li>
+            <li>
+              Para jugar con amigos, mirá
+              <a href="partidas.html">Crear y unirse</a>.
+            </li>
+            <li>
+              Cuando quieras más, probá
+              <a href="competitivo.html">Competitivo</a> o
+              <a href="reconquista.html">Reconquista</a>.
+            </li>
+          </ul>
+        </section>
+        <nav class="paginacion" aria-label="Páginas">
+          <a href="tutorial.html">← Tutorial</a>
+          <a href="partidas.html">Crear y unirse →</a>
+        </nav>
+      </main>
+    </div>
+    <footer>
+      <div class="contenedor">
+        <p>
+          ¿Preguntas o ideas? Escribí en
+          <a href="https://github.com/unlisted3954/TerraEnDisputa/discussions"
+            >Discussions</a
+          >.
+        </p>
+        <p>
+          Terra en disputa no está afiliado, respaldado ni patrocinado por los
+          titulares o editores de T.E.G.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
