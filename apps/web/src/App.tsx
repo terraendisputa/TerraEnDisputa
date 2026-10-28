@@ -58,7 +58,7 @@ function Landing({ encrypted }: { readonly encrypted: boolean }) {
           <h1>
             Terra en disputa,
             <br />
-            {tr('en tu propia red.', 'on your own network.')}
+            {tr('en tu propia red.', 'on your network.')}
           </h1>
           <p>
             {tr(

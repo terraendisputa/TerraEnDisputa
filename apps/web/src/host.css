@@ -202,11 +202,6 @@ body:has(.landing) {
   gap: 8px;
   max-width: none;
 }
-/* Game settings: one label column, so every select starts and ends in the same place. */
-.admin-layout .inline-control:has(> select) {
-  display: grid;
-  grid-template-columns: 8.5rem minmax(0, 1fr);
-}
 /* Inputs fill their row; a checkbox keeps its own size next to its label. */
 .admin-layout input[type='checkbox'] {
   width: auto;
@@ -545,4 +540,141 @@ body:has(.landing) {
 }
 .admin-layout .admin-game-box .button-row {
   justify-content: flex-end;
+}
+
+/* One look for the whole administration: the sidebar and the three boxes share
+  the box, title, field, note and button styles, so nothing changes size between them. */
+.admin-layout {
+  --admin-title: 17px;
+  --admin-text: 14px;
+  --admin-label: 13px;
+  --admin-small: 12px;
+  --admin-gap: 10px;
+  --admin-box-bg: color-mix(in srgb, var(--soft) 35%, var(--surface));
+}
+.admin-layout .admin-detail {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.admin-layout .admin-columns {
+  gap: var(--admin-gap);
+}
+.admin-layout :is(.admin-sidebar, .admin-box, .admin-detail > .empty-state) {
+  display: grid;
+  gap: var(--admin-gap);
+  align-content: start;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--admin-box-bg);
+  box-shadow: none;
+  font-size: var(--admin-text);
+}
+.admin-layout :is(.admin-sidebar, .admin-box) :is(p, li, small) {
+  font-size: inherit;
+}
+.admin-layout .admin-sidebar form {
+  display: grid;
+  gap: var(--admin-gap);
+}
+.admin-layout .admin-sidebar > details + details {
+  margin: 0;
+  padding-top: var(--admin-gap);
+  border-top: 1px solid var(--line);
+}
+/* Titles: the same serif size for every box and section. */
+.admin-layout .admin-sidebar summary :is(h1, h2),
+.admin-layout .admin-box > h2,
+.admin-layout .admin-box-title,
+.admin-layout .host-invite-intro h3 {
+  margin: 0;
+  font-size: var(--admin-title);
+  line-height: 1.25;
+}
+.admin-layout .host-invite-intro {
+  display: grid;
+  gap: 4px;
+}
+/* «En curso» / «Finalizadas»: small group headings. */
+.admin-layout .game-list h3 {
+  margin: var(--admin-gap) 0 6px;
+  font-family: inherit;
+  font-size: var(--admin-small);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.admin-layout .game-list section {
+  display: grid;
+  gap: 6px;
+}
+/* Fields: the label above, the control at full width, everywhere. */
+.admin-layout .host-player-count,
+.admin-layout .inline-control:has(> select),
+.admin-layout .host-network label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--admin-label);
+  font-weight: 600;
+}
+.admin-layout .inline-control:has(> input[type='checkbox']) {
+  font-size: var(--admin-label);
+  font-weight: 600;
+}
+.admin-layout
+  :is(.admin-sidebar, .admin-box)
+  :is(select, input:not([type='checkbox'])) {
+  width: 100%;
+  font-size: var(--admin-label);
+}
+/* Notes and states: one padding, radius and size. */
+.admin-layout :is(.host-lobby-notice, .admin-state-line, .admin-clock) {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: var(--admin-label);
+}
+.admin-layout .host-status-badge {
+  font-size: var(--admin-small);
+}
+.admin-layout .admin-box details > summary {
+  padding-block: 4px;
+  font-size: var(--admin-label);
+  font-weight: 600;
+}
+.admin-layout .admin-box details[open] > :not(summary) {
+  margin-top: 6px;
+}
+/* Buttons: full width actions, the destructive ones in red. */
+.admin-layout .admin-sidebar form > button,
+.admin-layout .admin-box .button-row > :is(button, .button-link),
+.admin-layout .host-invitation-link > .button-link,
+.admin-layout .admin-box details > button {
+  width: 100%;
+  flex: 1 1 0;
+}
+.admin-layout .admin-box .button-row {
+  display: flex;
+  gap: 8px;
+}
+.admin-layout button.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.admin-layout button.danger-quiet {
+  background: transparent;
+  border-color: currentColor;
+  color: var(--danger);
+}
+.admin-layout .game-list {
+  max-height: min(60vh, 520px);
 }
