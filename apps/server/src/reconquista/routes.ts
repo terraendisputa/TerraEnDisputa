@@ -493,9 +493,11 @@ export async function registerReconquista(
   clockTimer.unref();
   if (options.clockTicks === false) clearInterval(clockTimer);
   void server.register((app, _options, done) => {
-    app.addHook('onClose', () => {
+    app.addHook('onClose', async () => {
       clearInterval(clockTimer);
-      return store.close();
+      // A tick still reading the store would keep the lock busy on Windows.
+      await ticked;
+      await store.close();
     });
     app.addHook('preClose', (closed) => {
       for (const timer of focusTimers.values()) clearTimeout(timer);
