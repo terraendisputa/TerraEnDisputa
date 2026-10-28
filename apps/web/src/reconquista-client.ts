@@ -293,6 +293,19 @@ export interface Presentation {
   readonly round: number | undefined;
 }
 
+/** A condominio offered by whoever expelled one of a country's two occupants. */
+export function condominiumOffer(view: ReconquistaView) {
+  const occupation = view.campaign?.occupation;
+  if (occupation?.condominium !== 'proposed') return null;
+  const proposerId = occupation.arrivals[0]!.playerId;
+  const partnerId = view.territories
+    .find((t) => t.id === occupation.targetId)
+    ?.forces.find((f) => f.playerId !== proposerId && f.armies > 0)?.playerId;
+  return partnerId
+    ? { proposerId, partnerId, targetId: occupation.targetId }
+    : null;
+}
+
 /** Same role as game-presentation.ts in Classic: one current action per view. */
 export function reconquistaPresentation(view: ReconquistaView): Presentation {
   const me = view.self?.playerId;

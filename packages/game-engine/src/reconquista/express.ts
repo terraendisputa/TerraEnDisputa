@@ -5,6 +5,7 @@
  */
 import {
   campaignLegal,
+  condominiumPartner,
   type Campaign,
   type CampaignAction,
 } from './campaign.js';
@@ -96,6 +97,8 @@ function spread(
  * 2026-10-27): reinforcements are spread at random, attacks and regroups end,
  * an occupation takes the minimum, a joint attack keeps rolling until it
  * ends, a zone decision keeps the zone pact and unclaimed cards are lost.
+ * A condominio offer left unanswered is rejected and the third player leaves
+ * the country to its occupant (2026-10-28); an accepted one moves one army.
  * The caller repeats it until the activation changes.
  */
 export function reconquistaTimeoutMove(
@@ -136,8 +139,16 @@ export function reconquistaTimeoutMove(
       pactId: c.zoneDecisions[0]!.pactId,
       keep: true,
     });
+  if (c.pending?.condominium === 'proposed')
+    return campaign({ kind: 'respond-condominium', accept: false });
   if (c.pending?.arrivals[0]?.playerId === actorId)
-    return campaign({ kind: 'occupy', armies: 1 });
+    return campaign(
+      c.pending.invasion &&
+        !c.pending.joint &&
+        c.pending.condominium !== 'accepted'
+        ? { kind: 'abandon-invasion' }
+        : { kind: 'occupy', armies: 1 },
+    );
   const legal = campaignLegal(board, c, actorId);
   const alliance = activeAlliance(c);
   if (alliance) {
@@ -198,5 +209,9 @@ export function reconquistaDeclines(
         allianceId: a.id,
         accept: false,
       })),
+    ...(c.pending?.condominium === 'proposed' &&
+    condominiumPartner(c) === playerId
+      ? [{ kind: 'respond-condominium' as const, accept: false }]
+      : []),
   ].map((action) => ({ kind: 'campaign', action }));
 }

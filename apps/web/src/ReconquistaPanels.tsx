@@ -6,6 +6,7 @@ import type {
   ReconquistaView,
 } from '@game/protocol/reconquista';
 import { UiIcon } from './UiIcon.js';
+import { condominiumOffer } from './reconquista-client.js';
 import { CardArt, ContinentArt } from './ReconquistaCardArt.js';
 import {
   continentCardHint,
@@ -675,6 +676,7 @@ export function ReconquistaPacts({
   const allianceProposals = campaign.alliances.filter(
     (a) => a.status === 'proposed',
   );
+  const offer = condominiumOffer(view);
   const answer = (onAccept: () => void, onReject: () => void) => (
     <>
       <button type="button" disabled={disabled} onClick={onAccept}>
@@ -698,7 +700,9 @@ export function ReconquistaPacts({
             <h2>Pactos</h2>
           </div>
           <span className="count-badge">
-            {campaign.pacts.length + campaign.alliances.length}
+            {campaign.pacts.length +
+              campaign.alliances.length +
+              (offer ? 1 : 0)}
           </span>
         </summary>
         {active.length + activeAlliances.length === 0 && (
@@ -833,6 +837,23 @@ export function ReconquistaPacts({
               )}
           </div>
         ))}
+        {offer && (
+          <div className="pact-row">
+            <span className="pact-copy">
+              <small>Propuesta pendiente</small>
+              <strong>Condominio: {name(offer.targetId)}</strong>
+              <span>
+                {participant(offer.proposerId)} → {participant(offer.partnerId)}
+              </span>
+            </span>
+            {view.self &&
+              offer.partnerId === me &&
+              answer(
+                () => void act({ kind: 'respond-condominium', accept: true }),
+                () => void act({ kind: 'respond-condominium', accept: false }),
+              )}
+          </div>
+        )}
         {view.self &&
           campaign.phase !== 'finished' &&
           !campaign.occupation &&

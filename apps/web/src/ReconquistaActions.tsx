@@ -812,6 +812,69 @@ function Occupation({ view, board, busy, send, onPreview }: ActionProps) {
   const arrival = occupation.arrivals[0]!;
   const act = (action: CampaignAction) =>
     void send({ kind: 'campaign', action });
+  const name = (id: string) =>
+    board.countries.find((c) => c.id === id)?.name ?? id;
+  // The other occupant stays: the country is entered only by an accepted condominio.
+  if (
+    occupation.invasion &&
+    !occupation.joint &&
+    occupation.condominium !== 'accepted'
+  ) {
+    const occupant = view.territories
+      .find((t) => t.id === occupation.targetId)
+      ?.forces.find((f) => f.playerId !== arrival.playerId && f.armies > 0);
+    const nickname =
+      view.players.find((p) => p.id === occupant?.playerId)?.nickname ??
+      'Jugador';
+    const waiting = occupation.condominium === 'proposed';
+    return (
+      <div className="action-card action-layout primary-action-card">
+        <p className="muted-copy">
+          {waiting
+            ? `Esperando que ${nickname} responda el condominio en ${name(occupation.targetId)}.`
+            : `${nickname} sigue en ${name(occupation.targetId)}.`}
+        </p>
+        {!waiting && (
+          <>
+            {!occupation.continuing && (
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Seguir atacando"
+                title="Seguir atacando"
+                disabled={busy}
+                onClick={() => act({ kind: 'continue-invasion' })}
+              >
+                <UiIcon name="sword" />
+              </button>
+            )}
+            {!occupation.continuing && !occupation.condominium && (
+              <button
+                type="button"
+                className="icon-button"
+                aria-label={`Proponer condominio a ${nickname}`}
+                title={`Proponer condominio a ${nickname}`}
+                disabled={busy}
+                onClick={() => act({ kind: 'propose-condominium' })}
+              >
+                <UiIcon name="pact" />
+              </button>
+            )}
+            <button
+              type="button"
+              className="icon-button secondary"
+              aria-label="Dejar el país"
+              title="Dejar el país"
+              disabled={busy}
+              onClick={() => act({ kind: 'abandon-invasion' })}
+            >
+              <UiIcon name="leave" />
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
   return (
     <TransferCard
       onPreview={onPreview}
@@ -827,20 +890,7 @@ function Occupation({ view, board, busy, send, onPreview }: ActionProps) {
           : 'Confirmar traslado'
       }
       onConfirm={(armies) => act({ kind: 'occupy', armies })}
-    >
-      {occupation.invasion && !occupation.joint && !occupation.continuing && (
-        <button
-          type="button"
-          className="secondary"
-          aria-label="Seguir atacando desde afuera"
-          title="Seguir atacando desde afuera"
-          disabled={busy}
-          onClick={() => act({ kind: 'continue-invasion' })}
-        >
-          <UiIcon name="sword" />
-        </button>
-      )}
-    </TransferCard>
+    />
   );
 }
 

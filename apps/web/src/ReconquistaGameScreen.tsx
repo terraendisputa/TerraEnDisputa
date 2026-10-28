@@ -29,6 +29,7 @@ import {
 } from './ReconquistaPanels.js';
 import { ReconquistaClock } from './ReconquistaClock.js';
 import {
+  condominiumOffer,
   reconquistaPresentation,
   reconquistaRequest,
   useReconquistaGame,
@@ -330,7 +331,8 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
       ).length +
       view.campaign.alliances.filter(
         (x) => x.status === 'proposed' && x.allyId === me,
-      ).length
+      ).length +
+      (condominiumOffer(view)?.partnerId === me ? 1 : 0)
     : 0;
   if (incoming)
     notifications.pacts = {

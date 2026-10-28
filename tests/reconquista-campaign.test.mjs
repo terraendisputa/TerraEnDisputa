@@ -15,6 +15,10 @@ import {
   assertCampaign,
 } from '../packages/game-engine/dist/reconquista/campaign.js';
 import { projectCampaign } from '../packages/game-engine/dist/reconquista/campaign-projection.js';
+import {
+  reconquistaDeclines,
+  reconquistaTimeoutMove,
+} from '../packages/game-engine/dist/reconquista/express.js';
 const catalog = JSON.parse(
   await readFile(
     new URL('../apps/server/assets/reconquista/catalog.json', import.meta.url),
@@ -410,7 +414,7 @@ void test('Shared country blocks external partner attack, internal attack until 
   );
   assert.equal(s.conquests.a.individual, 1);
 });
-void test('D48–D50/D64: third-party expulsion captures only chosen missiles, requires entry/continuation and creates no automatic replacement pact', () => {
+void test('D48–D50: a third party who expels one occupant enters only by a condominio the other accepts (2026-10-28)', () => {
   let s = sharedGame();
   const neighbor = board.connections
     .filter((e) => e.endpoints.includes('ucrania'))
@@ -423,32 +427,79 @@ void test('D48–D50/D64: third-party expulsion captures only chosen missiles, r
   t.forces[0].missiles = 3;
   t.forces[1].armies = 4;
   t.forces[1].missiles = 2;
-  s = go(
-    s,
-    'c',
-    {
-      kind: 'attack-country',
-      originId: neighbor,
-      targetId: 'ucrania',
-      defenderId: 'a',
-    },
-    winRolls(),
-  );
+  const attack = (defenderId) => ({
+    kind: 'attack-country',
+    originId: neighbor,
+    targetId: 'ucrania',
+    defenderId,
+  });
+  // The occupant with more armies falls first.
+  assert.throws(() => go(s, 'c', attack('a'), winRolls()), /Illegal attack/);
+  t.forces[1].armies = 1;
+  s = go(s, 'c', attack('a'), winRolls());
   assert(s.pending.invasion);
   assert.equal(s.pending.arrivals[0].playerId, 'c');
   assert.throws(() => go(s, 'c', { kind: 'finish-regroup' }));
+  assert.throws(() => go(s, 'c', { kind: 'occupy', armies: 2 }), /condominio/);
   assert(!s.pacts.some((p) => p.kind === 'internal'));
   assert(!s.pacts.some((p) => p.kind === 'origin'));
+  s = go(s, 'c', { kind: 'propose-condominium' });
+  assert.equal(campaignLegal(board, s, 'c').actorId, 'b');
+  assert.throws(() => go(s, 'c', { kind: 'continue-invasion' }));
+  assert.throws(() =>
+    go(s, 'a', { kind: 'respond-condominium', accept: true }),
+  );
+  s = go(s, 'b', { kind: 'respond-condominium', accept: true });
   s = go(s, 'c', { kind: 'occupy', armies: 2 });
   const occupied = s.territories.find((t) => t.id === 'ucrania');
   assert.equal(occupied.ownership.kind, 'shared');
   assert.equal(occupied.forces.find((f) => f.playerId === 'c').missiles, 3);
   assert.equal(occupied.forces.find((f) => f.playerId === 'b').missiles, 2);
-  assert(!s.sharedOriginal.ucrania);
+  assert(s.sharedOriginal.ucrania);
+  assert(
+    s.pacts.some(
+      (p) =>
+        p.kind === 'internal' &&
+        [p.proposerId, p.partnerId].sort().join() === 'b,c',
+    ),
+  );
+  assert.equal(s.conquests.c.individual, 1);
   assert.equal(
     s.territories.find((t) => t.id === neighbor).forces[0].missiles,
     1,
   );
+});
+void test('A rejected or unanswered condominio leaves the country to its occupant', () => {
+  let s = sharedGame();
+  set(s, 'polonia', 'c', 8);
+  s.turnIndex = 2;
+  const t = s.territories.find((t) => t.id === 'ucrania');
+  t.forces[0].armies = 1;
+  t.forces[0].missiles = 3;
+  t.forces[1].armies = 1;
+  s = go(
+    s,
+    'c',
+    {
+      kind: 'attack-country',
+      originId: 'polonia',
+      targetId: 'ucrania',
+      defenderId: 'a',
+    },
+    winRolls(),
+  );
+  s = go(s, 'c', { kind: 'propose-condominium' });
+  s = go(s, 'b', { kind: 'respond-condominium', accept: false });
+  // One offer for each invasion.
+  assert.throws(() => go(s, 'c', { kind: 'propose-condominium' }));
+  assert.throws(() => go(s, 'c', { kind: 'occupy', armies: 1 }));
+  s = go(s, 'c', { kind: 'abandon-invasion' });
+  assert.equal(s.pending, null);
+  assert.deepEqual(s.invasionSpoils, {});
+  assert.deepEqual(s.territories.find((t) => t.id === 'ucrania').forces, [
+    { playerId: 'b', armies: 1, missiles: 3 },
+  ]);
+  assert.equal(s.phase, 'attack');
 });
 void test('D49: shared missile superiority and losses use the selected owner, never combined garrisons; internal missile rejected', () => {
   let s = sharedGame();
@@ -656,7 +707,7 @@ void test('D66: a continuing invader exhausted outside leaves captured missiles 
   const target = s.territories.find((t) => t.id === 'ucrania');
   target.forces[0].armies = 1;
   target.forces[0].missiles = 3;
-  target.forces[1].armies = 8;
+  target.forces[1].armies = 1;
   target.forces[1].missiles = 2;
   s = go(
     s,
@@ -669,6 +720,9 @@ void test('D66: a continuing invader exhausted outside leaves captured missiles 
     },
     winRolls(2),
   );
+  s.territories
+    .find((t) => t.id === 'ucrania')
+    .forces.find((f) => f.playerId === 'b').armies = 8;
   assert.equal(s.pending.capturedMissiles, 3);
   s = go(s, 'c', { kind: 'continue-invasion' });
   assert(s.pending.continuing);
@@ -745,13 +799,12 @@ void test('D64/D66: a successful continuing invader must occupy and retains all 
   assert.deepEqual(s.invasionSpoils, {});
 });
 
-void test('Country reward counts distinct territories: entering and then expelling the remaining partner counts once', () => {
+void test('Express: an unanswered condominio is rejected and the invader leaves; an accepted one moves one army', () => {
   let s = sharedGame();
   set(s, 'polonia', 'c', 8);
   s.turnIndex = 2;
-  s.cards.exchanges.c = 3;
-  const target = s.territories.find((t) => t.id === 'ucrania');
-  for (const f of target.forces) f.armies = 1;
+  for (const f of s.territories.find((t) => t.id === 'ucrania').forces)
+    f.armies = 1;
   s = go(
     s,
     'c',
@@ -763,18 +816,57 @@ void test('Country reward counts distinct territories: entering and then expelli
     },
     winRolls(),
   );
-  s = go(s, 'c', { kind: 'occupy', armies: 3 });
-  s = go(
-    s,
-    'c',
-    {
-      kind: 'attack-country',
-      originId: 'ucrania',
-      targetId: 'ucrania',
-      defenderId: 'b',
+  const offered = go(s, 'c', { kind: 'propose-condominium' });
+  const timeout = (state) =>
+    reconquistaTimeoutMove(board, { campaign: state }, random(5));
+  let move = timeout(offered);
+  assert.deepEqual(move, {
+    actorId: 'b',
+    action: {
+      kind: 'campaign',
+      action: { kind: 'respond-condominium', accept: false },
     },
-    winRolls(2),
+  });
+  assert.deepEqual(reconquistaDeclines({ campaign: offered }, 'b'), [
+    move.action,
+  ]);
+  let after = go(offered, 'b', move.action.action);
+  move = timeout(after);
+  assert.deepEqual(move.action.action, { kind: 'abandon-invasion' });
+  after = go(after, 'c', move.action.action);
+  assert.equal(
+    after.territories.find((t) => t.id === 'ucrania').ownership.playerId,
+    'b',
   );
+  const accepted = go(offered, 'b', {
+    kind: 'respond-condominium',
+    accept: true,
+  });
+  move = timeout(accepted);
+  assert.deepEqual(move.action.action, { kind: 'occupy', armies: 1 });
+  after = go(accepted, 'c', move.action.action);
+  assert.equal(
+    after.territories.find((t) => t.id === 'ucrania').ownership.kind,
+    'shared',
+  );
+});
+void test('Country reward counts distinct territories: expelling both occupants counts once', () => {
+  let s = sharedGame();
+  set(s, 'polonia', 'c', 8);
+  s.turnIndex = 2;
+  s.cards.exchanges.c = 3;
+  const target = s.territories.find((t) => t.id === 'ucrania');
+  for (const f of target.forces) f.armies = 1;
+  const attack = (defenderId) => ({
+    kind: 'attack-country',
+    originId: 'polonia',
+    targetId: 'ucrania',
+    defenderId,
+  });
+  s = go(s, 'c', attack('a'), winRolls());
+  s = go(s, 'c', { kind: 'continue-invasion' });
+  s = go(s, 'c', attack('b'), winRolls());
+  s = go(s, 'c', { kind: 'occupy', armies: 3 });
   assert.equal(s.conquests.c.individual, 1);
   assert.deepEqual(s.conquestCountries.c.individual, ['ucrania']);
   s = go(s, 'c', { kind: 'finish-regroup' });
@@ -838,7 +930,7 @@ void test('D66: both allied origins exhaust after expelling one occupant; the re
   const t = s.territories.find((t) => t.id === 'ucrania');
   t.forces[0].armies = 1;
   t.forces[0].missiles = 3;
-  t.forces[1].armies = 8;
+  t.forces[1].armies = 1;
   t.forces[1].missiles = 2;
   set(s, 'polonia', 'c', 2, 1);
   set(s, 'albania', 'd', 2, 1);
@@ -864,6 +956,9 @@ void test('D66: both allied origins exhaust after expelling one occupant; the re
     },
     winRolls(1),
   );
+  s.territories
+    .find((t) => t.id === 'ucrania')
+    .forces.find((f) => f.playerId === 'b').armies = 8;
   for (const [actor, origin] of [
     ['d', 'albania'],
     ['c', 'polonia'],

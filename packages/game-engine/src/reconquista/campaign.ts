@@ -41,6 +41,7 @@ import type {
   Campaign,
   CampaignAction,
   CampaignTerritory,
+  PendingOccupation,
 } from './campaign-types.js';
 export type { Campaign, CampaignAction } from './campaign-types.js';
 function reject(message: string): never {
@@ -288,7 +289,14 @@ function canAttack(
     af = force(from, actor),
     df = force(to, defenderId);
   if (!af || !df || actor === defenderId) return false;
-  if (s.sharedOriginal[targetId] && force(to, actor) && originId !== targetId)
+  // Occupants of one country fight only from inside, once no pact protects them.
+  if ((force(to, actor)?.armies ?? 0) > 0 && originId !== targetId)
+    return false;
+  // Against a condominio, the occupant with more armies is attacked first.
+  if (
+    !missile &&
+    to.forces.some((f) => f.playerId !== actor && f.armies > df.armies)
+  )
     return false;
   if (
     s.sharedOriginal[originId] &&
@@ -468,6 +476,7 @@ export function campaignLegal(
     !s.activeAllianceId;
   return {
     actorId:
+      (s.pending?.condominium === 'proposed' ? condominiumPartner(s) : null) ??
       s.pending?.arrivals[0]?.playerId ??
       currentAlliance(s)?.nextId ??
       (['ally-regroup', 'ally-closing'].includes(s.phase)
@@ -507,7 +516,8 @@ export function campaignLegal(
       ownTurn &&
       !exchangePlacement &&
       (s.pending
-        ? s.pending.arrivals.every((a) => a.playerId === actor)
+        ? s.pending.condominium !== 'proposed' &&
+          s.pending.arrivals.every((a) => a.playerId === actor)
         : Object.keys(s.invasionSpoils).length === 0),
     // Conservative: a pending conquest may still earn a card once occupied.
     endTurnMayForfeit:
@@ -632,6 +642,7 @@ function makeOccupation(
   actor: string,
   joint: boolean,
   previous: string[],
+  condominium?: PendingOccupation['condominium'],
 ) {
   const target = territory(s, targetId),
     alliance = currentAlliance(s);
@@ -664,7 +675,39 @@ function makeOccupation(
     invasion,
     continuing: false,
     originalDefenders: previous,
+    ...(condominium ? { condominium } : {}),
   };
+}
+/** The occupant left in a country whose other occupant was expelled. */
+export function condominiumPartner(s: Campaign): string | null {
+  const p = s.pending;
+  if (!p?.invasion || p.joint) return null;
+  const occupant = p.arrivals[0]!.playerId;
+  return (
+    territory(s, p.targetId).forces.find(
+      (f) => f.playerId !== occupant && f.armies > 0,
+    )?.playerId ?? null
+  );
+}
+/** The third player leaves: the remaining occupant keeps the country and the captured missiles (D66). */
+function abandonInvasion(s: Campaign) {
+  const to = territory(s, s.pending!.targetId);
+  to.forces = to.forces.filter((f) => f.armies > 0);
+  syncOwnership(to);
+  s.pending = null;
+  settleRepelledSpoils(s, to.id);
+}
+function invasionChoice(s: Campaign, actor: string): PendingOccupation {
+  const p = s.pending;
+  if (
+    !p?.invasion ||
+    p.joint ||
+    p.arrivals[0]?.playerId !== actor ||
+    p.condominium === 'proposed' ||
+    p.condominium === 'accepted'
+  )
+    reject('No invasion choice');
+  return p;
 }
 function settleRepelledSpoils(s: Campaign, targetId: string) {
   const survivor = territory(s, targetId).forces.find((f) => f.armies > 0);
@@ -766,6 +809,7 @@ function applyBattle(
           actor,
           false,
           continuation.originalDefenders,
+          continuation.condominium,
         );
       else settleRepelledSpoils(s, to.id);
     }
@@ -811,6 +855,8 @@ function occupy(
     integer(armies, 1) > arrival.maximum
   )
     reject('Illegal occupation');
+  if (p.invasion && !p.joint && p.condominium !== 'accepted')
+    reject('Occupied country needs an accepted condominio');
   const from = force(territory(s, arrival.originId), actor)!,
     to = territory(s, p.targetId);
   from.armies -= armies;
@@ -833,22 +879,8 @@ function occupy(
   if (p.arrivals.length) return;
   const alliance = currentAlliance(s);
   if (p.joint && to.forces.length === 2) {
-    s.sharedOriginal[to.id] = true;
     const [a, b] = to.forces.map((f) => f.playerId) as [string, string];
-    s.pacts.push({
-      id: `internal:${to.id}:${s.round}:${s.completedTurns[turnActor(s)]}:${s.pacts.length}`,
-      proposerId: a,
-      partnerId: b,
-      kind: 'internal',
-      linkedCountryId: to.id,
-      countryIds: [to.id],
-      continentIds: [],
-      status: 'active',
-      withdrawal: null,
-      untilStart: null,
-      opportunity: false,
-      fulfilled: false,
-    });
+    condominio(s, to.id, a, b);
     countConquest(s, a, true, to.id);
     countConquest(s, b, true, to.id);
     if (alliance) {
@@ -861,7 +893,11 @@ function occupy(
     }
   } else {
     countConquest(s, actor, false, to.id);
-    if (to.forces.length === 2) s.sharedOriginal[to.id] = false;
+    // Only an accepted condominio leaves a second occupant.
+    if (to.forces.length === 2) {
+      const [a, b] = to.forces.map((f) => f.playerId) as [string, string];
+      condominio(s, to.id, a, b);
+    }
   }
   for (const zone of s.pacts.filter(
     (v) =>
@@ -874,6 +910,24 @@ function occupy(
   s.activeAllianceId = null;
   if (alliance) s.alliances = s.alliances.filter((a) => a.id !== alliance.id);
   eliminate(board, s, random, p.creditId);
+}
+/** Two occupants of one country share it under an internal pact. */
+function condominio(s: Campaign, id: string, a: string, b: string) {
+  s.sharedOriginal[id] = true;
+  s.pacts.push({
+    id: `internal:${id}:${s.round}:${s.completedTurns[turnActor(s)]}:${s.pacts.length}`,
+    proposerId: a,
+    partnerId: b,
+    kind: 'internal',
+    linkedCountryId: id,
+    countryIds: [id],
+    continentIds: [],
+    status: 'active',
+    withdrawal: null,
+    untilStart: null,
+    opportunity: false,
+    fulfilled: false,
+  });
 }
 function placeForces(
   board: PreparationBoard,
@@ -1239,7 +1293,14 @@ export function applyCampaign(
   const legal = () => campaignLegal(board, s, actor);
   if (
     s.pending &&
-    !['occupy', 'continue-invasion', 'end-turn'].includes(action.kind) &&
+    ![
+      'occupy',
+      'continue-invasion',
+      'propose-condominium',
+      'respond-condominium',
+      'abandon-invasion',
+      'end-turn',
+    ].includes(action.kind) &&
     !(s.pending.continuing && ['attack-country', 'fire'].includes(action.kind))
   )
     reject('Resolve occupation first');
@@ -1325,11 +1386,22 @@ export function applyCampaign(
   else if (action.kind === 'occupy')
     occupy(board, s, actor, action.armies, random);
   else if (action.kind === 'continue-invasion') {
-    const p = s.pending;
-    if (!p?.invasion || p.arrivals[0]?.playerId !== actor || p.joint)
-      reject('No invasion choice');
+    const p = invasionChoice(s, actor);
     if (p.continuing) reject('Invasion already continuing');
     p.continuing = true;
+  } else if (action.kind === 'propose-condominium') {
+    const p = invasionChoice(s, actor);
+    // One offer for each invasion.
+    if (p.continuing || p.condominium) reject('Condominio already proposed');
+    p.condominium = 'proposed';
+  } else if (action.kind === 'respond-condominium') {
+    const p = s.pending;
+    if (p?.condominium !== 'proposed' || condominiumPartner(s) !== actor)
+      reject('No condominio response');
+    p.condominium = action.accept ? 'accepted' : 'rejected';
+  } else if (action.kind === 'abandon-invasion') {
+    invasionChoice(s, actor);
+    abandonInvasion(s);
   } else if (action.kind === 'regroup-forces')
     moveForces(board, s, actor, action);
   else if (action.kind === 'finish-attacks') {
@@ -1377,7 +1449,9 @@ export function applyCampaign(
     // Shortcut from any moment of the hostility turn: a pending occupation moves one army.
     if (!legal().canEndTurn) reject('Cannot end turn now');
     while (s.pending && s.phase !== 'finished')
-      occupy(board, s, actor, 1, random);
+      if (s.pending.invasion && s.pending.condominium !== 'accepted')
+        abandonInvasion(s);
+      else occupy(board, s, actor, 1, random);
     if (['attack', 'regroup'].includes(s.phase)) {
       s.allyWindows = s.allyWindows.filter(
         (id) => !s.eliminations[id] && !resting(s, id),
@@ -1651,6 +1725,11 @@ export function assertCampaign(
   }
   if (s.pending) {
     unique(s.pending.arrivals.map((a) => a.playerId));
+    if (
+      s.pending.condominium &&
+      (!s.pending.invasion || s.pending.joint || !condominiumPartner(s))
+    )
+      reject('Invalid condominio offer');
     if (s.pending.arrivals.length === 0 || !known.has(s.pending.targetId))
       reject('Invalid occupation checkpoint');
     const dest = territory(s, s.pending.targetId);

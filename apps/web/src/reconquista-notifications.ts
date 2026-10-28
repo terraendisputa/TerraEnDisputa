@@ -54,6 +54,13 @@ function reconquistaPanelChanges(
       )
         accepted++;
     }
+    const offer = next.campaign.occupation;
+    if (
+      offer?.condominium === 'proposed' &&
+      previous.campaign?.occupation?.condominium !== 'proposed' &&
+      offer.arrivals[0]?.playerId !== me
+    )
+      proposed++;
     const messages = [
       proposed > 0 &&
         (proposed === 1

@@ -31,6 +31,12 @@ export const campaignActionSchema = z.discriminatedUnion('kind', [
   }),
   z.strictObject({ kind: z.literal('occupy'), armies: positive }),
   z.strictObject({ kind: z.literal('continue-invasion') }),
+  z.strictObject({ kind: z.literal('propose-condominium') }),
+  z.strictObject({
+    kind: z.literal('respond-condominium'),
+    accept: z.boolean(),
+  }),
+  z.strictObject({ kind: z.literal('abandon-invasion') }),
   z.strictObject({
     kind: z.literal('regroup-forces'),
     originId: id,
@@ -116,6 +122,7 @@ const occupation = z.strictObject({
   invasion: z.boolean(),
   continuing: z.boolean(),
   originalDefenders: ids,
+  condominium: z.enum(['proposed', 'accepted', 'rejected']).optional(),
 });
 const pact = z.strictObject({
   id,

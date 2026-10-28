@@ -4,6 +4,7 @@
  */
 import {
   applyCampaign,
+  condominiumPartner,
   type Campaign,
   type CampaignAction,
 } from './campaign.js';
@@ -120,9 +121,19 @@ function inTheWay(
 /** The answer to the first pact or alliance waiting for the bot. */
 export function diplomacyAnswer(x: DiplomacyContext): CampaignAction | null {
   const { c, bot } = x;
+  const coin = () => x.random() < 0.5;
+  // A condominio offered by whoever expelled the other occupant: Easy at
+  // random, the others accept a stronger player (2026-10-28).
+  if (c.pending?.condominium === 'proposed' && condominiumPartner(c) === bot)
+    return {
+      kind: 'respond-condominium',
+      accept:
+        x.level === 'easy'
+          ? coin()
+          : strength(c, c.pending.arrivals[0]!.playerId) > strength(c, bot),
+    };
   if (c.pending || c.phase === 'zone-decision' || c.phase === 'finished')
     return null;
-  const coin = () => x.random() < 0.5;
   const pact = c.pacts.find(
     (p) => p.status === 'proposed' && p.partnerId === bot,
   );

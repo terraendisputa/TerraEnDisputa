@@ -491,6 +491,21 @@ function campaignMove(
   const pending = c.pending;
   if (pending?.arrivals[0]?.playerId === bot) {
     const arrival = pending.arrivals[0];
+    // After expelling one occupant, bots never offer a condominio: they keep
+    // attacking the other while they can (2026-10-28).
+    if (
+      pending.invasion &&
+      !pending.joint &&
+      pending.condominium !== 'accepted'
+    ) {
+      if (!pending.continuing) return move({ kind: 'continue-invasion' });
+      const route = legal.attacks[0];
+      return move(
+        route
+          ? { kind: 'attack-country', ...route }
+          : { kind: 'abandon-invasion' },
+      );
+    }
     return move({
       kind: 'occupy',
       armies: occupying(
@@ -563,11 +578,7 @@ function campaignMove(
     if (diplomacy) return move(diplomacy);
     const defenders = (r: { targetId: string; defenderId: string }) =>
       map.armies(r.targetId, r.defenderId);
-    // A country it already shares is attacked from inside: from outside,
-    // winning it fails (open question to the user, 2026-10-27).
-    const routes = legal.attacks.filter(
-      (r) => r.originId === r.targetId || !map.owns(r.targetId, bot),
-    );
+    const routes = legal.attacks;
     const attack = hard
       ? hardAttack(
           map,
