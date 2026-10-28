@@ -10,6 +10,7 @@ import './board-art.css';
 import './host.css';
 import './immersive.css';
 import './landing-art.css';
+import './site-controls.css';
 import { tr } from './language.js';
 
 // Each screen loads only when its route needs it.
@@ -107,8 +108,8 @@ function Landing({ encrypted }: { readonly encrypted: boolean }) {
           <a className="button-link secondary" href="/admin">
             {tr('Administrar servidor', 'Manage the server')}
           </a>
-          <LanguageSelect />
         </section>
+        <LanguageSelect full />
       </main>
     </>
   );

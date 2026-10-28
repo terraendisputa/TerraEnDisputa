@@ -29,12 +29,12 @@ const { readThemePreference } = await import(
   `data:text/javascript;base64,${Buffer.from(themeBuild.outputFiles[0].text).toString('base64')}`
 );
 
-await test('TED theme preference reads light and dark, with a light default', () => {
+await test('TED theme preference reads light and dark, with a dark default', () => {
   for (const [value, expected] of [
-    [null, 'light'],
+    [null, 'dark'],
     ['light', 'light'],
     ['dark', 'dark'],
-    ['invalid', 'light'],
+    ['invalid', 'dark'],
   ]) {
     assert.equal(
       readThemePreference({

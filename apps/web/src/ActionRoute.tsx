@@ -82,7 +82,7 @@ export function ActionRoute({
             value={source ?? ''}
             onChange={(e) => onSource?.(e.target.value || undefined)}
           >
-            <option value="">{tr('Elegí origen', 'Choose origin')}</option>
+            <option value="">{tr('Elegí origen', 'Choose')}</option>
             {sources?.map((id) => (
               <option key={id} value={id}>
                 {labelOf(id)}
@@ -100,7 +100,7 @@ export function ActionRoute({
           disabled={disabled || targets.length === 0}
           onChange={(e) => onTarget(e.target.value || undefined)}
         >
-          <option value="">{tr('Elegí destino', 'Choose destination')}</option>
+          <option value="">{tr('Elegí destino', 'Choose')}</option>
           {targets.map((id) => (
             <option key={id} value={id}>
               {labelOf(id)}

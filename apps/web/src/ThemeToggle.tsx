@@ -8,7 +8,7 @@ export function ThemeToggle() {
     try {
       return readThemePreference(localStorage);
     } catch {
-      return 'light';
+      return 'dark';
     }
   });
   useEffect(() => {

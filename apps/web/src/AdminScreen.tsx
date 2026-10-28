@@ -18,6 +18,8 @@ import { playerColorLabel } from './colors.js';
 import { redeemAdminLaunch } from './admin-launch.js';
 import { AdminBoxes } from './AdminBoxes.js';
 import { LanguageSelect } from './LanguageSelect.js';
+import { TextSizeToggle } from './TextSizeToggle.js';
+import { ThemeToggle } from './ThemeToggle.js';
 import { clockText } from './TurnSummary.js';
 import { clockState, durationText } from './admin-clock.js';
 import { ReconquistaAdminDetail } from './ReconquistaAdmin.js';
@@ -88,14 +90,6 @@ export function AdminScreen() {
     const update = () => setWideAdmin(media.matches);
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
-  }, []);
-  useEffect(() => {
-    const previous = document.documentElement.dataset.theme;
-    document.documentElement.dataset.theme = 'light';
-    return () => {
-      if (previous) document.documentElement.dataset.theme = previous;
-      else delete document.documentElement.dataset.theme;
-    };
   }, []);
   const operationLock = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -298,6 +292,7 @@ export function AdminScreen() {
             )}
           </p>
         </section>
+        <LanguageSelect full />
       </main>
     );
 
@@ -334,7 +329,10 @@ export function AdminScreen() {
           {GAME_SHORT_NAME}
         </a>
         <span>{tr('Panel del anfitrión', "Host's panel")}</span>
-        <LanguageSelect />
+        <div className="admin-tools">
+          <TextSizeToggle />
+          <ThemeToggle />
+        </div>
       </header>
       <aside className="panel admin-sidebar">
         <details className="admin-create" open={wideAdmin || undefined}>
@@ -377,12 +375,12 @@ export function AdminScreen() {
                     setPlayerCount((count) => Math.max(4, count));
                 }}
               >
+                <option value="reconquista">
+                  {tr('Reconquista', 'Retake')}
+                </option>
                 <option value="classic">{tr('Clásico', 'Classic')}</option>
                 <option value="competitive">
                   {tr('Competitivo', 'Competitive')}
-                </option>
-                <option value="reconquista">
-                  {tr('Reconquista', 'Retake')}
                 </option>
               </select>
               {mode === 'competitive' && (
@@ -1289,6 +1287,7 @@ export function AdminScreen() {
           </>
         )}
       </section>
+      <LanguageSelect full />
     </main>
   );
 }

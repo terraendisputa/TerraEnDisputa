@@ -1281,26 +1281,9 @@
 }
 
 @layer tactical {
-  /* Español / English: a small pair at the bottom of the menus and in the admin bar. */
-  .language-select {
+  .admin-layout .topbar > .admin-tools {
     display: flex;
-    justify-content: center;
-    gap: 0.35rem;
-    margin-top: 1rem;
-  }
-  .language-select button {
-    min-height: 2rem;
-    min-width: 2.6rem;
-    padding: 0.25rem 0.6rem;
-    font-size: 0.8rem;
-  }
-  .language-select button[aria-pressed='true'] {
-    background: var(--button);
-    border-color: var(--button);
-    color: white;
-  }
-  .topbar > .language-select {
-    display: flex;
-    margin: 0 0 0 auto;
+    gap: 8px;
+    margin-left: auto;
   }
 }

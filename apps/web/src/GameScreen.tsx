@@ -22,6 +22,7 @@ import { useLiveGame } from './use-live-game.js';
 import { playerColorLabel } from './colors.js';
 import { api, ApiError } from './api.js';
 import { ThemeToggle } from './ThemeToggle.js';
+import { TextSizeToggle } from './TextSizeToggle.js';
 import { LanguageSelect } from './LanguageSelect.js';
 import { GamePanels, DicePanel } from './GamePanels.js';
 import type { GamePanel } from './GamePanels.js';
@@ -735,6 +736,7 @@ function GameView({
           >
             <UiIcon name="leave" />
           </button>
+          <TextSizeToggle />
           <ThemeToggle />
           {leaveError && <span role="alert">{leaveError}</span>}
         </div>
@@ -824,8 +826,8 @@ function GameView({
                 <code>{snapshot.selfPlayerId}</code>
               </dd>
             </dl>
-            <LanguageSelect />
           </aside>
+          <LanguageSelect />
         </div>
       ) : (
         <div className="gameplay-stage">

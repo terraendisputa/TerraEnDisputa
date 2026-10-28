@@ -201,8 +201,8 @@ export function PlayerEntry({
             {error}
           </p>
         )}
-        <LanguageSelect />
       </section>
+      <LanguageSelect />
     </main>
   );
 }

@@ -120,7 +120,7 @@ export function ReconquistaObjective({
                         {own
                           ? tr(
                               `El ${colorName} sos vos.`,
-                              `${colorName} is you.`,
+                              `You are ${colorName}.`,
                             )
                           : tr(
                               `El ${colorName} no está en juego.`,

@@ -1198,7 +1198,8 @@
 .game-shell.playing-shell .action-cluster,
 .game-shell.playing-shell .action-cluster:not(.mobile-actions-open) {
   width: max-content;
-  max-width: 154px;
+  /* Wide enough for «Bot Bombthrower's turn» and the situation name. */
+  max-width: 230px;
   max-height: calc(100dvh - 80px);
   bottom: max(var(--inset), env(safe-area-inset-bottom));
 }

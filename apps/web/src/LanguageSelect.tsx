@@ -1,32 +1,34 @@
 import { changeLanguage, language, type Language } from './language.js';
+import { UiIcon } from './UiIcon.js';
 
-const options: readonly [Language, string, string][] = [
-  ['es', 'ES', 'Español'],
-  ['en', 'EN', 'English'],
-];
+const names: Record<Language, readonly [string, string]> = {
+  es: ['Español', 'Idioma: Español'],
+  en: ['English', 'Language: English'],
+};
 
-/** Español / English switch for the landing, the lobby and the admin. */
-export function LanguageSelect() {
+/**
+ * Español / English, always at the bottom center of the page, where websites
+ * usually keep it. `full` adds «Idioma:» / «Language:» (landing and admin).
+ */
+export function LanguageSelect({ full = false }: { readonly full?: boolean }) {
   return (
-    <div
-      className="language-select"
-      role="group"
-      aria-label={language === 'en' ? 'Language' : 'Idioma'}
-    >
-      {options.map(([id, short, name]) => (
-        <button
-          key={id}
-          type="button"
-          className="secondary"
-          lang={id}
-          aria-pressed={language === id}
-          title={name}
-          aria-label={name}
-          onClick={() => changeLanguage(id)}
+    <footer className="site-language">
+      <label>
+        <UiIcon name="globe" />
+        <span className="visually-hidden">
+          {language === 'en' ? 'Language' : 'Idioma'}
+        </span>
+        <select
+          value={language}
+          onChange={(event) => changeLanguage(event.target.value as Language)}
         >
-          {short}
-        </button>
-      ))}
-    </div>
+          {(Object.keys(names) as Language[]).map((id) => (
+            <option key={id} value={id} lang={id}>
+              {names[id][full ? 1 : 0]}
+            </option>
+          ))}
+        </select>
+      </label>
+    </footer>
   );
 }

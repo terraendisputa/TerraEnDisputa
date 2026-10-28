@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { GamePanels, type GamePanel } from './GamePanels.js';
 import { CombatDice } from './GameplayControls.js';
 import { ThemeToggle } from './ThemeToggle.js';
+import { TextSizeToggle } from './TextSizeToggle.js';
 import { LanguageSelect } from './LanguageSelect.js';
 import { TurnSound } from './PlayerRoster.js';
 import { MusicToggle } from './MusicToggle.js';
@@ -599,6 +600,7 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
           >
             <UiIcon name="leave" />
           </button>
+          <TextSizeToggle />
           <ThemeToggle />
         </div>
       </header>
@@ -1043,8 +1045,8 @@ function ReconquistaLobby({
               {game.error}
             </p>
           )}
-          <LanguageSelect />
         </section>
+        <LanguageSelect />
       </main>
     );
   return (
@@ -1066,6 +1068,7 @@ function ReconquistaLobby({
           {connectionLabels[game.connection]}
         </p>
         <div className="seat-exit-bar">
+          <TextSizeToggle />
           <ThemeToggle />
         </div>
       </header>
@@ -1135,8 +1138,8 @@ function ReconquistaLobby({
           >
             {self.ready ? tr('Listo', 'Ready') : tr('Estoy listo', "I'm ready")}
           </button>
-          <LanguageSelect />
         </aside>
+        <LanguageSelect />
       </div>
     </main>
   );
