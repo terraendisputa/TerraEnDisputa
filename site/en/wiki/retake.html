@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Retake · Terra en disputa</title>
+    <meta
+      name="description"
+      content="Rules of Retake in Terra en disputa: situations, blockade, missiles, continent cards, pacts, alliances and condominiums."
+    />
+    <link rel="icon" type="image/svg+xml" href="../../img/ted-clasico.svg" />
+    <link
+      rel="alternate"
+      hreflang="es"
+      href="https://unlisted3954.github.io/TerraEnDisputa/wiki/reconquista.html"
+    />
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://unlisted3954.github.io/TerraEnDisputa/en/wiki/retake.html"
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Retake · Terra en disputa" />
+    <meta
+      property="og:description"
+      content="Rules of Retake in Terra en disputa: situations, blockade, missiles, continent cards, pacts, alliances and condominiums."
+    />
+    <meta
+      property="og:image"
+      content="https://unlisted3954.github.io/TerraEnDisputa/img/vista-previa.jpg"
+    />
+    <meta property="og:locale" content="en_US" />
+    <link rel="stylesheet" href="../../estilo.css" />
+  </head>
+  <body>
+    <header class="wiki-cabecera">
+      <div class="contenedor">
+        <nav class="barra">
+          <a class="marca" href="../">TED</a>
+          <span class="barra-enlaces">
+            <a href="../">Home</a>
+            <a href="https://github.com/unlisted3954/TerraEnDisputa/releases"
+              >Download</a
+            >
+            <a href="../../wiki/reconquista.html" hreflang="es" lang="es"
+              >Español</a
+            >
+          </span>
+        </nav>
+      </div>
+    </header>
+    <div class="contenedor wiki">
+      <nav class="wiki-indice" aria-label="How to play">
+        <p>How to play</p>
+        <ul>
+          <li><a href="./">How to play</a></li>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="games.html">Create and join</a></li>
+          <li><a href="classic.html">Classic</a></li>
+          <li><a href="competitive.html">Competitive</a></li>
+          <li><a href="retake.html" aria-current="page">Retake</a></li>
+        </ul>
+      </nav>
+      <main class="articulo">
+        <h1>Retake</h1>
+        <p class="bajada">
+          The biggest mode: 72 countries across seven continents, a new
+          situation card every round, missiles, alliances to attack together and
+          shared countries. For 2 to 6 players, with or without bots.
+        </p>
+        <figure>
+          <img
+            src="../../img/reconquista.webp"
+            width="1440"
+            height="900"
+            loading="lazy"
+            alt="Retake map with 72 countries and the initial placement menu"
+          />
+        </figure>
+        <p>
+          The basics come from <a href="classic.html">Classic</a>: reinforce,
+          attack with dice, regroup, draw cards and exchange them. This page
+          explains what changes.
+        </p>
+
+        <section id="board">
+          <h2>The board</h2>
+          <div class="tabla">
+            <table>
+              <thead>
+                <tr>
+                  <th>Continent</th>
+                  <th>Countries</th>
+                  <th>Extra armies</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>North America</td>
+                  <td>12</td>
+                  <td>6</td>
+                </tr>
+                <tr>
+                  <td>Central America</td>
+                  <td>6</td>
+                  <td>3</td>
+                </tr>
+                <tr>
+                  <td>South America</td>
+                  <td>8</td>
+                  <td>4</td>
+                </tr>
+                <tr>
+                  <td>Europe</td>
+                  <td>16</td>
+                  <td>8</td>
+                </tr>
+                <tr>
+                  <td>Asia</td>
+                  <td>16</td>
+                  <td>8</td>
+                </tr>
+                <tr>
+                  <td>Africa</td>
+                  <td>8</td>
+                  <td>4</td>
+                </tr>
+                <tr>
+                  <td>Oceania</td>
+                  <td>6</td>
+                  <td>3</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            There are 16 islands, which count for some objectives. A country can
+            have two owners at once: that is a
+            <a href="#condominiums">condominium</a>.
+          </p>
+        </section>
+
+        <section id="setup">
+          <h2>Setup</h2>
+          <ol>
+            <li>
+              Countries are dealt at random, with one army in each. Dice assign
+              the leftovers.
+            </li>
+            <li>
+              Initial placement: two passes, of 8 and 4 armies. With two players
+              it is a single pass of 18.
+            </li>
+            <li>
+              The first situation card is revealed. If it is Extra
+              reinforcements, everyone places that extra before going on.
+            </li>
+            <li>
+              First hostility: each player takes one attack-only turn, without
+              missiles.
+            </li>
+          </ol>
+          <p>Then full turns begin.</p>
+        </section>
+
+        <section id="rounds">
+          <h2>Rounds and situations</h2>
+          <p>
+            Each round starts with a situation card that applies to the whole
+            round. Then everyone reinforces in turn, and after that everyone
+            plays their attack turn.
+          </p>
+          <div class="tabla">
+            <table>
+              <thead>
+                <tr>
+                  <th>Situation</th>
+                  <th>Effect</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Classic combat</td>
+                  <td>The round is played with the normal rules.</td>
+                </tr>
+                <tr>
+                  <td>Snow</td>
+                  <td>The defender adds one die, up to a maximum of 4.</td>
+                </tr>
+                <tr>
+                  <td>Tailwind</td>
+                  <td>The attacker adds one die, up to a maximum of 4.</td>
+                </tr>
+                <tr>
+                  <td>Crisis</td>
+                  <td>
+                    Each player rolls a die. The lowest roll gets no card this
+                    round.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Extra reinforcements</td>
+                  <td>
+                    Before reinforcement, each player places extra armies equal
+                    to half their countries.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Open borders</td>
+                  <td>
+                    Attacks are only allowed between countries on different
+                    continents.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Closed borders</td>
+                  <td>
+                    Attacks are only allowed between countries on the same
+                    continent.
+                  </td>
+                </tr>
+                <tr>
+                  <td>A color rests</td>
+                  <td>That color cannot attack or regroup this round.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            To see the round's situation, tap its indicator or press
+            <kbd>S</kbd>.
+          </p>
+        </section>
+
+        <section id="reinforcement">
+          <h2>Reinforcement and blockade</h2>
+          <p>
+            You get half your countries (at least 4) plus the extras of every
+            continent where you are in every country, even if you share some of
+            them.
+          </p>
+          <p>
+            A country surrounded by a single rival is
+            <strong>blockaded</strong>: that happens when it has at least 3
+            neighbors and all of them belong to that rival, with 2 or more
+            armies each. A blockaded country cannot receive armies or regroups.
+            If it is your last country, it does not count as blockaded.
+          </p>
+        </section>
+
+        <section id="attack">
+          <h2>Attack</h2>
+          <p>
+            Dice work as in Classic, with one addition: if you have at least
+            twice the defender's armies and they have 3 or more, you roll
+            <strong>4 dice</strong>. When you conquer a country you keep the
+            missiles that were in it.
+          </p>
+        </section>
+
+        <section id="missiles">
+          <h2>Missiles</h2>
+          <ul>
+            <li>
+              During reinforcement you can turn
+              <strong>6 armies into 1 missile</strong>. At least one army must
+              stay in the country.
+            </li>
+            <li>
+              A missile reaches countries 1, 2 or 3 steps away, along the
+              shortest path. It removes 3, 2 or 1 armies depending on the
+              distance.
+            </li>
+            <li>
+              To fire, you need more missiles in your country than the defender
+              has in theirs.
+            </li>
+            <li>
+              A missile never empties a country: the defender must have more
+              armies than the damage.
+            </li>
+            <li>Missiles can be regrouped like armies.</li>
+            <li>There are no missiles during setup or the first hostility.</li>
+          </ul>
+          <p>Press <kbd>M</kbd> to open the missile shot.</p>
+        </section>
+
+        <section id="cards">
+          <h2>Cards and exchanges</h2>
+          <p>
+            At the end of your turn you get a card if you conquered one country,
+            or two countries once you have made three exchanges. Two conquests
+            made attacking together with an ally also count. You can hold up to
+            5 cards.
+          </p>
+          <ul>
+            <li>
+              If you own the country of a card you drew, you can claim
+              <strong>3 armies</strong> there. Inherited cards give no bonus.
+            </li>
+            <li>
+              The symbols are plane, ship and tank. The soldier and the wildcard
+              count as any symbol. The supercard is exchanged on its own.
+            </li>
+            <li>
+              If you hold a whole continent without sharing any country, you can
+              take its <strong>continent card</strong>. Asia, Europe and North
+              America are exchanged on their own, and the others count as one or
+              two symbols. You lose it if you lose the continent, and each
+              player can use each continent card only once.
+            </li>
+            <li>
+              You make at most one exchange per round, during reinforcement or
+              when closing your turn.
+            </li>
+          </ul>
+          <div class="tabla">
+            <table>
+              <thead>
+                <tr>
+                  <th>Exchange</th>
+                  <th>1st</th>
+                  <th>2nd</th>
+                  <th>3rd</th>
+                  <th>4th</th>
+                  <th>After that</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Armies</td>
+                  <td>6</td>
+                  <td>10</td>
+                  <td>15</td>
+                  <td>20</td>
+                  <td>5 more each time</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="pacts">
+          <h2>Pacts</h2>
+          <p>
+            Pacts are offered from the <strong>Pacts</strong> panel and start
+            when the other player accepts. The game blocks the attacks and shots
+            a pact forbids.
+          </p>
+          <div class="tabla">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pact</th>
+                  <th>What it protects</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Between countries</td>
+                  <td>
+                    One country of each, 3 steps apart or less. You do not
+                    attack each other there, and no missile crosses the path
+                    between them.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Within a continent</td>
+                  <td>
+                    You do not attack each other inside a continent where you
+                    both are.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Between borders</td>
+                  <td>
+                    You do not attack each other between two continents where
+                    you have neighboring countries.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Worldwide</td>
+                  <td>You do not attack each other anywhere.</td>
+                </tr>
+                <tr>
+                  <td>International zone</td>
+                  <td>
+                    A country of yours with one army and no missiles, bordering
+                    both of you. Both of you must have made your third exchange.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            In an international zone you take turns holding the country. If on
+            your turn you could conquer it and did not, or you left it with more
+            than one army, you lose a random card and your partner decides
+            whether the zone goes on. Each player can have only one zone.
+          </p>
+          <p>
+            To leave a pact you break it: it stays in force until the other
+            player finishes one more turn.
+          </p>
+        </section>
+
+        <section id="alliances">
+          <h2>Attack together</h2>
+          <p>
+            Two players can join forces to attack a third player's country. Each
+            picks a country of their own that borders the target and has at
+            least 2 armies. The other player accepts, the one who proposed it
+            starts it on their attack turn, and both take turns rolling the
+            dice.
+          </p>
+          <p>
+            If they conquer it, both move in, with up to 2 armies each, and the
+            country becomes a condominium. Until the ally's turn in the next
+            round, the two origin countries are protected from each other.
+          </p>
+        </section>
+
+        <section id="condominiums">
+          <h2>Condominiums</h2>
+          <p>
+            A condominium is a country with two owners. The partners cannot
+            attack each other inside it, and each counts the country as their
+            own.
+          </p>
+          <ul>
+            <li>
+              To attack a condominium with dice, you must first attack the
+              occupant with more armies.
+            </li>
+            <li>
+              If you drive out one of the two, you can offer a condominium to
+              the one left. If they do not accept, you can keep attacking them
+              from inside or withdraw and leave them the country.
+            </li>
+          </ul>
+        </section>
+
+        <section id="objectives">
+          <h2>Objectives and victory</h2>
+          <p>
+            The common objective is to hold <strong>45 countries</strong>. Each
+            player also has a secret objective, of occupation or of elimination.
+          </p>
+          <ul>
+            <li>
+              With 2 players, each has two secret objectives and must meet both.
+            </li>
+            <li>
+              With 3 players, occupation objectives also require 10 countries
+              beyond those of the objective.
+            </li>
+            <li>
+              With 2 or 3 players there are no elimination objectives and no
+              35-country objective.
+            </li>
+            <li>
+              If you must eliminate someone and another player does it first,
+              you need 45 countries instead.
+            </li>
+          </ul>
+        </section>
+
+        <section id="express">
+          <h2>Retake Express</h2>
+          <p>
+            With the <strong>Express</strong> duration, the game lasts 40
+            minutes with 2 or 3 players, 60 with 4 and 80 with 5 or 6. Then two
+            final rounds are played. Setup turns last 2 minutes, full turns 3
+            and final round turns 4.
+          </p>
+          <p>
+            If time runs out, whoever holds the most countries wins, with the
+            same tiebreak as Classic: armies, exchanges and cards. If someone
+            disconnects, the game waits 5 minutes and then a bot can play for
+            them.
+          </p>
+        </section>
+        <nav class="paginacion" aria-label="Pages">
+          <a href="competitive.html">← Competitive</a>
+        </nav>
+      </main>
+    </div>
+    <footer>
+      <div class="contenedor">
+        <p>
+          Questions or ideas? Post them in
+          <a href="https://github.com/unlisted3954/TerraEnDisputa/discussions"
+            >Discussions</a
+          >.
+        </p>
+        <p>
+          Terra en disputa is not affiliated with, endorsed or sponsored by the
+          owners or publishers of T.E.G.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

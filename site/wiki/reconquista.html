@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reconquista · Terra en disputa</title>
+    <meta
+      name="description"
+      content="Reglas de Reconquista en Terra en disputa: situaciones, bloqueo, misiles, cartas de continente, pactos, alianzas y condominios."
+    />
+    <link rel="icon" type="image/svg+xml" href="../img/ted-clasico.svg" />
+    <link
+      rel="alternate"
+      hreflang="es"
+      href="https://unlisted3954.github.io/TerraEnDisputa/wiki/reconquista.html"
+    />
+    <link
+      rel="alternate"
+      hreflang="en"
+      href="https://unlisted3954.github.io/TerraEnDisputa/en/wiki/retake.html"
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Reconquista · Terra en disputa" />
+    <meta
+      property="og:description"
+      content="Reglas de Reconquista en Terra en disputa: situaciones, bloqueo, misiles, cartas de continente, pactos, alianzas y condominios."
+    />
+    <meta
+      property="og:image"
+      content="https://unlisted3954.github.io/TerraEnDisputa/img/vista-previa.jpg"
+    />
+    <meta property="og:locale" content="es_AR" />
+    <link rel="stylesheet" href="../estilo.css" />
+  </head>
+  <body>
+    <header class="wiki-cabecera">
+      <div class="contenedor">
+        <nav class="barra">
+          <a class="marca" href="../">TED</a>
+          <span class="barra-enlaces">
+            <a href="../">Inicio</a>
+            <a href="https://github.com/unlisted3954/TerraEnDisputa/releases"
+              >Descargar</a
+            >
+            <a href="../en/wiki/retake.html" hreflang="en" lang="en">English</a>
+          </span>
+        </nav>
+      </div>
+    </header>
+    <div class="contenedor wiki">
+      <nav class="wiki-indice" aria-label="Cómo jugar">
+        <p>Cómo jugar</p>
+        <ul>
+          <li><a href="./">Cómo jugar</a></li>
+          <li><a href="tutorial.html">Tutorial</a></li>
+          <li><a href="partidas.html">Crear y unirse</a></li>
+          <li><a href="clasico.html">Clásico</a></li>
+          <li><a href="competitivo.html">Competitivo</a></li>
+          <li>
+            <a href="reconquista.html" aria-current="page">Reconquista</a>
+          </li>
+        </ul>
+      </nav>
+      <main class="articulo">
+        <h1>Reconquista</h1>
+        <p class="bajada">
+          La modalidad más grande: 72 países en siete continentes, una carta de
+          situación nueva en cada ronda, misiles, alianzas para atacar juntos y
+          países compartidos. Se juega de 2 a 6 personas, con o sin bots.
+        </p>
+        <figure>
+          <img
+            src="../img/reconquista.webp"
+            width="1440"
+            height="900"
+            loading="lazy"
+            alt="Mapa de Reconquista con 72 países y el menú de incorporación inicial"
+          />
+        </figure>
+        <p>
+          La base es la del <a href="clasico.html">Clásico</a>: incorporar,
+          atacar con dados, reagrupar, pedir cartas y canjearlas. Esta página
+          explica lo que cambia.
+        </p>
+
+        <section id="tablero">
+          <h2>El tablero</h2>
+          <div class="tabla">
+            <table>
+              <thead>
+                <tr>
+                  <th>Continente</th>
+                  <th>Países</th>
+                  <th>Ejércitos extra</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>América del Norte</td>
+                  <td>12</td>
+                  <td>6</td>
+                </tr>
+                <tr>
+                  <td>América Central</td>
+                  <td>6</td>
+                  <td>3</td>
+                </tr>
+                <tr>
+                  <td>América del Sur</td>
+                  <td>8</td>
+                  <td>4</td>
+                </tr>
+                <tr>
+                  <td>Europa</td>
+                  <td>16</td>
+                  <td>8</td>
+                </tr>
+                <tr>
+                  <td>Asia</td>
+                  <td>16</td>
+                  <td>8</td>
+                </tr>
+                <tr>
+                  <td>África</td>
+                  <td>8</td>
+                  <td>4</td>
+                </tr>
+                <tr>
+                  <td>Oceanía</td>
+                  <td>6</td>
+                  <td>3</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Hay 16 islas, que cuentan para algunos objetivos. Un país puede
+            tener dos dueños a la vez: eso es un
+            <a href="#condominios">condominio</a>.
+          </p>
+        </section>
+
+        <section id="preparacion">
+          <h2>Preparación</h2>
+          <ol>
+            <li>
+              Los países se reparten al azar, con un ejército en cada uno. Los
+              que sobran se asignan con dados.
+            </li>
+            <li>
+              Colocación inicial: dos vueltas, de 8 y de 4 ejércitos. Con dos
+              jugadores es una sola vuelta de 18.
+            </li>
+            <li>
+              Se revela la primera carta de situación. Si es Refuerzos extra,
+              todos colocan ese extra antes de seguir.
+            </li>
+            <li>
+              Primera hostilidad: cada jugador juega un turno solo de ataque,
+              sin misiles.
+            </li>
+          </ol>
+          <p>Después empiezan los turnos completos.</p>
+        </section>
+
+        <section id="rondas">
+          <h2>Rondas y situaciones</h2>
+          <p>
+            Cada ronda empieza con una carta de situación, que vale para toda la
+            ronda. Después todos incorporan por turno, y luego todos juegan su
+            turno de ataque.
+          </p>
+          <div class="tabla">
+            <table>
+              <thead>
+                <tr>
+                  <th>Situación</th>
+                  <th>Efecto</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Combate clásico</td>
+                  <td>La ronda se juega con las reglas normales.</td>
+                </tr>
+                <tr>
+                  <td>Nieve</td>
+                  <td>El defensor suma un dado, hasta un máximo de 4.</td>
+                </tr>
+                <tr>
+                  <td>Viento a favor</td>
+                  <td>El atacante suma un dado, hasta un máximo de 4.</td>
+                </tr>
+                <tr>
+                  <td>Crisis</td>
+                  <td>
+                    Cada jugador tira un dado. Quien saca menos no recibe carta
+                    en esta ronda.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Refuerzos extra</td>
+                  <td>
+                    Antes de la incorporación, cada jugador coloca la mitad de
+                    sus países en ejércitos extra.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Fronteras abiertas</td>
+                  <td>Solo se ataca entre países de continentes distintos.</td>
+                </tr>
+                <tr>
+                  <td>Fronteras cerradas</td>
+                  <td>Solo se ataca entre países del mismo continente.</td>
+                </tr>
+                <tr>
+                  <td>Descansa un color</td>
+                  <td>Ese color no puede atacar ni reagrupar en esta ronda.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Para ver la situación de la ronda tocá su indicador o usá la tecla
+            <kbd>S</kbd>.
+          </p>
+        </section>
+
+        <section id="incorporacion">
+          <h2>Incorporación y bloqueo</h2>
+          <p>
+            Recibís la mitad de tus países (como mínimo 4) y los extras de cada
+            continente donde estás en todos los países, aunque sea compartiendo
+            alguno.
+          </p>
+          <p>
+            Un país rodeado por un mismo rival queda <strong>bloqueado</strong>:
+            pasa cuando tiene al menos 3 limítrofes y todos son de ese rival,
+            con 2 ejércitos o más cada uno. Un país bloqueado no recibe
+            ejércitos ni reagrupamientos. Si es tu último país, no cuenta como
+            bloqueado.
+          </p>
+        </section>
+
+        <section id="ataque">
+          <h2>Ataque</h2>
+          <p>
+            Los dados funcionan como en el Clásico, con un agregado: si tenés al
+            menos el doble de ejércitos que el defensor y él tiene 3 o más,
+            tirás
+            <strong>4 dados</strong>. Al conquistar un país te quedás con los
+            misiles que había.
+          </p>
+        </section>
+
+        <section id="misiles">
+          <h2>Misiles</h2>
+          <ul>
+            <li>
+              En la incorporación podés convertir
+              <strong>6 ejércitos en 1 misil</strong>. En el país tiene que
+              quedar al menos un ejército.
+            </li>
+            <li>
+              Un misil alcanza países a 1, 2 o 3 pasos de distancia, contando el
+              camino más corto. Quita 3, 2 o 1 ejércitos según la distancia.
+            </li>
+            <li>
+              Para disparar necesitás más misiles en tu país que los que tiene
+              el defensor en el suyo.
+            </li>
+            <li>
+              Un misil nunca deja un país vacío: el defensor tiene que tener más
+              ejércitos que el daño.
+            </li>
+            <li>Los misiles se pueden reagrupar como los ejércitos.</li>
+            <li>
+              No hay misiles en la preparación ni en la primera hostilidad.
+            </li>
+          </ul>
+          <p>Con la tecla <kbd>M</kbd> abrís el disparo de misil.</p>
+        </section>
+
+        <section id="cartas">
+          <h2>Cartas y canjes</h2>
+          <p>
+            Al final del turno recibís una carta si conquistaste un país, o dos
+            países si ya hiciste tres canjes. También alcanza con dos conquistas
+            hechas atacando junto a un aliado. Podés tener hasta 5 cartas.
+          </p>
+          <ul>
+            <li>
+              Si el país de una carta que sacaste es tuyo, podés cobrar
+              <strong>3 ejércitos</strong> en él. Las cartas heredadas no dan
+              este bono.
+            </li>
+            <li>
+              Los símbolos son avión, barco y tanque. El soldado y el comodín
+              valen cualquier símbolo. La supertarjeta se canjea sola.
+            </li>
+            <li>
+              Si controlás un continente entero sin compartir ningún país, podés
+              tomar su <strong>carta de continente</strong>. Asia, Europa y
+              América del Norte se canjean solas, y las demás valen como uno o
+              dos símbolos. La perdés si perdés el continente, y cada jugador
+              puede usar cada carta de continente una sola vez.
+            </li>
+            <li>
+              Hacés como máximo un canje por ronda, en la incorporación o al
+              cerrar tu turno.
+            </li>
+          </ul>
+          <div class="tabla">
+            <table>
+              <thead>
+                <tr>
+                  <th>Canje</th>
+                  <th>1.º</th>
+                  <th>2.º</th>
+                  <th>3.º</th>
+                  <th>4.º</th>
+                  <th>Siguientes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Ejércitos</td>
+                  <td>6</td>
+                  <td>10</td>
+                  <td>15</td>
+                  <td>20</td>
+                  <td>5 más cada vez</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="pactos">
+          <h2>Pactos</h2>
+          <p>
+            Los pactos se proponen desde el panel <strong>Pactos</strong> y
+            empiezan cuando el otro los acepta. El juego impide los ataques y
+            los disparos que un pacto prohíbe.
+          </p>
+          <div class="tabla">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pacto</th>
+                  <th>Qué protege</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Entre países</td>
+                  <td>
+                    Un país de cada uno, a 3 pasos o menos. No se atacan entre
+                    ellos y ningún misil cruza el camino que los une.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Dentro de un continente</td>
+                  <td>
+                    No se atacan dentro de un continente donde están los dos.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Entre fronteras</td>
+                  <td>
+                    No se atacan entre dos continentes donde tienen países
+                    limítrofes.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Mundial</td>
+                  <td>No se atacan en ningún lado.</td>
+                </tr>
+                <tr>
+                  <td>Zona internacional</td>
+                  <td>
+                    Un país tuyo con un ejército y sin misiles, limítrofe a los
+                    dos. Los dos tienen que haber hecho su tercer canje.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            En una zona internacional los dos se van pasando el país. Si en tu
+            turno podías conquistarla y no lo hiciste, o la dejaste con más de
+            un ejército, perdés una carta al azar y tu socio decide si la zona
+            sigue. Cada jugador puede tener una sola zona.
+          </p>
+          <p>
+            Para salir de un pacto, lo rompés: sigue vigente hasta que el otro
+            jugador termine un turno más.
+          </p>
+        </section>
+
+        <section id="alianzas">
+          <h2>Atacar juntos</h2>
+          <p>
+            Dos jugadores pueden aliarse para atacar el país de un tercero. Cada
+            uno elige un país propio limítrofe al objetivo, con al menos 2
+            ejércitos. El otro la acepta, quien la propuso la inicia en su turno
+            de ataque, y los dos van tirando los dados por turnos.
+          </p>
+          <p>
+            Si lo conquistan, entran los dos, con hasta 2 ejércitos cada uno, y
+            el país queda como condominio. Hasta el turno del aliado en la ronda
+            siguiente, los países de origen de los dos quedan protegidos entre
+            sí.
+          </p>
+        </section>
+
+        <section id="condominios">
+          <h2>Condominios</h2>
+          <p>
+            Un condominio es un país con dos dueños. Los dos socios no pueden
+            atacarse dentro de él, y cada uno cuenta el país como propio.
+          </p>
+          <ul>
+            <li>
+              Para atacar un condominio con dados, primero tenés que atacar al
+              ocupante con más ejércitos.
+            </li>
+            <li>
+              Si expulsás a uno de los dos, podés ofrecerle un condominio al que
+              queda. Si no acepta, podés seguir atacándolo desde adentro o
+              retirarte y dejarle el país.
+            </li>
+          </ul>
+        </section>
+
+        <section id="objetivos">
+          <h2>Objetivos y victoria</h2>
+          <p>
+            El objetivo común es controlar <strong>45 países</strong>. Además,
+            cada jugador tiene un objetivo secreto de ocupación o de
+            destrucción.
+          </p>
+          <ul>
+            <li>
+              Con 2 jugadores, cada uno tiene dos objetivos secretos y debe
+              cumplir los dos.
+            </li>
+            <li>
+              Con 3 jugadores, los objetivos de ocupación piden además 10 países
+              aparte de los del objetivo.
+            </li>
+            <li>
+              Con 2 o 3 jugadores no hay objetivos de destrucción ni el de 35
+              países.
+            </li>
+            <li>
+              Si tu objetivo es destruir a alguien y otro lo elimina primero,
+              pasás a necesitar 45 países.
+            </li>
+          </ul>
+        </section>
+
+        <section id="express">
+          <h2>Reconquista Express</h2>
+          <p>
+            Con la duración <strong>Express</strong>, la partida dura 40 minutos
+            con 2 o 3 jugadores, 60 con 4 y 80 con 5 o 6. Después se juegan dos
+            rondas finales. Los turnos de preparación duran 2 minutos, los
+            turnos completos 3 y los de las rondas finales 4.
+          </p>
+          <p>
+            Si se termina el tiempo, gana quien tenga más países, con el mismo
+            desempate que el Clásico: ejércitos, canjes y cartas. Si alguien se
+            desconecta, la partida lo espera 5 minutos y después un bot puede
+            jugar por él.
+          </p>
+        </section>
+        <nav class="paginacion" aria-label="Páginas">
+          <a href="competitivo.html">← Competitivo</a>
+        </nav>
+      </main>
+    </div>
+    <footer>
+      <div class="contenedor">
+        <p>
+          ¿Preguntas o ideas? Escribí en
+          <a href="https://github.com/unlisted3954/TerraEnDisputa/discussions"
+            >Discussions</a
+          >.
+        </p>
+        <p>
+          Terra en disputa no está afiliado, respaldado ni patrocinado por los
+          titulares o editores de T.E.G.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
