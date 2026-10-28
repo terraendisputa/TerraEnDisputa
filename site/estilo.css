@@ -279,3 +279,248 @@ footer p {
     margin-top: -24px;
   }
 }
+
+/* Cómo jugar: wiki y tutorial */
+
+.wiki-cabecera {
+  background: var(--mar);
+  color: var(--crema);
+  padding: 14px 0;
+}
+
+.wiki-cabecera .barra {
+  margin-bottom: 0;
+}
+
+.wiki-cabecera a {
+  color: var(--crema);
+}
+
+.marca a,
+a.marca {
+  text-decoration: none;
+}
+
+.barra-enlaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.wiki {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+  padding-top: 40px;
+}
+
+.wiki-indice {
+  position: sticky;
+  top: 24px;
+  font-size: 0.95rem;
+}
+
+.wiki-indice p {
+  margin: 0 0 8px;
+  font-weight: 700;
+  color: var(--suave);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+}
+
+.wiki-indice ul {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.wiki-indice a {
+  display: block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.wiki-indice a:hover {
+  background: var(--superficie);
+}
+
+.wiki-indice a[aria-current='page'] {
+  background: var(--superficie);
+  border-left: 3px solid var(--acento);
+  font-weight: 600;
+}
+
+.articulo {
+  max-width: 760px;
+  min-width: 0;
+}
+
+.articulo h1 {
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  margin: 0 0 12px;
+}
+
+.articulo .bajada {
+  font-size: 1.1rem;
+  color: var(--suave);
+  margin: 0 0 32px;
+}
+
+.articulo section {
+  padding: 24px 0 0;
+}
+
+.articulo h2 {
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  margin: 0 0 12px;
+}
+
+.articulo h3 {
+  font-size: 1.2rem;
+  margin: 24px 0 8px;
+}
+
+.articulo li + li {
+  margin-top: 6px;
+}
+
+.articulo figure {
+  margin: 20px 0;
+}
+
+.articulo figure img {
+  border-radius: 10px;
+  border: 1px solid var(--borde);
+}
+
+.articulo figcaption {
+  font-size: 0.9rem;
+  color: var(--suave);
+  margin-top: 6px;
+}
+
+.nota {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--acento);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+
+.nota p {
+  margin: 0;
+}
+
+.tabla {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.tabla table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.tabla th,
+.tabla td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--borde);
+  vertical-align: top;
+}
+
+.tabla th {
+  background: var(--superficie);
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 1px 6px;
+  border: 1px solid var(--borde);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--superficie);
+  font:
+    600 0.85rem ui-monospace,
+    monospace;
+  text-align: center;
+}
+
+.temas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.temas a {
+  display: block;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 18px 20px;
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.temas a:hover {
+  border-color: var(--acento);
+}
+
+.temas strong {
+  display: block;
+  font-family: Georgia, serif;
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+  color: var(--acento);
+}
+
+.temas span {
+  color: var(--suave);
+}
+
+.paginacion {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--borde);
+}
+
+@media (max-width: 860px) {
+  .wiki {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding-top: 24px;
+  }
+
+  .wiki-indice {
+    position: static;
+  }
+
+  .wiki-indice ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .wiki-indice a {
+    border: 1px solid var(--borde);
+  }
+
+  .wiki-indice a[aria-current='page'] {
+    border-left-width: 1px;
+    border-color: var(--acento);
+  }
+}
