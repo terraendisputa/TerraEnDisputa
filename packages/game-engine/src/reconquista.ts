@@ -12,3 +12,4 @@ export * from './reconquista/cards.js';
 export * from './reconquista/victory.js';
 export * from './reconquista/express.js';
 export * from './reconquista/bot.js';
+export type { ReconquistaBotMemory } from './reconquista/bot-diplomacy.js';

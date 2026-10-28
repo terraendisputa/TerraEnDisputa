@@ -6,7 +6,15 @@
 import { campaignLegal, type Campaign } from './campaign.js';
 import { continent, turnActor } from './campaign-politics.js';
 import type { ReconquistaTerritory } from './contracts.js';
-import { reconquistaActor, reconquistaDeclines } from './express.js';
+import {
+  allianceToStart,
+  diplomacyAnswer,
+  diplomacyOffer,
+  zoneDecision,
+  type DiplomacyContext,
+  type ReconquistaBotMemory,
+} from './bot-diplomacy.js';
+import { reconquistaActor } from './express.js';
 import { firstHostilityActions } from './hostilities.js';
 import type { InitialSecret } from './objectives.js';
 import type { PreparationBoard, PreparationRandom } from './preparation.js';
@@ -439,32 +447,46 @@ function campaignMove(
   bot: string,
   level: ReconquistaBotLevel,
   random: PreparationRandom,
+  memory: ReconquistaBotMemory | undefined,
 ): SetupAction | null {
   const move = (action: Extract<SetupAction, { kind: 'campaign' }>['action']) =>
     ({ kind: 'campaign', action }) as const;
+  if (c.phase === 'finished') return null;
   const map = geography(board, c.territories);
   const situation = c.cycle.active!.typeId;
   const hard = level === 'hard';
+  const secrets =
+    c.objectives.find((o) => o.playerId === bot)?.objectives ?? [];
   const values = hard
-    ? wants(
-        board,
-        catalog,
-        map,
-        bot,
-        c.objectives.find((o) => o.playerId === bot)?.objectives ?? [],
-        c.eliminations,
-      )
+    ? wants(board, catalog, map, bot, secrets, c.eliminations)
     : {};
+  const x: DiplomacyContext = {
+    board,
+    catalog,
+    c,
+    bot,
+    level,
+    random,
+    map,
+    values,
+    // Colors it must destroy, while nobody else has.
+    targets: secrets.flatMap((o) =>
+      o.targetPlayerId && !c.eliminations[o.targetPlayerId]
+        ? [o.targetPlayerId]
+        : [],
+    ),
+    chance: (attacker, defender) =>
+      conquestChance(attacker, defender, situation),
+  };
+  // Offers are answered even out of turn.
+  const answer = diplomacyAnswer(x);
+  if (answer) return move(answer);
+  if (campaignLegal(board, c, turnActor(c)).actorId !== bot) return null;
   const place = (ids: readonly string[], amount: number) =>
     hard
       ? hardPlacements(board, map, bot, ids, amount, values, situation)
       : placements(map, bot, ids, amount, level, random);
-  if (c.phase === 'zone-decision')
-    return move({
-      kind: 'decide-zone',
-      pactId: c.zoneDecisions[0]!.pactId,
-      keep: true,
-    });
+  if (c.phase === 'zone-decision') return move(zoneDecision(x));
   const legal = campaignLegal(board, c, bot);
   const pending = c.pending;
   if (pending?.arrivals[0]?.playerId === bot) {
@@ -537,19 +559,26 @@ function campaignMove(
   if (legal.canFinishAllyRegroup) return move({ kind: 'finish-ally-regroup' });
   if (!own) return null;
   if (c.phase === 'attack') {
+    const diplomacy = allianceToStart(x) ?? diplomacyOffer(x, memory);
+    if (diplomacy) return move(diplomacy);
     const defenders = (r: { targetId: string; defenderId: string }) =>
       map.armies(r.targetId, r.defenderId);
+    // A country it already shares is attacked from inside: from outside,
+    // winning it fails (open question to the user, 2026-10-27).
+    const routes = legal.attacks.filter(
+      (r) => r.originId === r.targetId || !map.owns(r.targetId, bot),
+    );
     const attack = hard
       ? hardAttack(
           map,
           bot,
-          legal.attacks,
+          routes,
           values,
           situation,
           !c.conquests[bot]?.individual && c.cards.hands[bot]!.length < 5,
           defenders,
         )
-      : attackChoice(map, bot, legal.attacks, level, random, defenders);
+      : attackChoice(map, bot, routes, level, random, defenders);
     // Hard also fires at the countries its objectives need.
     const wanted = hard
       ? [...legal.missileShots]
@@ -604,8 +633,9 @@ function campaignMove(
 }
 
 /**
- * The bot's next command, or null when it has nothing to do now. Until bots
- * learn diplomacy, every pact or alliance offered to them is rejected.
+ * The bot's next command, or null when it has nothing to do now. It answers
+ * offers even out of turn; it makes offers only when the caller keeps a
+ * memory for it, so it offers once a turn at most.
  */
 export function chooseReconquistaBotMove(
   board: PreparationBoard,
@@ -613,19 +643,12 @@ export function chooseReconquistaBotMove(
   bot: string,
   level: ReconquistaBotLevel,
   random: PreparationRandom,
+  memory?: ReconquistaBotMemory,
 ): SetupAction | null {
   const c = state.campaign;
-  if (
-    c &&
-    c.phase !== 'finished' &&
-    !c.pending &&
-    c.phase !== 'zone-decision'
-  ) {
-    const decline = reconquistaDeclines(state, bot)[0];
-    if (decline) return decline;
-  }
+  if (c)
+    return campaignMove(board, state.catalog, c, bot, level, random, memory);
   if (reconquistaActor(board, state) !== bot) return null;
-  if (c) return campaignMove(board, state.catalog, c, bot, level, random);
   const secrets =
     state.objectives.secrets.find((o) => o.playerId === bot)?.objectives ?? [];
   const situation = state.cycle.active?.typeId ?? '';
