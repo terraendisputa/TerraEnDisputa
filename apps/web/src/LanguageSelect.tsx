@@ -1,20 +1,12 @@
 import { changeLanguage, language, type Language } from './language.js';
-import { UiIcon } from './UiIcon.js';
 
-const names: Record<Language, readonly [string, string]> = {
-  es: ['Español', 'Idioma: Español'],
-  en: ['English', 'Language: English'],
-};
+const names: Record<Language, string> = { es: 'Español', en: 'English' };
 
-/**
- * Español / English, always at the bottom center of the page, where websites
- * usually keep it. `full` adds «Idioma:» / «Language:» (landing and admin).
- */
-export function LanguageSelect({ full = false }: { readonly full?: boolean }) {
+/** Español / English, always at the bottom center of the page, where websites usually keep it. */
+export function LanguageSelect() {
   return (
     <footer className="site-language">
       <label>
-        <UiIcon name="globe" />
         <span className="visually-hidden">
           {language === 'en' ? 'Language' : 'Idioma'}
         </span>
@@ -24,7 +16,7 @@ export function LanguageSelect({ full = false }: { readonly full?: boolean }) {
         >
           {(Object.keys(names) as Language[]).map((id) => (
             <option key={id} value={id} lang={id}>
-              {names[id][full ? 1 : 0]}
+              {names[id]}
             </option>
           ))}
         </select>

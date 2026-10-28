@@ -202,6 +202,11 @@ body:has(.landing) {
   gap: 8px;
   max-width: none;
 }
+/* Game settings: one label column, so every select starts and ends in the same place. */
+.admin-layout .inline-control:has(> select) {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+}
 /* Inputs fill their row; a checkbox keeps its own size next to its label. */
 .admin-layout input[type='checkbox'] {
   width: auto;

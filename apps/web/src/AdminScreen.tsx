@@ -292,7 +292,7 @@ export function AdminScreen() {
             )}
           </p>
         </section>
-        <LanguageSelect full />
+        <LanguageSelect />
       </main>
     );
 
@@ -1287,7 +1287,7 @@ export function AdminScreen() {
           </>
         )}
       </section>
-      <LanguageSelect full />
+      <LanguageSelect />
     </main>
   );
 }

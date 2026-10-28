@@ -109,7 +109,7 @@ function Landing({ encrypted }: { readonly encrypted: boolean }) {
             {tr('Administrar servidor', 'Manage the server')}
           </a>
         </section>
-        <LanguageSelect full />
+        <LanguageSelect />
       </main>
     </>
   );
