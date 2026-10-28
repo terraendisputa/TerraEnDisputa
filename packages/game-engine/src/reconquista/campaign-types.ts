@@ -53,6 +53,8 @@ export interface PendingOccupation {
   invasion: boolean;
   continuing: boolean;
   originalDefenders: string[];
+  /** A third player who expelled one occupant may share only by an accepted condominio. */
+  condominium?: 'proposed' | 'accepted' | 'rejected';
 }
 export interface Campaign {
   round: number;
@@ -98,6 +100,8 @@ export interface Campaign {
   penaltyDebts: Record<string, number>;
   zoneDecisions: { pactId: string; playerId: string }[];
   winners: string[];
+  /** Express ended by the clock; a full tie finishes without winners. */
+  timeLimit?: boolean;
   lastCombat:
     | ({ originId: string; targetId: string; defenderId: string } & ReturnType<
         typeof resolveReconquistaCombat
@@ -128,6 +132,9 @@ export type CampaignAction =
   | { kind: 'fire'; originId: string; targetId: string; defenderId: string }
   | { kind: 'occupy'; armies: number }
   | { kind: 'continue-invasion' }
+  | { kind: 'propose-condominium' }
+  | { kind: 'respond-condominium'; accept: boolean }
+  | { kind: 'abandon-invasion' }
   | {
       kind: 'regroup-forces';
       originId: string;

@@ -1,6 +1,6 @@
 {
   "name": "ted",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Self-hosted browser strategy game for 2\u20136 human players",
   "license": "AGPL-3.0-only",
@@ -23,7 +23,7 @@
     "release": "pnpm release:build && pnpm release:smoke",
     "typecheck": "tsc -b",
     "test": "pnpm typecheck && pnpm build && pnpm test:integration",
-    "test:classic": "node --test --test-isolation=none tests/classic-reference.test.mjs tests/edition-compatibility.test.mjs",
+    "test:classic": "node --test --test-isolation=none tests/classic-reference.test.mjs tests/edition-compatibility.test.mjs tests/classic-express.test.mjs tests/classic-bots.test.mjs",
     "test:competitive": "node --test tests/competitive-stage*.test.mjs",
     "test:zone-withdrawal": "node --test tests/international-zone-withdrawal.test.mjs",
     "test:pact-notifications": "node --test tests/pact-notifications.test.mjs",
@@ -31,7 +31,8 @@
     "test:security": "node --test tests/security.test.mjs",
     "test:reconquista": "node --test --test-isolation=none tests/reconquista-*.test.mjs",
     "test:integration": "pnpm test:classic && pnpm test:competitive && pnpm test:reconquista && pnpm test:zone-withdrawal && pnpm test:pact-notifications && pnpm test:shortcuts && pnpm test:security && pnpm test:identity",
-    "test:identity": "node --test tests/identity.test.mjs"
+    "test:identity": "node --test tests/identity.test.mjs",
+    "simulate:bots": "node scripts/simulate-bots.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

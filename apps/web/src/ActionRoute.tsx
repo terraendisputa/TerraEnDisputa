@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { TERRITORY_LABELS } from './territories.js';
 import { stepChoice, useRouteShortcut } from './shortcuts.js';
+import { tr } from './language.js';
 
 export function ActionRoute({
   source,
@@ -65,17 +66,23 @@ export function ActionRoute({
   return (
     <div className="action-route-fields" ref={fields}>
       <label>
-        <small>{reserve === undefined ? 'Origen' : 'Refuerzos'}</small>
+        <small>
+          {reserve === undefined
+            ? tr('Origen', 'Origin')
+            : tr('Refuerzos', 'Reinforcements')}
+        </small>
         {reserve !== undefined ? (
-          <strong>Reserva · {reserve}</strong>
+          <strong>
+            {tr('Reserva', 'Reserve')} · {reserve}
+          </strong>
         ) : (
           <select
-            aria-label="Origen de la acción"
+            aria-label={tr('Origen de la acción', 'Action origin')}
             disabled={disabled || !sources?.length}
             value={source ?? ''}
             onChange={(e) => onSource?.(e.target.value || undefined)}
           >
-            <option value="">Elegí origen</option>
+            <option value="">{tr('Elegí origen', 'Choose')}</option>
             {sources?.map((id) => (
               <option key={id} value={id}>
                 {labelOf(id)}
@@ -86,14 +93,14 @@ export function ActionRoute({
       </label>
       <span aria-hidden="true">→</span>
       <label>
-        <small>Destino</small>
+        <small>{tr('Destino', 'Destination')}</small>
         <select
-          aria-label="Destino de la acción"
+          aria-label={tr('Destino de la acción', 'Action destination')}
           value={target ?? ''}
           disabled={disabled || targets.length === 0}
           onChange={(e) => onTarget(e.target.value || undefined)}
         >
-          <option value="">Elegí destino</option>
+          <option value="">{tr('Elegí destino', 'Choose')}</option>
           {targets.map((id) => (
             <option key={id} value={id}>
               {labelOf(id)}

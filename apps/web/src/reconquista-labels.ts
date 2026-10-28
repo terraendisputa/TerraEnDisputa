@@ -1,13 +1,14 @@
-export const RECONQUISTA_NAME = 'Reconquista';
+import { tr } from './language.js';
+export const RECONQUISTA_NAME = tr('Reconquista', 'Retake');
 
 export const continentNames: Record<string, string> = {
-  north_america: 'América del Norte',
-  central_america: 'América Central',
-  south_america: 'América del Sur',
-  europe: 'Europa',
+  north_america: tr('América del Norte', 'North America'),
+  central_america: tr('América Central', 'Central America'),
+  south_america: tr('América del Sur', 'South America'),
+  europe: tr('Europa', 'Europe'),
   asia: 'Asia',
-  africa: 'África',
-  oceania: 'Oceanía',
+  africa: tr('África', 'Africa'),
+  oceania: tr('Oceanía', 'Oceania'),
 };
 
 export const playerColors: Record<string, string> = {
@@ -20,32 +21,35 @@ export const playerColors: Record<string, string> = {
 };
 
 export const playerColorNames: Record<string, string> = {
-  white: 'Blanco',
-  black: 'Negro',
-  red: 'Rojo',
-  blue: 'Azul',
-  yellow: 'Amarillo',
-  green: 'Verde',
+  white: tr('Blanco', 'White'),
+  black: tr('Negro', 'Black'),
+  red: tr('Rojo', 'Red'),
+  blue: tr('Azul', 'Blue'),
+  yellow: tr('Amarillo', 'Yellow'),
+  green: tr('Verde', 'Green'),
 };
 
 export const preparationStageNames: Record<string, string> = {
-  lobby: 'Sala de espera',
-  'initial-placement': 'Incorporación inicial',
-  'reveal-situation': 'Revelar situación',
-  'extra-placement': 'Refuerzos extra',
-  'first-hostility': 'Primera hostilidad',
-  campaign: 'Partida',
+  lobby: tr('Sala de espera', 'Waiting room'),
+  'initial-placement': tr('Incorporación inicial', 'Initial placement'),
+  'reveal-situation': tr('Revelar situación', 'Reveal situation'),
+  'extra-placement': tr('Refuerzos extra', 'Extra reinforcements'),
+  'first-hostility': tr('Primera hostilidad', 'First hostility'),
+  campaign: tr('Partida', 'Game'),
 };
 
 export const campaignPhaseNames: Record<string, string> = {
-  incorporation: 'Refuerzos',
-  attack: 'Ataque',
-  regroup: 'Reagrupamiento',
-  'ally-regroup': 'Reagrupamiento del socio',
-  'ally-closing': 'Solicitudes del socio',
-  closing: 'Solicitudes y cierre',
-  'zone-decision': 'Decisión sobre zona internacional',
-  finished: 'Partida terminada',
+  incorporation: tr('Refuerzos', 'Reinforcements'),
+  attack: tr('Ataque', 'Attack'),
+  regroup: tr('Reagrupamiento', 'Regroup'),
+  'ally-regroup': tr('Reagrupamiento del socio', "Partner's regroup"),
+  'ally-closing': tr('Solicitudes del socio', "Partner's requests"),
+  closing: tr('Solicitudes y cierre', 'Requests and closing'),
+  'zone-decision': tr(
+    'Decisión sobre zona internacional',
+    'International zone decision',
+  ),
+  finished: tr('Partida terminada', 'Game over'),
 };
 
 interface SituationCard {
@@ -58,51 +62,74 @@ export function situationCard(typeId: string): SituationCard {
   switch (typeId) {
     case 'classic_combat':
       return {
-        name: 'Combate clásico',
-        effect: 'La ronda se juega con las reglas normales.',
+        name: tr('Combate clásico', 'Classic combat'),
+        effect: tr(
+          'La ronda se juega con las reglas normales.',
+          'The round is played with the normal rules.',
+        ),
       };
     case 'snow':
       return {
-        name: 'Nieve',
-        effect:
+        name: tr('Nieve', 'Snow'),
+        effect: tr(
           'El defensor suma un dado a su defensa. Hasta un máximo de 4 dados.',
+          'The defender adds one die to their defense. Up to a maximum of 4 dice.',
+        ),
       };
     case 'tailwind':
       return {
-        name: 'Viento a favor',
-        effect:
+        name: tr('Viento a favor', 'Tailwind'),
+        effect: tr(
           'El atacante suma un dado a su ataque. Hasta un máximo de 4 dados.',
+          'The attacker adds one die to their attack. Up to a maximum of 4 dice.',
+        ),
       };
     case 'crisis':
       return {
-        name: 'Crisis',
-        effect:
+        name: tr('Crisis', 'Crisis'),
+        effect: tr(
           'Cada jugador tira un dado. El jugador que saque el menor resultado no recibe una carta esta ronda.',
+          'Each player rolls a die. The player with the lowest result gets no card this round.',
+        ),
       };
     case 'extra_reinforcements':
       return {
-        name: 'Refuerzos extra',
-        effect: 'Cada jugador debe incorporar tropas extras.',
+        name: tr('Refuerzos extra', 'Extra reinforcements'),
+        effect: tr(
+          'Cada jugador debe incorporar tropas extras.',
+          'Each player must place extra troops.',
+        ),
       };
     case 'open_borders':
       return {
-        name: 'Fronteras abiertas',
-        effect: 'Solo se puede atacar entre países de continentes distintos.',
+        name: tr('Fronteras abiertas', 'Open borders'),
+        effect: tr(
+          'Solo se puede atacar entre países de continentes distintos.',
+          'Attacks are only allowed between countries on different continents.',
+        ),
       };
     case 'closed_borders':
       return {
-        name: 'Fronteras cerradas',
-        effect: 'Solo se puede atacar entre países del mismo continente.',
+        name: tr('Fronteras cerradas', 'Closed borders'),
+        effect: tr(
+          'Solo se puede atacar entre países del mismo continente.',
+          'Attacks are only allowed between countries on the same continent.',
+        ),
       };
     default:
       return typeId.startsWith('rest_')
         ? {
             // «Descansa el Blanco»: the name says the color.
-            name: `Descansa el ${playerColorNames[typeId.slice(5)] ?? ''}`.trim(),
-            effect:
+            name: tr(
+              `Descansa el ${playerColorNames[typeId.slice(5)] ?? ''}`,
+              `${playerColorNames[typeId.slice(5)] ?? ''} rests`,
+            ).trim(),
+            effect: tr(
               'El color que descansa no puede atacar ni reagrupar esta ronda.',
+              'The resting color cannot attack or regroup this round.',
+            ),
           }
-        : { name: 'Situación', effect: '' };
+        : { name: tr('Situación', 'Situation'), effect: '' };
   }
 }
 
@@ -115,26 +142,26 @@ export type CardSymbol =
   | 'wildcard';
 
 export const symbolNames: Record<CardSymbol, string> = {
-  plane: 'Avión',
-  ship: 'Barco',
-  tank_grenade: 'Tanque / granada',
-  soldier_wildcard: 'Soldado (comodín)',
-  supercard: 'Supertarjeta',
-  wildcard: 'Comodín',
+  plane: tr('Avión', 'Plane'),
+  ship: tr('Barco', 'Ship'),
+  tank_grenade: tr('Tanque / granada', 'Tank / grenade'),
+  soldier_wildcard: tr('Soldado (comodín)', 'Soldier (wildcard)'),
+  supercard: tr('Supertarjeta', 'Supercard'),
+  wildcard: tr('Comodín', 'Wildcard'),
 };
 
 /** Special cards name their type under the drawing. */
 export const specialCardNames: Partial<Record<CardSymbol, string>> = {
-  soldier_wildcard: 'Comodín',
-  wildcard: 'Comodín',
-  supercard: 'Supertarjeta',
+  soldier_wildcard: tr('Comodín', 'Wildcard'),
+  wildcard: tr('Comodín', 'Wildcard'),
+  supercard: tr('Supertarjeta', 'Supercard'),
 };
 
 /** How each card can be exchanged, shown on the card itself. */
 export const symbolHints: Partial<Record<CardSymbol, string>> = {
-  soldier_wildcard: 'Reemplaza cualquier símbolo',
-  wildcard: 'Reemplaza cualquier símbolo',
-  supercard: 'Se canjea sola',
+  soldier_wildcard: tr('Reemplaza cualquier símbolo', 'Replaces any symbol'),
+  wildcard: tr('Reemplaza cualquier símbolo', 'Replaces any symbol'),
+  supercard: tr('Se canjea sola', 'Exchanged on its own'),
 };
 
 /** Symbols printed on each continent card, as in the engine's exchange rule. */
@@ -152,17 +179,17 @@ export function continentCardHint(continentId: string) {
   const symbols = continentCardSymbols[continentId];
   if (!symbols) return '';
   return symbols === 'complete'
-    ? 'Se canjea sola'
-    : `Vale ${symbols.map((s) => symbolNames[s]).join(' + ')}`;
+    ? tr('Se canjea sola', 'Exchanged on its own')
+    : `${tr('Vale', 'Worth')} ${symbols.map((s) => symbolNames[s]).join(' + ')}`;
 }
 
 export const pactKindNames: Record<string, string> = {
-  countries: 'Entre países',
-  continent: 'Dentro de un continente',
-  intercontinental: 'Entre fronteras',
-  world: 'Mundial',
-  zone: 'Zona internacional',
-  internal: 'No agresión interna',
-  origin: 'Protección de socios',
-  condominium: 'Condominio',
+  countries: tr('Entre países', 'Between countries'),
+  continent: tr('Dentro de un continente', 'Within a continent'),
+  intercontinental: tr('Entre fronteras', 'Between borders'),
+  world: tr('Mundial', 'Worldwide'),
+  zone: tr('Zona internacional', 'International zone'),
+  internal: tr('No agresión interna', 'Internal non-aggression'),
+  origin: tr('Protección de socios', 'Partner protection'),
+  condominium: tr('Condominio', 'Condominium'),
 };

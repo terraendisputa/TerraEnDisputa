@@ -1,0 +1,68 @@
+/* Raised specificity: page styles (like the Retake lobby labels) must not reshape it. */
+/* Language: one fixed place, bottom center, readable over any page. */
+.site-language {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+}
+:root body .site-language > label {
+  display: block;
+  width: auto;
+  margin: 0;
+}
+:root body .site-language > label > select {
+  width: auto;
+  min-height: 34px;
+  padding: 0 28px 0 12px;
+  /* The brown edge of the game's menus. */
+  border: 1px solid rgb(196 161 101);
+  border-radius: 4px;
+  background-color: rgb(22 28 25 / 0.86);
+  color: #fff;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.3);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.site-language select:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.site-language option {
+  background: #1d2420;
+  color: #fff;
+}
+main:has(> .site-language),
+main:has(> * > .site-language) {
+  padding-bottom: 72px;
+}
+/* Text size: menus scale as a whole, so they keep their proportions; the map does not. */
+:root[data-text-size='large'] {
+  --ui-zoom: 1.12;
+}
+:root[data-text-size='larger'] {
+  --ui-zoom: 1.25;
+}
+/* Phones have little room around the map: the steps are smaller there. */
+@media (max-width: 600px) {
+  :root[data-text-size='large'] {
+    --ui-zoom: 1.06;
+  }
+  :root[data-text-size='larger'] {
+    --ui-zoom: 1.12;
+  }
+}
+:root[data-text-size] main:not(.playing-shell),
+:root[data-text-size]
+  .playing-shell
+  :is(
+    #game-toolbar,
+    .player-roster,
+    .action-cluster,
+    .floating-information,
+    .player-popover
+  ) {
+  zoom: var(--ui-zoom);
+}

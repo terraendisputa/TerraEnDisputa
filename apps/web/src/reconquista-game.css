@@ -346,12 +346,24 @@ html[data-theme='dark']
   + .confirm-placement {
   margin-left: 0;
 }
-/* Ataque: Ataque, missile switch, then the finish flag. */
+/* Ataque: the route on top, then Ataque, the missile switch and the finish flag on one bottom row. */
 .game-shell.playing-shell.reconquista-shell .contextual-panel-host .attack-card,
 .game-shell.playing-shell.reconquista-shell
   .contextual-panel-host
   .attack-card.with-missile {
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+.game-shell.playing-shell.reconquista-shell
+  .contextual-panel-host
+  .attack-card
+  > :not(button) {
+  grid-column: 1 / -1;
+}
+.game-shell.playing-shell.reconquista-shell
+  .contextual-panel-host
+  .attack-card
+  > .attack-button {
+  grid-column: 2;
 }
 .game-shell.playing-shell.reconquista-shell .attack-card > .end-attack {
   min-width: 36px;

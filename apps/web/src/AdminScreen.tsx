@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from 'react';
 import type { AdminGameView } from '@game/protocol';
+import { gameClockDurationMs } from '@game/game-engine';
 
 import { competitiveRoundLabel } from './competitive-results.js';
 import { CompetitiveResultsPanel } from './CompetitiveResultsPanel.js';
@@ -16,7 +17,11 @@ import { objectiveText } from './objectives.js';
 import { playerColorLabel } from './colors.js';
 import { redeemAdminLaunch } from './admin-launch.js';
 import { AdminBoxes } from './AdminBoxes.js';
+import { LanguageSelect } from './LanguageSelect.js';
+import { TextSizeToggle } from './TextSizeToggle.js';
+import { ThemeToggle } from './ThemeToggle.js';
 import { clockText } from './TurnSummary.js';
+import { clockState, durationText } from './admin-clock.js';
 import { ReconquistaAdminDetail } from './ReconquistaAdmin.js';
 import { PHASE_LABELS } from './game-presentation.js';
 import {
@@ -24,34 +29,47 @@ import {
   reconquistaErrorMessage,
   reconquistaRequest,
 } from './reconquista-client.js';
+import { tr } from './language.js';
 
 interface ReconquistaGameSummary {
   readonly gameId: string;
   readonly playerCount: number;
   readonly players: number;
   readonly started: boolean;
+  readonly finished?: boolean;
 }
 
 const STATUS_LABELS = {
-  LOBBY: 'Esperando jugadores',
-  SETUP: 'Preparando el tablero',
-  ACTIVE: 'En juego',
-  FINISHED: 'Finalizada',
+  LOBBY: tr('Esperando jugadores', 'Waiting for players'),
+  SETUP: tr('Preparando el tablero', 'Preparing the board'),
+  ACTIVE: tr('En juego', 'Playing'),
+  FINISHED: tr('Finalizada', 'Finished'),
 };
 const SETUP_LABELS = {
-  additional_armies: 'Refuerzos iniciales',
-  territory_deal: 'Reparto de territorios',
-  leftover_awards: 'Territorios sobrantes',
-  starting_order: 'Orden inicial',
-  reinforcement: 'Refuerzos de preparación',
+  additional_armies: tr('Refuerzos iniciales', 'Initial reinforcements'),
+  territory_deal: tr('Reparto de territorios', 'Territory deal'),
+  leftover_awards: tr('Territorios sobrantes', 'Leftover territories'),
+  starting_order: tr('Orden inicial', 'Starting order'),
+  reinforcement: tr('Refuerzos de preparación', 'Setup reinforcements'),
 };
 
 const gameDeletionConfirmation = (
   game: Pick<AdminGameView, 'gameId' | 'status'>,
 ) =>
   game.status === 'SETUP' || game.status === 'ACTIVE'
-    ? `La partida ${game.gameId} ya está en curso. Eliminarla es destructivo y terminará inmediatamente las sesiones conectadas y el acceso a la partida. ¿Eliminar definitivamente?`
-    : `Eliminar definitivamente la partida ${game.gameId}?`;
+    ? tr(
+        `La partida ${game.gameId} ya está en curso. Eliminarla es destructivo y terminará inmediatamente las sesiones conectadas y el acceso a la partida. ¿Eliminar definitivamente?`,
+        `Game ${game.gameId} is already in progress. Deleting it is destructive and immediately ends the connected sessions and access to the game. Delete it for good?`,
+      )
+    : tr(
+        `Eliminar definitivamente la partida ${game.gameId}?`,
+        `Delete game ${game.gameId} for good?`,
+      );
+
+const groupLabel = (group: 'En curso' | 'Finalizadas') =>
+  group === 'Finalizadas'
+    ? tr('Finalizadas', 'Finished')
+    : tr('En curso', 'In progress');
 
 async function deleteGameAfterConfirmation(
   game: Pick<AdminGameView, 'gameId' | 'status'>,
@@ -72,14 +90,6 @@ export function AdminScreen() {
     const update = () => setWideAdmin(media.matches);
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
-  }, []);
-  useEffect(() => {
-    const previous = document.documentElement.dataset.theme;
-    document.documentElement.dataset.theme = 'light';
-    return () => {
-      if (previous) document.documentElement.dataset.theme = previous;
-      else delete document.documentElement.dataset.theme;
-    };
   }, []);
   const operationLock = useRef(false);
   const [busy, setBusy] = useState(false);
@@ -198,7 +208,10 @@ export function AdminScreen() {
     return (
       <main className="entry-layout">
         <section className="panel entry-panel" role="status">
-          Comprobando acceso del anfitrión…
+          {tr(
+            'Comprobando acceso del anfitrión…',
+            "Checking the host's access…",
+          )}
         </section>
       </main>
     );
@@ -207,13 +220,18 @@ export function AdminScreen() {
     return (
       <main className="entry-layout">
         <section className="panel entry-panel">
-          <h1>No pudimos conectar con Terra en disputa</h1>
+          <h1>
+            {tr(
+              'No pudimos conectar con Terra en disputa',
+              "We couldn't connect to Terra en disputa",
+            )}
+          </h1>
           <p role="alert">{visibleError}</p>
           <button
             type="button"
             onClick={() => setAccessAttempt((value) => value + 1)}
           >
-            Reintentar
+            {tr('Reintentar', 'Retry')}
           </button>
         </section>
       </main>
@@ -224,13 +242,17 @@ export function AdminScreen() {
       <main className="entry-layout">
         <section className="panel entry-panel">
           <a className="text-link" href="/">
-            ← Inicio
+            {tr('← Inicio', '← Home')}
           </a>
-          <p className="eyebrow">Administración local</p>
-          <h1>Acceso del administrador</h1>
+          <p className="eyebrow">
+            {tr('Administración local', 'Local administration')}
+          </p>
+          <h1>{tr('Acceso del administrador', 'Administrator access')}</h1>
           <p className="warning">
-            La credencial se enviará sin cifrar si usás HTTP. Hacelo solamente
-            en una red confiable.
+            {tr(
+              'La credencial se enviará sin cifrar si usás HTTP. Hacelo solamente en una red confiable.',
+              'The credential is sent unencrypted over HTTP. Do it only on a trusted network.',
+            )}
           </p>
           <form
             onSubmit={(event: FormEvent) => {
@@ -243,7 +265,10 @@ export function AdminScreen() {
             }}
           >
             <label>
-              Código de acceso del administrador
+              {tr(
+                'Código de acceso del administrador',
+                'Administrator access code',
+              )}
               <input
                 required
                 autoComplete="off"
@@ -257,19 +282,27 @@ export function AdminScreen() {
               </p>
             )}
             <button type="submit" disabled={busy}>
-              Ingresar
+              {tr('Ingresar', 'Sign in')}
             </button>
           </form>
           <p>
-            El código aparece en la terminal cada vez que iniciás el servidor.
+            {tr(
+              'El código aparece en la terminal cada vez que iniciás el servidor.',
+              'The code shows up in the terminal every time you start the server.',
+            )}
           </p>
         </section>
+        <LanguageSelect />
       </main>
     );
 
   const selected = games.find(({ gameId }) => gameId === selectedId);
+  // A table with bots waits for its people; the bots sit at the start.
+  const humanSeats = selected
+    ? selected.configuredPlayerCount - (selected.competitiveBotSeats ?? 0)
+    : 0;
   const missingPlayers = selected
-    ? Math.max(0, selected.configuredPlayerCount - selected.players.length)
+    ? Math.max(0, humanSeats - selected.players.length)
     : 0;
   const missingReady = selected
     ? Math.max(
@@ -279,22 +312,32 @@ export function AdminScreen() {
     : 0;
   // Everyone who joined is ready and the mode's minimum is met: the table
   // shrinks to them on start.
+  const bots = selected?.competitiveBotSeats ?? 0;
+  // Classic with bots can start with a single person.
   const readyToStart =
     selected?.status === 'LOBBY' &&
     missingReady === 0 &&
-    selected.players.length >= (selected.mode === 'competitive' ? 4 : 2);
+    (selected.mode === 'competitive'
+      ? bots
+        ? missingPlayers === 0
+        : selected.players.length >= 4
+      : selected.players.length >= (bots ? 1 : 2));
   return (
     <main className="admin-layout">
       <header className="topbar">
         <a className="brand" href="/" title={GAME_NAME} aria-label={GAME_NAME}>
           {GAME_SHORT_NAME}
         </a>
-        <span>Panel del anfitrión</span>
+        <span>{tr('Panel del anfitrión', "Host's panel")}</span>
+        <div className="admin-tools">
+          <TextSizeToggle />
+          <ThemeToggle />
+        </div>
       </header>
       <aside className="panel admin-sidebar">
         <details className="admin-create" open={wideAdmin || undefined}>
           <summary>
-            <h1>Crear una partida</h1>
+            <h1>{tr('Crear una partida', 'Create a game')}</h1>
           </summary>
           <form
             onSubmit={(event) => {
@@ -322,7 +365,7 @@ export function AdminScreen() {
             }}
           >
             <label className="host-player-count">
-              Modalidad
+              {tr('Modalidad', 'Mode')}
               <select
                 value={mode}
                 onChange={(event) => {
@@ -332,19 +375,25 @@ export function AdminScreen() {
                     setPlayerCount((count) => Math.max(4, count));
                 }}
               >
-                <option value="classic">Clásico</option>
-                <option value="competitive">Competitivo</option>
-                <option value="reconquista">Reconquista</option>
+                <option value="reconquista">
+                  {tr('Reconquista', 'Retake')}
+                </option>
+                <option value="classic">{tr('Clásico', 'Classic')}</option>
+                <option value="competitive">
+                  {tr('Competitivo', 'Competitive')}
+                </option>
               </select>
               {mode === 'competitive' && (
                 <small>
-                  4–6 jugadores. Resultados y puntuación en partidas
-                  finalizadas.
+                  {tr(
+                    '4–6 jugadores. Resultados y puntuación en partidas finalizadas.',
+                    '4–6 players. Results and scoring in finished games.',
+                  )}
                 </small>
               )}
             </label>
             <label className="host-player-count">
-              Cantidad de jugadores
+              {tr('Cantidad de jugadores', 'Number of players')}
               <select
                 value={playerCount}
                 onChange={(event) => setPlayerCount(Number(event.target.value))}
@@ -361,21 +410,30 @@ export function AdminScreen() {
               type="submit"
               disabled={busy}
             >
-              <span aria-hidden="true">＋ </span>Crear partida
+              <span aria-hidden="true">＋ </span>
+              {tr('Crear partida', 'Create game')}
             </button>
           </form>
         </details>
         <details className="admin-existing" open={wideAdmin || undefined}>
           <summary>
-            <h2>Continuar una partida</h2>
+            <h2>{tr('Continuar una partida', 'Continue a game')}</h2>
           </summary>
           {games.length === 0 && reconquistaGames.length === 0 && (
-            <p>Todavía no hay partidas guardadas.</p>
+            <p>
+              {tr(
+                'Todavía no hay partidas guardadas.',
+                'There are no saved games yet.',
+              )}
+            </p>
           )}
-          <nav aria-label="Partidas existentes" className="game-list">
+          <nav
+            aria-label={tr('Partidas existentes', 'Existing games')}
+            className="game-list"
+          >
             {(['En curso', 'Finalizadas'] as const).map((group) => (
-              <section key={group} aria-label={group}>
-                <h3>{group}</h3>
+              <section key={group} aria-label={groupLabel(group)}>
+                <h3>{groupLabel(group)}</h3>
                 {games
                   .filter(
                     (game) =>
@@ -404,41 +462,45 @@ export function AdminScreen() {
                       </small>
                       <small>
                         {game.mode === 'competitive'
-                          ? 'Competitivo'
-                          : 'Clásico'}
+                          ? tr('Competitivo', 'Competitive')
+                          : tr('Clásico', 'Classic')}
                       </small>
+                    </button>
+                  ))}
+                {reconquistaGames
+                  .filter(
+                    (game) =>
+                      (game.finished === true) === (group === 'Finalizadas'),
+                  )
+                  .map((game) => (
+                    <button
+                      type="button"
+                      key={game.gameId}
+                      className={
+                        selectedReconquista === game.gameId
+                          ? 'selected-game secondary'
+                          : 'secondary'
+                      }
+                      aria-pressed={selectedReconquista === game.gameId}
+                      onClick={() => {
+                        setSelectedId(undefined);
+                        setSelectedReconquista(game.gameId);
+                      }}
+                    >
+                      <strong>{game.gameId.slice(0, 8)}</strong>
+                      <small>
+                        {game.finished
+                          ? STATUS_LABELS.FINISHED
+                          : game.started
+                            ? STATUS_LABELS.ACTIVE
+                            : STATUS_LABELS.LOBBY}{' '}
+                        · {game.players}/{game.playerCount}
+                      </small>
+                      <small>{tr('Reconquista', 'Retake')}</small>
                     </button>
                   ))}
               </section>
             ))}
-            {reconquistaGames.length > 0 && (
-              <section aria-label="Reconquista">
-                <h3>Reconquista</h3>
-                {reconquistaGames.map((game) => (
-                  <button
-                    type="button"
-                    key={game.gameId}
-                    className={
-                      selectedReconquista === game.gameId
-                        ? 'selected-game secondary'
-                        : 'secondary'
-                    }
-                    aria-pressed={selectedReconquista === game.gameId}
-                    onClick={() => {
-                      setSelectedId(undefined);
-                      setSelectedReconquista(game.gameId);
-                    }}
-                  >
-                    <strong>{game.gameId.slice(0, 8)}</strong>
-                    <small>
-                      {game.started ? 'En juego' : 'Esperando jugadores'} ·{' '}
-                      {game.players}/{game.playerCount}
-                    </small>
-                    <small>Reconquista</small>
-                  </button>
-                ))}
-              </section>
-            )}
           </nav>
         </details>
       </aside>
@@ -454,7 +516,7 @@ export function AdminScreen() {
                 void load();
               }}
             >
-              Reintentar
+              {tr('Reintentar', 'Retry')}
             </button>
           </p>
         )}
@@ -468,8 +530,13 @@ export function AdminScreen() {
           />
         ) : !selected ? (
           <div className="empty-state">
-            <h2>Elegí una partida</h2>
-            <p>Creá una mesa o abrí una existente.</p>
+            <h2>{tr('Elegí una partida', 'Choose a game')}</h2>
+            <p>
+              {tr(
+                'Creá una mesa o abrí una existente.',
+                'Create a table or open an existing one.',
+              )}
+            </p>
           </div>
         ) : (
           <>
@@ -478,33 +545,223 @@ export function AdminScreen() {
               gameId={selected.gameId}
               lobby={selected.status === 'LOBBY'}
               seats={
-                <label className="inline-control">
-                  Jugadores requeridos
-                  <select
-                    disabled={busy || selected.status !== 'LOBBY'}
-                    value={selected.configuredPlayerCount}
-                    onChange={(event) =>
-                      void run(() =>
-                        api.configureGame(
-                          selected.gameId,
-                          Number(event.target.value),
-                        ),
-                      )
-                    }
-                  >
-                    {(selected.mode === 'competitive'
-                      ? [4, 5, 6]
-                      : [2, 3, 4, 5, 6]
-                    ).map((count) => (
-                      <option
-                        key={count}
-                        disabled={count < selected.players.length}
+                <>
+                  <label className="inline-control">
+                    {tr('Jugadores requeridos', 'Required players')}
+                    <select
+                      disabled={busy || selected.status !== 'LOBBY'}
+                      value={
+                        selected.mode === 'competitive' &&
+                        selected.competitiveBotSeats
+                          ? '6+2'
+                          : selected.configuredPlayerCount
+                      }
+                      onChange={(event) =>
+                        void run(() =>
+                          event.target.value === '6+2'
+                            ? api.configureGame(selected.gameId, 6, 80, 2)
+                            : selected.mode === 'classic'
+                              ? api.configureGame(
+                                  selected.gameId,
+                                  Number(event.target.value),
+                                  undefined,
+                                  // Fewer seats keep room for who joined.
+                                  Math.min(
+                                    bots,
+                                    Number(event.target.value) -
+                                      Math.max(1, selected.players.length),
+                                  ),
+                                )
+                              : api.configureGame(
+                                  selected.gameId,
+                                  Number(event.target.value),
+                                  selected.competitiveBotSeats
+                                    ? undefined
+                                    : selected.competitiveDurationMinutes,
+                                ),
+                        )
+                      }
+                    >
+                      {(selected.mode === 'competitive'
+                        ? [4, 5, 6]
+                        : [2, 3, 4, 5, 6]
+                      ).map((count) => (
+                        <option
+                          key={count}
+                          disabled={
+                            count < selected.players.length ||
+                            (selected.mode === 'classic' && count < 2)
+                          }
+                        >
+                          {count}
+                        </option>
+                      ))}
+                      {selected.mode === 'competitive' && (
+                        <option
+                          value="6+2"
+                          disabled={
+                            selected.players.length > 4 ||
+                            !!selected.competitiveDeciding
+                          }
+                        >
+                          {tr(
+                            '6: 4 jugadores + 2 bots',
+                            '6: 4 players + 2 bots',
+                          )}
+                        </option>
+                      )}
+                    </select>
+                  </label>
+                  {selected.mode === 'classic' && (
+                    <label
+                      className="inline-control"
+                      title={tr(
+                        'Asientos que ocupan bots al comenzar. Siempre queda al menos uno para una persona.',
+                        'Seats taken by bots at the start. At least one always stays for a person.',
+                      )}
+                    >
+                      Bots
+                      <select
+                        disabled={busy || selected.status !== 'LOBBY'}
+                        value={bots}
+                        onChange={(event) =>
+                          void run(() =>
+                            api.configureGame(
+                              selected.gameId,
+                              selected.configuredPlayerCount,
+                              undefined,
+                              Number(event.target.value),
+                            ),
+                          )
+                        }
                       >
-                        {count}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                        {Array.from(
+                          { length: selected.configuredPlayerCount },
+                          (_, n) => (
+                            <option
+                              key={n}
+                              value={n}
+                              disabled={
+                                selected.configuredPlayerCount - n <
+                                selected.players.length
+                              }
+                            >
+                              {n === 0 ? tr('Sin bots', 'No bots') : n}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    </label>
+                  )}
+                  {selected.mode === 'classic' && (
+                    <label
+                      className="inline-control"
+                      title={tr(
+                        'Express: turnos de 2 minutos y tiempo máximo de juego, después dos rondas finales. Sin puntaje.',
+                        'Express: 2-minute turns and a maximum game time, then two final rounds. No scoring.',
+                      )}
+                    >
+                      {tr('Duración', 'Duration')}
+                      <select
+                        disabled={busy || selected.status !== 'LOBBY'}
+                        value={selected.classicExpress ? 'express' : 'free'}
+                        onChange={(event) =>
+                          void run(() =>
+                            api.configureGame(
+                              selected.gameId,
+                              selected.configuredPlayerCount,
+                              undefined,
+                              undefined,
+                              undefined,
+                              event.target.value === 'express',
+                            ),
+                          )
+                        }
+                      >
+                        <option value="free">
+                          {tr('Sin límite', 'No limit')}
+                        </option>
+                        <option value="express">
+                          {`Express: ${durationText(gameClockDurationMs(selected))} + 2 ${tr('rondas', 'rounds')}`}
+                        </option>
+                      </select>
+                    </label>
+                  )}
+                  {selected.mode === 'competitive' && (
+                    <label className="inline-control">
+                      {tr('Duración', 'Duration')}
+                      <select
+                        disabled={
+                          busy ||
+                          selected.status !== 'LOBBY' ||
+                          selected.configuredPlayerCount === 4 ||
+                          !!selected.competitiveBotSeats
+                        }
+                        value={
+                          selected.configuredPlayerCount === 4
+                            ? 60
+                            : (selected.competitiveDurationMinutes ?? 80)
+                        }
+                        onChange={(event) =>
+                          void run(() =>
+                            api.configureGame(
+                              selected.gameId,
+                              selected.configuredPlayerCount,
+                              Number(event.target.value) as 60 | 80,
+                            ),
+                          )
+                        }
+                      >
+                        {selected.configuredPlayerCount !== 4 && (
+                          <option value={80}>
+                            {tr('1:20 h + 2 rondas', '1:20 h + 2 rounds')}
+                          </option>
+                        )}
+                        {!selected.competitiveBotSeats && (
+                          <option value={60}>
+                            {selected.configuredPlayerCount === 4
+                              ? tr('1:00 h + 2 rondas', '1:00 h + 2 rounds')
+                              : tr(
+                                  'Express: 1:00 h + 2 rondas',
+                                  'Express: 1:00 h + 2 rounds',
+                                )}
+                          </option>
+                        )}
+                      </select>
+                    </label>
+                  )}
+                  {selected.mode === 'competitive' && (
+                    <label
+                      className="inline-control"
+                      title={tr(
+                        'Clasificatorias, semifinales y finales: sin bots. Quien abandona o queda ausente pasa a inactivo, con turnos de 1 minuto.',
+                        'Qualifiers, semifinals and finals: no bots. Whoever leaves or goes absent becomes inactive, with 1-minute turns.',
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        disabled={
+                          busy ||
+                          selected.status !== 'LOBBY' ||
+                          !!selected.competitiveBotSeats
+                        }
+                        checked={!!selected.competitiveDeciding}
+                        onChange={(event) =>
+                          void run(() =>
+                            api.configureGame(
+                              selected.gameId,
+                              selected.configuredPlayerCount,
+                              undefined,
+                              undefined,
+                              event.target.checked,
+                            ),
+                          )
+                        }
+                      />
+                      {tr('Partida definitoria', 'Deciding game')}
+                    </label>
+                  )}
+                </>
               }
               start={
                 <>
@@ -517,14 +774,37 @@ export function AdminScreen() {
                         {readyToStart ? '✓ ' : '◷ '}
                       </span>
                       {readyToStart && missingPlayers > 0
-                        ? `Todos los que entraron están listos. Podés comenzar con ${selected.players.length} jugadores.`
+                        ? tr(
+                            `Todos los que entraron están listos. Podés comenzar con ${selected.players.length} jugadores.`,
+                            `Everyone who joined is ready. You can start with ${selected.players.length} players.`,
+                          )
                         : missingPlayers > 0
-                          ? `Falta${missingPlayers === 1 ? '' : 'n'} ${missingPlayers} ${missingPlayers === 1 ? 'persona' : 'personas'} para completar la mesa.`
+                          ? tr(
+                              `Falta${missingPlayers === 1 ? '' : 'n'} ${missingPlayers} ${missingPlayers === 1 ? 'persona' : 'personas'} para completar la mesa.`,
+                              `${missingPlayers} more ${missingPlayers === 1 ? 'person is' : 'people are'} needed to fill the table.`,
+                            )
                           : missingReady > 0
-                            ? `Esperando que ${missingReady} ${missingReady === 1 ? 'persona marque' : 'personas marquen'} «Estoy listo».`
-                            : 'Todos están listos. Podés comenzar.'}{' '}
-                      Listos: {selected.readyPlayerIds?.length ?? 0}/
-                      {selected.configuredPlayerCount}.
+                            ? tr(
+                                `Esperando que ${missingReady} ${missingReady === 1 ? 'persona marque' : 'personas marquen'} «Estoy listo».`,
+                                `Waiting for ${missingReady} ${missingReady === 1 ? 'person' : 'people'} to mark «I'm ready».`,
+                              )
+                            : tr(
+                                'Todos están listos. Podés comenzar.',
+                                'Everyone is ready. You can start.',
+                              )}{' '}
+                      {tr('Listos', 'Ready')}:{' '}
+                      {selected.readyPlayerIds?.length ?? 0}/{humanSeats}.
+                      {bots === 1
+                        ? tr(
+                            ' El bot se suma al comenzar.',
+                            ' The bot joins at the start.',
+                          )
+                        : bots
+                          ? tr(
+                              ` Los ${bots} bots se suman al comenzar.`,
+                              ` The ${bots} bots join at the start.`,
+                            )
+                          : ''}
                     </p>
                   )}
                   <div className="button-row">
@@ -535,23 +815,23 @@ export function AdminScreen() {
                         title={
                           readyToStart
                             ? undefined
-                            : 'Todos los que entraron deben estar listos.'
+                            : tr(
+                                'Todos los que entraron deben estar listos.',
+                                'Everyone who joined must be ready.',
+                              )
                         }
                         onClick={() =>
                           void run(async () => {
-                            if (
-                              selected.players.length !==
-                              selected.configuredPlayerCount
-                            )
+                            if (selected.players.length !== humanSeats)
                               await api.configureGame(
                                 selected.gameId,
-                                selected.players.length,
+                                selected.players.length + bots,
                               );
                             return api.startGame(selected.gameId);
                           })
                         }
                       >
-                        Comenzar partida
+                        {tr('Comenzar partida', 'Start game')}
                       </button>
                     )}
                   </div>
@@ -570,36 +850,43 @@ export function AdminScreen() {
                         : '● '}
                     </span>
                     {readyToStart
-                      ? 'Todo listo para comenzar'
+                      ? tr('Todo listo para comenzar', 'All set to start')
                       : STATUS_LABELS[selected.status]}
                   </p>
-                  <h2>Partida {selected.gameId.slice(0, 8)}</h2>
+                  <h2>
+                    {tr('Partida', 'Game')} {selected.gameId.slice(0, 8)}
+                  </h2>
                   <small>
                     {selected.mode === 'competitive'
-                      ? 'Competitivo'
-                      : 'Clásico'}
+                      ? tr('Competitivo', 'Competitive')
+                      : selected.classicExpress
+                        ? tr('Clásico Express', 'Classic Express')
+                        : tr('Clásico', 'Classic')}
                   </small>
                   {selected.setup && (
                     <p className="admin-state-line">
-                      Preparación:{' '}
+                      {tr('Preparación:', 'Setup:')}{' '}
                       <strong>{SETUP_LABELS[selected.setup.stage]}</strong>
                       {selected.setup.currentPlayerId
-                        ? ` · turno de ${selected.players.find(({ id }) => id === selected.setup?.currentPlayerId)?.nickname ?? 'jugador'}`
+                        ? tr(
+                            ` · turno de ${selected.players.find(({ id }) => id === selected.setup?.currentPlayerId)?.nickname ?? 'jugador'}`,
+                            ` · ${selected.players.find(({ id }) => id === selected.setup?.currentPlayerId)?.nickname ?? 'player'}'s turn`,
+                          )
                         : ''}
                     </p>
                   )}
                   {selected.turn && (
                     <p className="admin-state-line">
                       {selected.mode === 'competitive'
-                        ? `${competitiveRoundLabel(selected)} · ${selected.turn.round.kind === 'normal' && selected.turn.round.pass === 'incorporation' ? 'Refuerzos' : 'Ataques'}`
+                        ? `${competitiveRoundLabel(selected)} · ${selected.turn.round.kind === 'normal' && selected.turn.round.pass === 'incorporation' ? tr('Refuerzos', 'Reinforcements') : tr('Ataques', 'Attacks')}`
                         : selected.turn.round.kind === 'initial_hostility'
-                          ? 'Hostilidad inicial'
-                          : `Ronda ${selected.turn.round.roundNumber} · ${selected.turn.round.pass === 'hostility' ? 'Ataques' : 'Refuerzos'}`}{' '}
+                          ? tr('Hostilidad inicial', 'Initial hostility')
+                          : `${tr('Ronda', 'Round')} ${selected.turn.round.roundNumber} · ${selected.turn.round.pass === 'hostility' ? tr('Ataques', 'Attacks') : tr('Refuerzos', 'Reinforcements')}`}{' '}
                       ·{' '}
                       <strong>
                         {selected.players.find(
                           ({ id }) => id === selected.turn?.playerId,
-                        )?.nickname ?? 'jugador'}
+                        )?.nickname ?? tr('jugador', 'player')}
                       </strong>{' '}
                       · {PHASE_LABELS[selected.turn.phase]}
                     </p>
@@ -612,32 +899,65 @@ export function AdminScreen() {
                       );
                       const reason = selected.result.victoryReason;
                       const reasonText =
-                        reason.kind === 'time_limit'
-                          ? 'Se completaron las dos rondas finales.'
-                          : reason.kind === 'no_competitors'
-                            ? 'No quedan jugadores habilitados.'
-                            : reason.kind === 'control_all_territories'
-                              ? 'Conquistó los 50 territorios.'
-                              : reason.kind === 'control_territories'
-                                ? 'Controló 30 territorios.'
-                                : reason.kind === 'secret_objective'
-                                  ? objectiveText(
-                                      reason.objectiveId,
-                                      reason.effectiveDestructionTargetColor,
+                        reason.kind === 'time_limit' &&
+                        selected.mode === 'classic'
+                          ? winner
+                            ? tr(
+                                'Se terminó el tiempo: ganó por desempate (más países, después tropas, canjes y cartas).',
+                                'Time ran out: won on the tiebreak (most countries, then troops, exchanges and cards).',
+                              )
+                            : tr(
+                                'Se terminó el tiempo con empate en países, tropas, canjes y cartas.',
+                                'Time ran out with a tie in countries, troops, exchanges and cards.',
+                              )
+                          : reason.kind === 'time_limit'
+                            ? tr(
+                                'Se completaron las dos rondas finales.',
+                                'The two final rounds were completed.',
+                              )
+                            : reason.kind === 'no_competitors'
+                              ? tr(
+                                  'No quedan jugadores habilitados.',
+                                  'No eligible players are left.',
+                                )
+                              : reason.kind === 'control_all_territories'
+                                ? tr(
+                                    'Conquistó los 50 territorios.',
+                                    'Conquered all 50 territories.',
+                                  )
+                                : reason.kind === 'control_territories'
+                                  ? tr(
+                                      'Controló 30 territorios.',
+                                      'Controlled 30 territories.',
                                     )
-                                  : 'Partida finalizada';
+                                  : reason.kind === 'secret_objective'
+                                    ? objectiveText(
+                                        reason.objectiveId,
+                                        reason.effectiveDestructionTargetColor,
+                                      )
+                                    : tr('Partida finalizada', 'Game over');
                       return (
                         <section className="objective-box admin-result">
-                          <p className="eyebrow">Resultado final</p>
+                          <p className="eyebrow">
+                            {tr('Resultado final', 'Final result')}
+                          </p>
                           <h3>
                             {winner
-                              ? `Ganó ${winner.nickname}`
-                              : 'Partida cerrada'}
+                              ? tr(
+                                  `Ganó ${winner.nickname}`,
+                                  `${winner.nickname} won`,
+                                )
+                              : reason.kind === 'time_limit' &&
+                                  selected.mode === 'classic'
+                                ? tr('Empate', 'Tie')
+                                : tr('Partida cerrada', 'Game closed')}
                           </h3>
                           {selected.result?.scoringEligible === false && (
                             <p>
-                              Sin puntuación oficial; el detalle indica el
-                              motivo.
+                              {tr(
+                                'Sin puntuación oficial; el detalle indica el motivo.',
+                                'No official score; the detail gives the reason.',
+                              )}
                             </p>
                           )}
                           {winner && (
@@ -658,7 +978,9 @@ export function AdminScreen() {
                       <section className="panel admin-clock">
                         <dl>
                           <div>
-                            <dt>Duración de la partida</dt>
+                            <dt>
+                              {tr('Duración de la partida', 'Game duration')}
+                            </dt>
                             <dd>
                               {Math.floor(
                                 selected.competitiveClock.elapsedMs / 60000,
@@ -667,12 +989,12 @@ export function AdminScreen() {
                             </dd>
                           </div>
                           <div>
-                            <dt>Turno actual</dt>
+                            <dt>{tr('Turno actual', 'Current turn')}</dt>
                             <dd>
                               {clockText(
                                 selected.competitiveClock.activationRemainingMs,
                               )}{' '}
-                              restantes
+                              {tr('restantes', 'left')}
                             </dd>
                           </div>
                         </dl>
@@ -699,9 +1021,75 @@ export function AdminScreen() {
                           }
                         >
                           {selected.competitiveClock.pauseReason
-                            ? 'Reanudar cuando todos estén disponibles'
-                            : 'Pausar por inconveniente técnico'}
+                            ? tr(
+                                'Reanudar cuando todos estén disponibles',
+                                'Resume when everyone is available',
+                              )
+                            : tr(
+                                'Pausar por inconveniente técnico',
+                                'Pause for a technical problem',
+                              )}
                         </button>
+                      </section>
+                    )}
+                  {selected.mode === 'competitive' &&
+                    selected.status !== 'FINISHED' &&
+                    selected.competitiveDeciding && (
+                      <p className="admin-bots">
+                        {tr(
+                          'Partida definitoria: sin bots. Quien abandona o queda ausente pasa a inactivo, con turnos de 1 minuto.',
+                          'Deciding game: no bots. Whoever leaves or goes absent becomes inactive, with 1-minute turns.',
+                        )}
+                      </p>
+                    )}
+                  {selected.status !== 'FINISHED' &&
+                    !selected.competitiveDeciding && (
+                      <section className="admin-bots">
+                        {/* Without Express nobody turns absent: bots come in by hand. */}
+                        {(selected.mode === 'competitive' ||
+                          selected.classicExpress) && (
+                          <label className="inline-control">
+                            <input
+                              type="checkbox"
+                              disabled={busy}
+                              checked={
+                                selected.competitiveBotsReplaceAbsent !== false
+                              }
+                              onChange={(event) =>
+                                void run(() =>
+                                  api.configureBots(selected.gameId, {
+                                    replaceAbsent: event.target.checked,
+                                  }),
+                                )
+                              }
+                            />
+                            {tr(
+                              'Reemplazar ausentes por bot',
+                              'Replace absent players with a bot',
+                            )}
+                          </label>
+                        )}
+                        <label className="inline-control">
+                          {tr('Dificultad de los bots', 'Bot difficulty')}
+                          <select
+                            disabled={busy}
+                            value={selected.competitiveBotLevel ?? 'hard'}
+                            onChange={(event) =>
+                              void run(() =>
+                                api.configureBots(selected.gameId, {
+                                  level: event.target.value as
+                                    'easy' | 'normal' | 'hard',
+                                }),
+                              )
+                            }
+                          >
+                            <option value="easy">{tr('Fácil', 'Easy')}</option>
+                            <option value="normal">Normal</option>
+                            <option value="hard">
+                              {tr('Difícil', 'Hard')}
+                            </option>
+                          </select>
+                        </label>
                       </section>
                     )}
                   <ul className="player-list">
@@ -712,21 +1100,31 @@ export function AdminScreen() {
                           aria-hidden="true"
                         />
                         <span className="admin-player-copy">
-                          <strong>{player.nickname}</strong>
+                          <strong>
+                            {player.nickname}
+                            {player.bot && player.bot !== 'table'
+                              ? ' (bot)'
+                              : ''}
+                            {player.inactive
+                              ? tr(' (inactivo)', ' (inactive)')
+                              : ''}
+                          </strong>
                           <small>
-                            {playerColorLabel(player.color)} · Asiento{' '}
-                            {player.seatIndex + 1} ·{' '}
-                            {player.controller === 'controlled'
-                              ? 'con jugador'
-                              : 'sin jugador'}
+                            {playerColorLabel(player.color)} ·{' '}
+                            {tr('Asiento', 'Seat')} {player.seatIndex + 1} ·{' '}
+                            {player.bot === 'table'
+                              ? tr('bot de la mesa', 'table bot')
+                              : player.controller === 'controlled'
+                                ? tr('con jugador', 'with a player')
+                                : tr('sin jugador', 'no player')}
                           </small>
                           {selected.status === 'LOBBY' && (
                             <span
                               className={`host-status-badge host-player-ready ${selected.readyPlayerIds?.includes(player.id) ? 'host-ready' : 'host-waiting'}`}
                               title={
                                 selected.readyPlayerIds?.includes(player.id)
-                                  ? 'Jugador listo'
-                                  : 'Todavía no está listo'
+                                  ? tr('Jugador listo', 'Player ready')
+                                  : tr('Todavía no está listo', 'Not ready yet')
                               }
                             >
                               <span aria-hidden="true">
@@ -735,17 +1133,102 @@ export function AdminScreen() {
                                   : '◷ '}
                               </span>
                               {selected.readyPlayerIds?.includes(player.id)
-                                ? 'Listo'
-                                : 'Pendiente'}
+                                ? tr('Listo', 'Ready')
+                                : tr('Pendiente', 'Pending')}
                             </span>
                           )}
                         </span>
                         <div className="row-actions">
+                          {selected.mode === 'competitive' &&
+                            (selected.status === 'SETUP' ||
+                              selected.status === 'ACTIVE') &&
+                            !player.eliminated &&
+                            !player.disqualified &&
+                            selected.competitiveDeciding && (
+                              <button
+                                type="button"
+                                className="secondary"
+                                disabled={busy}
+                                title={
+                                  player.inactive
+                                    ? tr(
+                                        `Devolverle los turnos normales a ${player.nickname}`,
+                                        `Give ${player.nickname} normal turns back`,
+                                      )
+                                    : tr(
+                                        `${player.nickname} abandonó: sus turnos pasan a durar 1 minuto`,
+                                        `${player.nickname} left: their turns now last 1 minute`,
+                                      )
+                                }
+                                onClick={() =>
+                                  void run(() =>
+                                    api.markInactive(
+                                      selected.gameId,
+                                      player.id,
+                                      !player.inactive,
+                                    ),
+                                  )
+                                }
+                              >
+                                {player.inactive
+                                  ? tr('Quitar inactivo', 'Clear inactive')
+                                  : tr('Marcar inactivo', 'Mark inactive')}
+                              </button>
+                            )}
+                          {(selected.status === 'SETUP' ||
+                            selected.status === 'ACTIVE') &&
+                            !player.eliminated &&
+                            !player.disqualified &&
+                            !selected.competitiveDeciding &&
+                            // Express frees a table bot's seat for a person.
+                            (player.bot !== 'table' ||
+                              !!selected.classicExpress) && (
+                              <button
+                                type="button"
+                                className="secondary"
+                                disabled={busy}
+                                title={
+                                  player.bot === 'table'
+                                    ? tr(
+                                        `Liberar el asiento de ${player.nickname}: sus turnos pasan solos hasta que lo tome una persona`,
+                                        `Free ${player.nickname}'s seat: its turns pass on their own until a person takes it`,
+                                      )
+                                    : player.bot
+                                      ? tr(
+                                          `Devolverle el lugar a ${player.nickname}`,
+                                          `Give ${player.nickname} their place back`,
+                                        )
+                                      : tr(
+                                          `Poner un bot en lugar de ${player.nickname}`,
+                                          `Put a bot in place of ${player.nickname}`,
+                                        )
+                                }
+                                onClick={() =>
+                                  void run(() =>
+                                    api.assignBot(
+                                      selected.gameId,
+                                      player.id,
+                                      !player.bot,
+                                    ),
+                                  )
+                                }
+                              >
+                                {player.bot
+                                  ? tr('Quitar bot', 'Remove bot')
+                                  : tr('Poner bot', 'Add bot')}
+                              </button>
+                            )}
                           {selected.status === 'LOBBY' && (
                             <button
                               type="button"
-                              aria-label={`Quitar a ${player.nickname}`}
-                              title={`Quitar a ${player.nickname}`}
+                              aria-label={tr(
+                                `Quitar a ${player.nickname}`,
+                                `Remove ${player.nickname}`,
+                              )}
+                              title={tr(
+                                `Quitar a ${player.nickname}`,
+                                `Remove ${player.nickname}`,
+                              )}
                               disabled={busy}
                               className="danger-quiet"
                               onClick={() =>
@@ -755,7 +1238,7 @@ export function AdminScreen() {
                               }
                             >
                               <span className="remove-player-label">
-                                Quitar
+                                {tr('Quitar', 'Remove')}
                               </span>
                               <span
                                 className="remove-player-icon"
@@ -773,7 +1256,9 @@ export function AdminScreen() {
               }
               advanced={
                 <details open>
-                  <summary>Opciones avanzadas</summary>
+                  <summary>
+                    {tr('Opciones avanzadas', 'Advanced options')}
+                  </summary>
                   <button
                     disabled={busy}
                     type="button"
@@ -790,7 +1275,7 @@ export function AdminScreen() {
                       });
                     }}
                   >
-                    Eliminar partida
+                    {tr('Eliminar partida', 'Delete game')}
                   </button>
                 </details>
               }
@@ -802,32 +1287,7 @@ export function AdminScreen() {
           </>
         )}
       </section>
+      <LanguageSelect />
     </main>
   );
-}
-
-/** The Competitive clock's state, naming why it is paused. */
-function clockState(
-  clock: NonNullable<AdminGameView['competitiveClock']>,
-  players: AdminGameView['players'],
-) {
-  if (clock.pauseReason === 'admin') return 'Pausada por el administrador';
-  if (clock.pauseReason === 'restart')
-    return 'Pausada por reinicio del servidor';
-  if (clock.pauseReason === 'disconnection') {
-    const player = players.find(({ id }) => id === clock.disconnectedPlayerId);
-    return (
-      <>
-        Pausada: esperando a{' '}
-        {player && (
-          <>
-            <span className={`color-dot color-${player.color}`} />{' '}
-            <strong>{player.nickname}</strong>
-          </>
-        )}{' '}
-        · Reconexión {clockText(clock.technicalRemainingMs ?? 0)}
-      </>
-    );
-  }
-  return 'En curso';
 }

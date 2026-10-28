@@ -1279,3 +1279,11 @@
     }
   }
 }
+
+@layer tactical {
+  .admin-layout .topbar > .admin-tools {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+  }
+}

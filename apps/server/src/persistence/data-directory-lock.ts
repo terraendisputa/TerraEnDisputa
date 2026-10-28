@@ -210,7 +210,7 @@ export class DataDirectoryLock {
     const releasePath = `${this.lockPath}.release-${this.token}-${randomUUID()}`;
     try {
       await this.options.fault?.('before-release-move');
-      await rename(this.lockPath, releasePath);
+      await renameRetryingOnWindows(this.lockPath, releasePath);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
       throw error;
@@ -231,6 +231,25 @@ export class DataDirectoryLock {
       );
     }
     await rm(releasePath, { recursive: true });
+  }
+}
+
+/** Windows refuses to move a directory while any file in it is still open, even for a moment. */
+async function renameRetryingOnWindows(from: string, to: string) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await rename(from, to);
+      return;
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (
+        process.platform !== 'win32' ||
+        (code !== 'EPERM' && code !== 'EACCES') ||
+        attempt >= 9
+      )
+        throw error;
+      await new Promise((done) => setTimeout(done, 100));
+    }
   }
 }
 

@@ -197,7 +197,13 @@ export function checkedCampaignAction(value: unknown): CampaignAction {
         keep: boolean(a.keep),
       };
     }
+    case 'respond-condominium': {
+      const a = object(value, ['kind', 'accept']);
+      return { kind: 'respond-condominium', accept: boolean(a.accept) };
+    }
     case 'continue-invasion':
+    case 'propose-condominium':
+    case 'abandon-invasion':
     case 'finish-attacks':
     case 'finish-regroup':
     case 'finish-ally-regroup':

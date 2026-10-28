@@ -10,6 +10,7 @@ import { z } from 'zod';
 import {
   preparationBoard,
   projectReconquistaSession,
+  reconquistaExpressDurationMs,
   validateReconquistaCatalog,
 } from '@game/game-engine/reconquista';
 import {
@@ -93,6 +94,23 @@ const colorNames: Record<string, string> = {
   green: 'verde',
   yellow: 'amarillo',
 };
+const colorNamesEn: Record<string, string> = {
+  red: 'red',
+  white: 'white',
+  blue: 'blue',
+  black: 'black',
+  green: 'green',
+  yellow: 'yellow',
+};
+const continentNamesEn: Record<string, string> = {
+  north_america: 'North America',
+  central_america: 'Central America',
+  south_america: 'South America',
+  europe: 'Europe',
+  asia: 'Asia',
+  africa: 'Africa',
+  oceania: 'Oceania',
+};
 const continentNames: Record<string, string> = {
   north_america: 'América del Norte',
   central_america: 'América Central',
@@ -174,43 +192,63 @@ export async function loadReconquistaAssets(
     connections: raw.connections.map((c) => c.endpoints),
   });
   // Wording follows the printed objective list: "Ocupar Asia y América Central."
-  const listed = (parts: readonly string[]) =>
-    parts.length > 1
-      ? `${parts.slice(0, -1).join(', ')} y ${parts.at(-1)}`
-      : (parts[0] ?? '');
-  const spelled: Record<number, string> = { 2: 'dos', 3: 'tres', 4: 'cuatro' };
+  const describe = (o: (typeof raw.objectives)[number], en: boolean) => {
+    const names = en ? continentNamesEn : continentNames;
+    const listed = (parts: readonly string[]) =>
+      parts.length > 1
+        ? `${parts.slice(0, -1).join(', ')} ${en ? 'and' : 'y'} ${parts.at(-1)}`
+        : (parts[0] ?? '');
+    const spelled: Record<number, string> = en
+      ? { 2: 'two', 3: 'three', 4: 'four' }
+      : { 2: 'dos', 3: 'tres', 4: 'cuatro' };
+    if (o.kind === 'destruction') {
+      if (o.target === 'left_neighbor')
+        return en
+          ? 'Destroy the player on your left.'
+          : 'Destruir al jugador de la izquierda.';
+      const color = (
+        (en ? colorNamesEn : colorNames)[o.target!] ?? o.target!
+      ).replace(/^./, (c) => c.toUpperCase());
+      return en
+        ? `Destroy the ${color} army.`
+        : `Destruir al ejército ${color}.`;
+    }
+    if (o.minTerritories)
+      return en
+        ? `Occupy ${o.minTerritories} countries anywhere on the map.`
+        : `Ocupar ${o.minTerritories} países en cualquier lugar del mapa.`;
+    const entries = Object.entries(o.requirements ?? {});
+    const whole = entries
+      .filter(([, n]) => n === 'all')
+      .map(([id]) => names[id]!);
+    const counted = entries
+      .filter(([, n]) => n !== 'all')
+      .map(([id, n], i) =>
+        en
+          ? i === 0
+            ? `${n} countries in ${names[id]}`
+            : `${n} in ${names[id]}`
+          : i === 0
+            ? `${n} países de ${names[id]}`
+            : `${n} de ${names[id]}`,
+      );
+    const continents =
+      o.islands &&
+      (spelled[o.islands.minContinents] ?? o.islands.minContinents);
+    const islands = o.islands
+      ? [
+          en
+            ? `${o.islands.count} islands, spread over at least ${continents} continents`
+            : `${o.islands.count} islas, repartidas en por lo menos ${continents} continentes`,
+        ]
+      : [];
+    return `${en ? 'Occupy' : 'Ocupar'} ${listed([...whole, ...counted, ...islands])}.`;
+  };
   const descriptions = new Map(
-    raw.objectives.map((o) => {
-      if (o.kind === 'destruction')
-        return [
-          o.id,
-          o.target === 'left_neighbor'
-            ? 'Destruir al jugador de la izquierda.'
-            : `Destruir al ejército ${(colorNames[o.target!] ?? o.target!).replace(/^./, (c) => c.toUpperCase())}.`,
-        ];
-      if (o.minTerritories)
-        return [
-          o.id,
-          `Ocupar ${o.minTerritories} países en cualquier lugar del mapa.`,
-        ];
-      const entries = Object.entries(o.requirements ?? {});
-      const whole = entries
-        .filter(([, n]) => n === 'all')
-        .map(([id]) => continentNames[id]!);
-      const counted = entries
-        .filter(([, n]) => n !== 'all')
-        .map(([id, n], i) =>
-          i === 0
-            ? `${n} países de ${continentNames[id]}`
-            : `${n} de ${continentNames[id]}`,
-        );
-      const islands = o.islands
-        ? [
-            `${o.islands.count} islas, repartidas en por lo menos ${spelled[o.islands.minContinents] ?? o.islands.minContinents} continentes`,
-          ]
-        : [];
-      return [o.id, `Ocupar ${listed([...whole, ...counted, ...islands])}.`];
-    }),
+    raw.objectives.map((o) => [
+      o.id,
+      { es: describe(o, false), en: describe(o, true) },
+    ]),
   );
   return { catalog, board, light, dark, descriptions };
 }
@@ -222,6 +260,8 @@ export async function registerReconquista(
     readonly publicOrigin?: string;
     readonly classicStore: FileGameStore;
     readonly randomness?: () => number;
+    /** Tests drive the Express clock by hand. */
+    readonly clockTicks?: boolean;
     readonly writeOptions?: AtomicWriteOptions;
     readonly rateLimitPolicies?: Readonly<
       Record<RateLimitSurface, RateLimitPolicy>
@@ -281,6 +321,49 @@ export async function registerReconquista(
   // Selection shared by the player on turn: memory only, so it never reaches the journal.
   const focuses = new Map<string, NonNullable<ReconquistaView['focus']>>();
   const countryIds = new Set(board.countries.map((c) => c.id));
+  const described = <T extends { objectiveId: string }>(o: T) => ({
+    ...o,
+    ...(o.objectiveId === 'common_45'
+      ? {
+          description: 'Ocupar 45 países.',
+          descriptionEn: 'Occupy 45 countries.',
+        }
+      : {
+          description: assets.descriptions.get(o.objectiveId)!.es,
+          descriptionEn: assets.descriptions.get(o.objectiveId)!.en,
+        }),
+  });
+  /** Public seats: never the session digests. */
+  const seats = (current: ReconquistaEnvelope) =>
+    current.players.map(({ id, color, nickname, ready, bot, free }) => ({
+      id,
+      color,
+      nickname,
+      ready,
+      ...(bot ? { bot } : {}),
+      ...(free ? { free } : {}),
+    }));
+  /** The Express clock for screens, without the server's bookkeeping. */
+  const clock = (current: ReconquistaEnvelope) => {
+    const c = current.clock;
+    if (!c) return {};
+    return {
+      clock: {
+        durationMs: reconquistaExpressDurationMs(current.playerCount),
+        elapsedMs: c.elapsedMs,
+        activationRemainingMs: c.activationRemainingMs,
+        ...(c.finalRound !== undefined ? { finalRound: c.finalRound } : {}),
+        ...(c.pauseReason ? { pauseReason: c.pauseReason } : {}),
+        ...(c.disconnectedPlayerId
+          ? { disconnectedPlayerId: c.disconnectedPlayerId }
+          : {}),
+        ...(c.technicalRemainingMs !== undefined
+          ? { technicalRemainingMs: c.technicalRemainingMs }
+          : {}),
+        absentPlayerIds: c.absentPlayerIds,
+      },
+    };
+  };
   function view(
     current: ReconquistaEnvelope,
     viewer: string | null,
@@ -291,13 +374,10 @@ export async function registerReconquista(
       gameId: current.gameId,
       revision: current.revision,
       playerCount: current.playerCount,
+      ...(current.express ? { express: true } : {}),
+      ...clock(current),
     };
-    const players = current.players.map(({ id, color, nickname, ready }) => ({
-      id,
-      color,
-      nickname,
-      ready,
-    }));
+    const players = seats(current);
     if (!current.journal)
       return reconquistaViewSchema.parse({
         ...base,
@@ -349,19 +429,21 @@ export async function registerReconquista(
       ...(focuses.has(current.gameId)
         ? { focus: focuses.get(current.gameId) }
         : {}),
+      ...(publicView.winnerObjectives.length
+        ? {
+            winnerObjectives: publicView.winnerObjectives.map((w) => ({
+              playerId: w.playerId,
+              objectives: w.objectives.map(described),
+            })),
+          }
+        : {}),
       ...(self
         ? {
             self: {
               playerId: self.playerId,
               ...(self.campaign ? { campaign: self.campaign } : {}),
               legal: self.legal,
-              objectives: self.objectives.map((o) => ({
-                ...o,
-                description:
-                  o.objectiveId === 'common_45'
-                    ? 'Ocupar 45 países.'
-                    : assets.descriptions.get(o.objectiveId)!,
-              })),
+              objectives: self.objectives.map(described),
             },
           }
         : {}),
@@ -387,8 +469,36 @@ export async function registerReconquista(
       }, FOCUS_ANNOUNCE_MS),
     );
   };
+  // Express games run on a clock, ticked every second as Classic's.
+  const ticking = new Set(await store.running());
+  const connected = (gameId: string) => (playerId: string) =>
+    [...(live.get(gameId)?.values() ?? [])].includes(playerId);
+  let ticks = 0;
+  let ticked = Promise.resolve();
+  const clockTimer = setInterval(() => {
+    ticked = ticked
+      .then(async () => {
+        // Games that ended or were removed leave the list now and then.
+        if (++ticks % 30 === 0)
+          for (const id of [...ticking])
+            if (!(await store.running()).includes(id)) ticking.delete(id);
+        for (const id of ticking)
+          if (
+            await store.tick(id, Date.now(), connected(id)).catch(() => false)
+          )
+            notify(id);
+      })
+      .catch(() => {});
+  }, 1_000);
+  clockTimer.unref();
+  if (options.clockTicks === false) clearInterval(clockTimer);
   void server.register((app, _options, done) => {
-    app.addHook('onClose', () => store.close());
+    app.addHook('onClose', async () => {
+      clearInterval(clockTimer);
+      // A tick still reading the store would keep the lock busy on Windows.
+      await ticked;
+      await store.close();
+    });
     app.addHook('preClose', (closed) => {
       for (const timer of focusTimers.values()) clearTimeout(timer);
       focusTimers.clear();
@@ -467,13 +577,12 @@ export async function registerReconquista(
       const current = await store.load(params(request));
       return {
         playerCount: current.playerCount,
+        ...(current.express ? { express: true } : {}),
         stage: current.journal ? 'started' : 'lobby',
-        players: current.players.map(({ id, nickname, color, ready }) => ({
-          id,
-          nickname,
-          color,
-          ready,
-        })),
+        players: seats(current),
+        ...(current.botSeats ? { botSeats: current.botSeats } : {}),
+        botLevel: current.botLevel ?? 'hard',
+        botsReplaceAbsent: current.botsReplaceAbsent !== false,
       };
     });
     app.post(prefix + '/games/:gameId/join', async (request, reply) => {
@@ -484,6 +593,24 @@ export async function registerReconquista(
       const existing = store.authenticate(current, playerToken(request, id));
       if (existing) return { playerId: existing };
       const result = await store.join(id, request.body);
+      notify(id);
+      const cookie = createSessionCookie(
+        { kind: 'player', gameId: 'reconquista-' + id },
+        result.token,
+        transport(request),
+        result.expiresAt,
+      );
+      reply.setCookie(cookie.name, cookie.value, cookie.options);
+      return { playerId: result.playerId };
+    });
+    app.post(prefix + '/games/:gameId/take-seat', async (request, reply) => {
+      const id = params(request);
+      if (!limiter.consume('join', request.ip, id))
+        return reply.code(429).send({ code: 'RATE_LIMITED' });
+      const current = await store.load(id);
+      const existing = store.authenticate(current, playerToken(request, id));
+      if (existing) return { playerId: existing };
+      const result = await store.takeSeat(id, request.body);
       notify(id);
       const cookie = createSessionCookie(
         { kind: 'player', gameId: 'reconquista-' + id },
@@ -534,8 +661,30 @@ export async function registerReconquista(
       await requireAdmin(request);
       z.strictObject({}).parse(request.body ?? {});
       const started = await store.start(params(request));
+      if (started.express || started.players.some((p) => p.bot))
+        ticking.add(started.gameId);
       notify(started.gameId);
       return view(started, null);
+    });
+    app.post(prefix + '/games/:gameId/bots', async (request) => {
+      await requireAdmin(request);
+      const current = await store.bots(
+        params(request),
+        request.body,
+        Date.now(),
+      );
+      if (current.players.some((p) => p.bot)) ticking.add(current.gameId);
+      notify(current.gameId);
+      return view(current, null);
+    });
+    app.post(prefix + '/games/:gameId/pause', async (request) => {
+      await requireAdmin(request);
+      const { paused } = z
+        .strictObject({ paused: z.boolean() })
+        .parse(request.body);
+      const current = await store.pause(params(request), paused, Date.now());
+      notify(current.gameId);
+      return view(current, null);
     });
     app.get(prefix + '/games/:gameId/state', async (request) => {
       limit(request, 'game-read', params(request));

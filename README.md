@@ -4,9 +4,16 @@ Terra en disputa es un juego de estrategia por turnos para **2 a 6 personas**, c
 
 Tiene tres modalidades, que se eligen al crear la partida:
 
+- **Reconquista** (_Retake_ en inglés): 72 países, situaciones que cambian cada ronda, misiles, alianzas y países compartidos.
 - **Clásico:** 50 países. Con 4 a 6 jugadores hay objetivos secretos y el objetivo común de ocupar 30 países; con 2 o 3 gana quien conquiste los 50.
-- **Competitivo:** para 4 a 6 personas, con relojes, rondas finales automáticas y puntaje.
-- **Reconquista:** 72 países, situaciones que cambian cada ronda, misiles, alianzas y países compartidos.
+- **Competitivo:** para 4 a 6 personas, con relojes, rondas finales automáticas, puntaje y las reglas de la Superliga (solo pactos de frontera, desempate y partidas definitorias).
+
+Además:
+
+- **Express:** Clásico y Reconquista pueden jugarse con turnos y tiempo de partida limitados, seguidos de dos rondas finales.
+- **Bots** fáciles, normales o difíciles en las tres modalidades: completan la mesa, reemplazan a quien se desconecta y el anfitrión puede ponerlos o quitarlos.
+- **Español o inglés**, con un selector abajo en cada página. La primera vez se usa el idioma del sistema.
+- Tema oscuro por defecto, tamaño de letra ajustable, atajos de teclado y música.
 
 Terra en disputa no está afiliado, respaldado ni patrocinado por los titulares o editores de T.E.G. No incluye arte, capturas, textos del reglamento ni material de TEGNet oficiales.
 
@@ -27,7 +34,7 @@ Los paquetes compilados incluyen Node.js, así que no hace falta instalar nada m
 
 1. Descargá el paquete de tu sistema, comprobalo con `SHA256SUMS` y extraé **toda la carpeta**.
 2. En Windows abrí `ted.cmd`. En Linux ejecutá `./ted` dentro de la carpeta.
-3. Se abre el panel del anfitrión. Creá una partida, elegí la modalidad y cuántas personas juegan (contándote si participás).
+3. Se abre el panel del anfitrión. Creá una partida, elegí la modalidad y cuántas personas juegan (contándote si participás). Si querés, sumá bots y elegí la duración.
 4. En **Red para compartir**, elegí la red que usan tus amigos, copiá la invitación y enviala. `localhost` y `127.0.0.1` solo funcionan en tu propio equipo.
 5. Cada jugador elige apodo y color y se marca listo. Cuando todos están listos, tocá **Comenzar**.
 

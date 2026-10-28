@@ -1,6 +1,7 @@
 import {
   resolveGameRuntime,
   competitiveResults,
+  canRequestCompetitiveBot,
   type GameState,
   type PlayerId,
 } from '@game/game-engine';
@@ -17,6 +18,9 @@ const publicPlayers = (state: GameState): AdminGameView['players'] =>
     ...(player.disqualified === undefined
       ? {}
       : { disqualified: player.disqualified }),
+    ...(player.absent ? { absent: true as const } : {}),
+    ...(player.bot ? { bot: player.bot } : {}),
+    ...(player.inactive ? { inactive: true as const } : {}),
     cardCount: player.cards.length,
     completedExchangeCount: player.completedExchangeCount,
   }));
@@ -36,6 +40,22 @@ export function projectGameForAdmin(
       ? { competitiveClock: structuredClone(state.competitiveClock) }
       : {}),
     configuredPlayerCount: state.configuredPlayerCount,
+    ...(state.competitiveDurationMinutes
+      ? { competitiveDurationMinutes: state.competitiveDurationMinutes }
+      : {}),
+    ...(state.competitiveBotLevel
+      ? { competitiveBotLevel: state.competitiveBotLevel }
+      : {}),
+    ...(state.competitiveBotsReplaceAbsent !== undefined
+      ? { competitiveBotsReplaceAbsent: state.competitiveBotsReplaceAbsent }
+      : {}),
+    ...(state.competitiveBotSeats
+      ? { competitiveBotSeats: state.competitiveBotSeats }
+      : {}),
+    ...(state.competitiveDeciding
+      ? { competitiveDeciding: true as const }
+      : {}),
+    ...(state.classicExpress ? { classicExpress: true as const } : {}),
     players: publicPlayers(state),
     ...(state.pendingInheritance
       ? {
@@ -100,7 +120,26 @@ export function projectGameFor(
       ? { competitiveClock: structuredClone(state.competitiveClock) }
       : {}),
     configuredPlayerCount: state.configuredPlayerCount,
+    ...(state.competitiveDurationMinutes
+      ? { competitiveDurationMinutes: state.competitiveDurationMinutes }
+      : {}),
+    ...(state.competitiveBotLevel
+      ? { competitiveBotLevel: state.competitiveBotLevel }
+      : {}),
+    ...(state.competitiveBotsReplaceAbsent !== undefined
+      ? { competitiveBotsReplaceAbsent: state.competitiveBotsReplaceAbsent }
+      : {}),
+    ...(state.competitiveBotSeats
+      ? { competitiveBotSeats: state.competitiveBotSeats }
+      : {}),
+    ...(state.competitiveDeciding
+      ? { competitiveDeciding: true as const }
+      : {}),
+    ...(state.classicExpress ? { classicExpress: true as const } : {}),
     selfPlayerId: playerId,
+    ...(canRequestCompetitiveBot(state, playerId)
+      ? { botRequestAvailable: true as const }
+      : {}),
     legalActions: runtime.deriveLegalActions(state, playerId),
     players: publicPlayers(state),
     ...(state.pendingInheritance

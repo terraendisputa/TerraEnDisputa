@@ -8,6 +8,7 @@ import {
   type ServerMessage,
 } from '@game/protocol';
 import { createCommandId } from './command-id.js';
+import { parseServerJson } from './language.js';
 
 export type ConnectionStatus =
   | 'connecting'
@@ -130,7 +131,7 @@ export class LiveGameClient {
       if (this.socket !== socket || this.stopped) return;
       let decoded: unknown;
       try {
-        decoded = JSON.parse(String(event.data));
+        decoded = parseServerJson(String(event.data));
       } catch {
         this.failProtocol(socket);
         return;

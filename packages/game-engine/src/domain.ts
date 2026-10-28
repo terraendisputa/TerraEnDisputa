@@ -27,6 +27,21 @@ export interface PlayerState {
   readonly controller: 'controlled' | 'controllerless_reassignment';
   readonly eliminated: boolean;
   readonly disqualified?: boolean;
+  /** Competitive: disconnected past the wait; turns pass on their own. */
+  readonly absent?: boolean;
+  /**
+   * Competitive: the server plays this seat. `absent` replaces a disconnected
+   * player until they return; `admin` was put by the administrator;
+   * `requested` was asked for by the player with one country left in the
+   * final rounds; `table` is one of the bots of a four plus two table.
+   */
+  readonly bot?: 'absent' | 'admin' | 'requested' | 'table';
+  /** Competitive: a bot played this seat at some point. */
+  readonly botPlayed?: true;
+  /** Deciding Competitive game: left or absent, plays one-minute turns. */
+  readonly inactive?: true;
+  /** Classic: the turn in which this seat's bot last proposed a pact. */
+  readonly botProposalTurn?: number;
   readonly cards: readonly TerritoryCardPossession[];
   readonly completedExchangeCount: number;
   readonly secretObjectiveId?: SecretObjectiveId;
@@ -67,6 +82,8 @@ export interface ExactPoints {
 }
 export interface CompetitiveResultRow {
   readonly playerId: PlayerId;
+  /** A table bot, or a player a bot replaced at some point. */
+  readonly bot?: 'table' | 'replacement';
   readonly status: 'survivor' | 'eliminated' | 'disqualified';
   readonly position?: number;
   readonly tiedPlayers: number;
@@ -216,8 +233,15 @@ export interface CompetitivePactWithdrawal {
   readonly recipientId: PlayerId;
   readonly incorporationsRemaining: 1 | 2;
 }
+export interface CompetitivePactRejection {
+  readonly proposerId: PlayerId;
+  readonly recipientId: PlayerId;
+  /** Game clock time of the rejection. */
+  readonly elapsedMs: number;
+}
 export interface PactState {
   readonly competitiveWithdrawals?: readonly CompetitivePactWithdrawal[];
+  readonly competitiveRejections?: readonly CompetitivePactRejection[];
   readonly proposals: readonly PactProposal[];
   readonly active: readonly ActivePact[];
 }
@@ -280,6 +304,24 @@ interface GameStateBase {
   readonly mode: GameMode;
   readonly id: GameId;
   readonly configuredPlayerCount: 2 | 3 | 4 | 5 | 6;
+  /** Competitive with five or six players may be the 60 minute Express game. */
+  readonly competitiveDurationMinutes?: 60 | 80;
+  /** Competitive bot difficulty; hard when unset, as in the Superliga. */
+  readonly competitiveBotLevel?: 'easy' | 'normal' | 'hard';
+  /** False keeps automatic turns for absent players instead of a bot. */
+  readonly competitiveBotsReplaceAbsent?: boolean;
+  /**
+   * Seats bots take at the start: two of six in Competitive (Superliga 4 + 2),
+   * from one up to all but one in Classic.
+   */
+  readonly competitiveBotSeats?: number;
+  /**
+   * Qualifiers, semifinals and finals: no bots; whoever leaves stays inactive
+   * with one-minute turns.
+   */
+  readonly competitiveDeciding?: true;
+  /** Classic with a game clock: two-minute turns and a time limit, no score. */
+  readonly classicExpress?: true;
   readonly players: readonly PlayerState[];
 }
 export interface LobbyGameState extends GameStateBase {

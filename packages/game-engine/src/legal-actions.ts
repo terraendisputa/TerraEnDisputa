@@ -11,7 +11,9 @@ import {
   isLegalExchange,
   isPactProposalLegal,
   isActiveInternationalZone,
+  competitiveProposalError,
   pactBlocks,
+  suicideBlocks,
 } from './rules.js';
 
 export type LegalActionType =
@@ -196,7 +198,9 @@ export function deriveLegalActions(
   const pactIdsToWithdraw = state.pacts.active
     .filter(
       (pact) =>
-        state.competitiveClock?.finalRoundNumber === undefined &&
+        // Classic Express still lets pacts be broken in the final rounds.
+        (state.mode !== 'competitive' ||
+          state.competitiveClock?.finalRoundNumber === undefined) &&
         pact.parties.includes(playerId) &&
         pact.withdrawal.kind === 'none',
     )
@@ -208,12 +212,18 @@ export function deriveLegalActions(
       state.turn.round.pass === 'hostility');
   const pactRecipientIds =
     ownsHostilityActivation &&
-    pactsAllowed(state.mode, state.configuredPlayerCount)
+    pactsAllowed(
+      state.mode,
+      state.configuredPlayerCount,
+      state.competitiveBotSeats,
+    )
       ? state.players
           .filter(
             (player) =>
               !player.eliminated &&
               !player.disqualified &&
+              !player.absent &&
+              (state.mode !== 'competitive' || !player.bot) &&
               player.id !== playerId,
           )
           .map(({ id }) => id)
@@ -241,13 +251,18 @@ export function deriveLegalActions(
             },
           });
     }
+    if (competitiveProposalError(state, playerId, recipientId)) return [];
     return candidates.filter(({ terms }) =>
       isPactProposalLegal(state, playerId, recipientId, terms as PactTerms),
     );
   });
   const pactActions = actionList(
     ownsHostilityActivation &&
-      pactsAllowed(state.mode, state.configuredPlayerCount) &&
+      pactsAllowed(
+        state.mode,
+        state.configuredPlayerCount,
+        state.competitiveBotSeats,
+      ) &&
       'propose_pact',
     pactProposalIdsToAnswer.length > 0 && 'accept_pact',
     pactProposalIdsToAnswer.length > 0 && 'reject_pact',
@@ -342,7 +357,11 @@ export function deriveLegalActions(
   }
   if (phase === 'attack') {
     const attackChoices = owned.flatMap((from) => {
-      if (state.territories[from].armies < 2) return [];
+      if (
+        state.territories[from].armies < 2 ||
+        suicideBlocks(state, playerId, from)
+      )
+        return [];
       const targets = TERRITORIES[from].adjacentTerritoryIds.filter((to) => {
         const defender = state.territories[to].ownerId;
         return (

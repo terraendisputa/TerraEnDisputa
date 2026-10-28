@@ -341,20 +341,34 @@ void test('historical schema 5/6 mid-setup migration retains actor, board and pr
   }
 });
 
-void test('four players cannot propose or accept pacts; five and six permit the shared pact types', () => {
+void test('four players cannot propose or accept pacts; five and six permit only border pacts', () => {
   for (const n of [4, 5, 6]) {
     const state = complete(
       createClassicSetup('pacts', players(n), rng(), 'competitive'),
     ).state;
     const actor = state.turn.playerId;
-    const recipient = state.players.find((p) => p.id !== actor).id;
+    const [from, to] = TERRITORY_IDS.flatMap((id) =>
+      state.territories[id].ownerId === actor
+        ? TERRITORIES[id].adjacentTerritoryIds
+            .filter((adjacent) => state.territories[adjacent].ownerId !== actor)
+            .map((adjacent) => [id, adjacent])
+        : [],
+    )[0];
+    const recipient = state.territories[to].ownerId;
     const proposal = {
       type: 'propose_pact',
       playerId: actor,
       proposalId: 'proposal',
       recipientId: recipient,
-      terms: { kind: 'general_non_aggression' },
+      terms: { kind: 'border_non_aggression', territoryIds: [from, to] },
     };
+    assert.equal(
+      applyCommand(state, {
+        ...proposal,
+        terms: { kind: 'general_non_aggression' },
+      }).ok,
+      false,
+    );
     const result = applyCommand(state, proposal);
     assert.equal(result.ok, n !== 4);
     assert.equal(

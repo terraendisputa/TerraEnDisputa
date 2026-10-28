@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1 — 2026-10-28
+
+- Competitive follows the Superliga rules: border pacts only, a wait after a rejected pact, disconnection grace, tiebreak and a suicide block; deciding games.
+- Bots (easy, normal and hard) for Classic, Competitive and Retake: bot tables, replacement of absent players, host controls and pact diplomacy.
+- Classic Express and Retake Express, with game clocks and two final rounds.
+- Reconquista is now called Retake in English; condominium invasions and lost reinforcements when every country is blocked.
+- Full English translation with a language selector on every page, dark theme by default and a text size control.
+- Map label fixes, music by game moment, result panels at game end and a consistent host panel.
+
 ## 1.0.0 — 2026-10-24
 
 First stable release.

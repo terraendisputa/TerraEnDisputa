@@ -5,7 +5,13 @@ import {
   synchronizeCompetitiveClock,
   pauseCompetitiveClock,
   selectCompetitiveTerritory,
+  requestCompetitiveBot,
+  hasGameClock,
+  markCompetitiveInactive,
   competitiveActor,
+  chooseBotCommand,
+  applyBotCommand,
+  assignCompetitiveBot,
   type GameState,
   type GameplayCommand,
   type PlayerId,
@@ -117,10 +123,28 @@ function execute(
       ok: false as const,
       error: { code: 'GAME_PAUSED', message: 'Game is paused' },
     };
+  if (payload.type === 'request_bot') {
+    try {
+      return {
+        ok: true as const,
+        state: requestCompetitiveBot(state, playerId),
+      };
+    } catch {
+      return {
+        ok: false as const,
+        error: { code: 'INVALID_PHASE', message: 'A bot cannot take over now' },
+      };
+    }
+  }
   if (state.players.find((p) => p.id === playerId)?.disqualified)
     return {
       ok: false as const,
       error: { code: 'PLAYER_DISQUALIFIED', message: 'Player is disqualified' },
+    };
+  if (state.players.find((p) => p.id === playerId)?.bot)
+    return {
+      ok: false as const,
+      error: { code: 'BOT_CONTROLLED', message: 'A bot plays this seat' },
     };
   if (payload.type === 'set_ready') {
     if (state.status !== 'LOBBY')
@@ -165,7 +189,7 @@ function execute(
 // remain part of the comparison. Ranges are volatile: restart fails closed.
 function clockOnlyChange(before: GameState, after: GameState): boolean {
   if (
-    before.mode !== 'competitive' ||
+    !hasGameClock(before) ||
     !before.competitiveClock ||
     !after.competitiveClock
   )
@@ -187,11 +211,50 @@ function clockOnlyChange(before: GameState, after: GameState): boolean {
   return JSON.stringify(context(before)) === JSON.stringify(context(after));
 }
 
+/**
+ * Time between two bot moves in a game, so everyone can follow them on the
+ * map; a two-minute turn still leaves room for dozens of moves.
+ */
+export const BOT_MOVE_GAP_MS = 2_000;
+
+/**
+ * One move per clock tick for a seat the server plays, so everyone can follow
+ * it on the map. A rejected move leaves the turn to its timer. In Classic a
+ * bot first answers the pact offered to it, even out of turn.
+ */
+function playBot(state: GameState, now: number): GameState {
+  if (state.competitiveClock?.pauseReason) return state;
+  const plays = (id: PlayerId | undefined) =>
+    !!id && !!state.players.find((p) => p.id === id)?.bot;
+  const offered =
+    state.status === 'ACTIVE'
+      ? state.pacts.proposals.find((p) => plays(p.recipientId))?.recipientId
+      : undefined;
+  const actor = offered ?? competitiveActor(state);
+  if (!actor || !plays(actor)) return state;
+  const command = chooseBotCommand(
+    state,
+    actor,
+    state.competitiveBotLevel ?? 'hard',
+    secureGameRandomness,
+  );
+  if (!command) return state;
+  const result = applyBotCommand(state, command, {
+    dice: secureGameRandomness,
+    shuffle: secureGameRandomness,
+  });
+  return result.ok
+    ? synchronizeCompetitiveClock(state, result.state, now)
+    : state;
+}
+
 export class GameService {
   private readonly clockRevisionRanges = new Map<
     string,
     { first: number; last: number; authGeneration: number }
   >();
+  /** When a bot last moved in each game. */
+  private readonly botMoves = new Map<string, number>();
   constructor(
     private readonly store: CommandGameStore,
     private readonly coordinator = new PerGameCoordinator(),
@@ -241,7 +304,7 @@ export class GameService {
     this.clockRevisionRanges.delete(gameId);
     await this.coordinator.run(gameId, async () => {
       const current = await this.store.loadGame(gameId);
-      if (!current || current.state.mode !== 'competitive') return;
+      if (!current || !hasGameClock(current.state)) return;
       const now = this.now();
       const actor = competitiveActor(current.state);
       const accounted = tickCompetitiveClock(
@@ -266,12 +329,17 @@ export class GameService {
         return false;
       }
       const actor = competitiveActor(current.state);
-      const state = tickCompetitiveClock(
+      const now = this.now();
+      const ticked = tickCompetitiveClock(
         current.state,
-        this.now(),
+        now,
         actor ? this.connected(gameId, actor) : true,
         secureGameRandomness,
       );
+      const rested =
+        now - (this.botMoves.get(gameId) ?? -Infinity) >= BOT_MOVE_GAP_MS;
+      const state = rested ? playBot(ticked, now) : ticked;
+      if (state !== ticked) this.botMoves.set(gameId, now);
       if (JSON.stringify(state) === JSON.stringify(current.state)) return false;
       const range = this.clockRevisionRanges.get(gameId);
       const measurementsOnly = clockOnlyChange(current.state, state);
@@ -293,6 +361,81 @@ export class GameService {
       return true;
     });
   }
+  /** Administrator changes to the bots of a Classic or Competitive game. */
+  async updateBots(
+    gameId: string,
+    change:
+      | {
+          readonly level?: 'easy' | 'normal' | 'hard';
+          readonly replaceAbsent?: boolean;
+        }
+      | { readonly playerId: string; readonly enabled: boolean }
+      | { readonly playerId: string; readonly inactive: boolean },
+  ): Promise<number> {
+    this.clockRevisionRanges.delete(gameId);
+    return this.coordinator.run(gameId, async () => {
+      const current = await this.store.loadGame(gameId);
+      if (!current) throw new Error('GAME_NOT_FOUND');
+      let state = current.state;
+      if (
+        state.status === 'FINISHED' ||
+        ('inactive' in change && state.mode !== 'competitive')
+      )
+        throw new Error('INVALID_PHASE');
+      if ('playerId' in change) {
+        const now = this.now();
+        const actor = competitiveActor(state);
+        state = tickCompetitiveClock(
+          state,
+          now,
+          actor ? this.connected(gameId, actor) : true,
+          secureGameRandomness,
+        );
+        state =
+          'inactive' in change
+            ? markCompetitiveInactive(
+                state,
+                change.playerId as PlayerId,
+                change.inactive,
+              )
+            : assignCompetitiveBot(
+                state,
+                change.playerId as PlayerId,
+                change.enabled,
+              );
+      } else
+        state = {
+          ...state,
+          ...(change.level ? { competitiveBotLevel: change.level } : {}),
+          ...(change.replaceAbsent !== undefined
+            ? { competitiveBotsReplaceAbsent: change.replaceAbsent }
+            : {}),
+        };
+      // A freed table seat needs the open record anyone can take it with.
+      const freed = state.players.filter(
+        (p) =>
+          p.controller === 'controllerless_reassignment' &&
+          !current.auth.players[p.id],
+      );
+      const auth = freed.length
+        ? {
+            ...current.auth,
+            generation: current.auth.generation + 1,
+            players: {
+              ...current.auth.players,
+              ...Object.fromEntries(
+                freed.map((p) => [p.id, { playerId: p.id }]),
+              ),
+            },
+          }
+        : current.auth;
+      await this.store.commitGame(
+        { ...current, state, auth, revision: current.revision + 1 },
+        { authGeneration: current.auth.generation, revision: current.revision },
+      );
+      return current.revision + 1;
+    });
+  }
   async pause(gameId: string, paused: boolean): Promise<number> {
     this.clockRevisionRanges.delete(gameId);
     return this.coordinator.run(gameId, async () => {
@@ -310,7 +453,11 @@ export class GameService {
         !paused &&
         accounted.players.some(
           (p) =>
-            !p.eliminated && !p.disqualified && !this.connected(gameId, p.id),
+            !p.eliminated &&
+            !p.disqualified &&
+            !p.absent &&
+            !p.bot &&
+            !this.connected(gameId, p.id),
         )
       )
         throw new Error('PLAYERS_UNAVAILABLE');
@@ -381,7 +528,7 @@ export class GameService {
             };
       const range = this.clockRevisionRanges.get(gameId);
       const clockOnlyRevision =
-        current.state.mode === 'competitive' &&
+        hasGameClock(current.state) &&
         range?.last === current.revision &&
         range.authGeneration === current.auth.generation &&
         command.baseRevision >= range.first &&
@@ -412,7 +559,10 @@ export class GameService {
           timed.competitiveClock?.finalRoundNumber ||
         initial.status !== timed.status ||
         initial.players.some(
-          (p, i) => p.disqualified !== timed.players[i]?.disqualified,
+          (p, i) =>
+            p.disqualified !== timed.players[i]?.disqualified ||
+            p.absent !== timed.players[i]?.absent ||
+            p.bot !== timed.players[i]?.bot,
         ) ||
         !!initial.pendingInheritance !== !!timed.pendingInheritance;
       if (temporalBoundary) {

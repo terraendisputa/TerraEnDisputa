@@ -41,6 +41,11 @@ const player = z.strictObject({
   controller: z.enum(['controlled', 'controllerless_reassignment']),
   eliminated: z.boolean(),
   disqualified: z.boolean().optional(),
+  absent: z.literal(true).optional(),
+  bot: z.enum(['absent', 'admin', 'requested', 'table']).optional(),
+  botPlayed: z.literal(true).optional(),
+  inactive: z.literal(true).optional(),
+  botProposalTurn: nonnegativeInteger.optional(),
   cards: z.array(
     z.strictObject({
       cardId: z.enum(TERRITORY_IDS),
@@ -126,6 +131,15 @@ const pacts = z.strictObject({
         withdrawingPlayerId: id,
         recipientId: id,
         incorporationsRemaining: z.union([z.literal(1), z.literal(2)]),
+      }),
+    )
+    .optional(),
+  competitiveRejections: z
+    .array(
+      z.strictObject({
+        proposerId: id,
+        recipientId: id,
+        elapsedMs: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
       }),
     )
     .optional(),
@@ -223,6 +237,14 @@ const base = {
     z.literal(5),
     z.literal(6),
   ]),
+  competitiveDurationMinutes: z
+    .union([z.literal(60), z.literal(80)])
+    .optional(),
+  competitiveBotLevel: z.enum(['easy', 'normal', 'hard']).optional(),
+  competitiveBotsReplaceAbsent: z.boolean().optional(),
+  competitiveBotSeats: z.number().int().min(1).max(5).optional(),
+  competitiveDeciding: z.literal(true).optional(),
+  classicExpress: z.literal(true).optional(),
   players: z.array(player),
 };
 const competitiveHistory = z.strictObject({
@@ -432,7 +454,7 @@ function validateDurableGame(
     }
   }
   for (const seat of parsed.state.players)
-    if (!parsed.auth.players[seat.id]) {
+    if (!parsed.auth.players[seat.id] && seat.bot !== 'table') {
       if (seat.controller === 'controllerless_reassignment')
         throw new Error('controllerless player is missing reassignment auth');
       if (!allowLegacyMissingAuth)

@@ -1,4 +1,9 @@
-import { setupArmies, validPlayerCount, pactsAllowed } from './mode-policy.js';
+import {
+  setupArmies,
+  validPlayerCount,
+  pactsAllowed,
+  humanSeats,
+} from './mode-policy.js';
 import {
   CONTINENTS,
   CONTINENT_IDS,
@@ -11,6 +16,7 @@ import {
 } from './classic-data.js';
 import type { ActivePact, GameState, PlayerId } from './domain.js';
 import { victoryReason } from './rules.js';
+import { hasGameClock, timeLimitWinner } from './competitive-clock.js';
 
 /** Pure, Classic-specific structural validation used at engine boundaries and in tests. */
 export function classicInvariantViolations(
@@ -21,13 +27,17 @@ export function classicInvariantViolations(
     errors.push('invalid mode or player count');
   if (
     state.status !== 'LOBBY' &&
-    !pactsAllowed(state.mode, state.configuredPlayerCount) &&
+    !pactsAllowed(
+      state.mode,
+      state.configuredPlayerCount,
+      state.competitiveBotSeats,
+    ) &&
     (state.pacts.active.length || state.pacts.proposals.length)
   )
     errors.push('pacts disabled');
   if (
     state.mode === 'competitive' &&
-    state.configuredPlayerCount === 4 &&
+    humanSeats(state) === 4 &&
     state.players.some((p) => p.secretObjectiveId?.startsWith('destroy_'))
   )
     errors.push('destruction objectives disabled');
@@ -71,8 +81,18 @@ export function classicInvariantViolations(
       errors.push(`invalid destruction target for ${player.id}`);
   }
   if (state.status === 'LOBBY') {
-    if (state.players.length > state.configuredPlayerCount)
+    if (state.players.length > humanSeats(state))
       errors.push('lobby exceeds configured player count');
+    if (
+      state.competitiveBotSeats &&
+      (state.mode === 'competitive'
+        ? state.configuredPlayerCount !== 6 ||
+          state.competitiveBotSeats !== 2 ||
+          state.competitiveDurationMinutes === 60
+        : !Number.isInteger(state.competitiveBotSeats) ||
+          state.competitiveBotSeats >= state.configuredPlayerCount)
+    )
+      errors.push('A bot table leaves seats for people');
     const readyIds = new Set<PlayerId>();
     for (const id of state.readyPlayerIds) {
       if (!playerIds.has(id)) errors.push(`invalid ready player ${id}`);
@@ -310,6 +330,14 @@ export function classicInvariantViolations(
     pactIds.add(wait.id);
     validateTerms(wait.terms, playerIds, errors, `withdrawal ${wait.id}`);
   }
+  for (const rejection of state.pacts.competitiveRejections ?? [])
+    if (
+      state.mode !== 'competitive' ||
+      !playerIds.has(rejection.proposerId) ||
+      !playerIds.has(rejection.recipientId) ||
+      rejection.proposerId === rejection.recipientId
+    )
+      errors.push('invalid competitive pact rejection');
 
   for (const pact of state.pacts.active) {
     if (pactIds.has(pact.id)) errors.push(`duplicate pact ${pact.id}`);
@@ -493,8 +521,13 @@ export function classicInvariantViolations(
     ['time_limit', 'no_competitors'].includes(state.result.victoryReason.kind)
   ) {
     if (
-      state.mode !== 'competitive' ||
-      state.result.winnerId !== undefined ||
+      (state.mode !== 'competitive' &&
+        !(
+          state.classicExpress &&
+          state.result.victoryReason.kind === 'time_limit'
+        )) ||
+      state.result.winnerId !==
+        (state.mode === 'classic' ? timeLimitWinner(state) : undefined) ||
       (state.result.victoryReason.kind === 'time_limit' &&
         (!state.competitiveClock?.finalRoundNumber ||
           state.competitiveClock.completedRounds <
@@ -529,12 +562,14 @@ export function classicInvariantViolations(
   if (
     clock &&
     state.status === 'FINISHED' &&
-    state.result.scoringEligible !== clock.completedRounds >= 6
+    (state.mode === 'competitive'
+      ? state.result.scoringEligible !== clock.completedRounds >= 6
+      : state.result.scoringEligible !== undefined)
   )
     errors.push('invalid scoring eligibility');
   if (
     clock &&
-    (state.mode !== 'competitive' ||
+    (!hasGameClock(state) ||
       ![
         clock.updatedAtMs,
         clock.elapsedMs,
@@ -559,6 +594,58 @@ export function classicInvariantViolations(
       ))
   )
     errors.push('invalid competitive clock');
+  if (
+    state.mode !== 'competitive' &&
+    (state.players.some(
+      (p) =>
+        p.bot === 'requested' || (p.bot === 'absent' && !hasGameClock(state)),
+    ) ||
+      (state.competitiveBotSeats ?? 0) >= state.configuredPlayerCount)
+  )
+    errors.push(
+      "Classic bots are the administrator's or replace absents in Express",
+    );
+  if (
+    state.mode === 'competitive' &&
+    state.competitiveBotSeats &&
+    (state.configuredPlayerCount !== 6 ||
+      state.competitiveDurationMinutes === 60 ||
+      state.players.filter((p) => p.bot === 'table').length !==
+        state.competitiveBotSeats)
+  )
+    errors.push('A bot table is six seats with two bots and no Express');
+  if (
+    state.mode === 'classic' &&
+    state.players.filter((p) => p.bot === 'table').length >
+      (state.competitiveBotSeats ?? 0)
+  )
+    errors.push('A Classic table has at most the bots chosen in the lobby');
+  if (
+    !state.competitiveBotSeats &&
+    state.players.some((p) => p.bot === 'table')
+  )
+    errors.push('Table bots belong to a started bot table');
+  if (
+    state.players.some(
+      (p) => [p.absent, p.bot, p.inactive].filter(Boolean).length > 1,
+    )
+  )
+    errors.push('A seat is either absent, inactive or played by a bot');
+  if (
+    state.competitiveDeciding &&
+    (state.mode !== 'competitive' ||
+      state.competitiveBotSeats ||
+      state.players.some((p) => p.bot))
+  )
+    errors.push('A deciding game is Competitive and has no bots');
+  if (!state.competitiveDeciding && state.players.some((p) => p.inactive))
+    errors.push('Only deciding games have inactive players');
+  if (!hasGameClock(state) && state.players.some((p) => p.absent))
+    errors.push('Only games with a clock can have absent players');
+  if (state.classicExpress && state.mode !== 'classic')
+    errors.push('Express is a Classic option');
+  if (state.mode !== 'competitive' && state.competitiveDurationMinutes)
+    errors.push('Only Competitive can choose its duration');
   if (state.mode === 'classic' && state.players.some((p) => p.disqualified))
     errors.push('Classic cannot contain disqualified players');
   return errors;

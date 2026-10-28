@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { createCommandId } from './command-id.js';
+import { reconquistaCountryName } from './place-names.js';
 import {
   RECONQUISTA_PROTOCOL,
   reconquistaBoardSchema,
@@ -14,6 +16,7 @@ import {
   campaignPhaseNames,
   preparationStageNames,
 } from './reconquista-labels.js';
+import { parseServerJson, tr } from './language.js';
 
 const RECONQUISTA_API = '/api/reconquista';
 
@@ -42,7 +45,10 @@ export async function reconquistaRequest(
           body: JSON.stringify(body),
         }),
   });
-  const value: unknown = await response.json().catch(() => ({}));
+  const value: unknown = await response
+    .text()
+    .then(parseServerJson)
+    .catch(() => ({}));
   if (!response.ok) {
     const code =
       typeof value === 'object' &&
@@ -60,25 +66,69 @@ export function reconquistaErrorMessage(caught: unknown): string {
   const code = caught instanceof ReconquistaRequestError ? caught.code : '';
   switch (code) {
     case 'UNAUTHORIZED':
-      return 'Necesitás un asiento en esta partida o la sesión de administrador.';
+      return tr(
+        'Necesitás un asiento en esta partida o la sesión de administrador.',
+        'You need a seat in this game or the administrator session.',
+      );
     case 'NOT_FOUND':
-      return 'La partida no existe.';
+      return tr('La partida no existe.', 'The game does not exist.');
     case 'RATE_LIMITED':
-      return 'Demasiados intentos. Esperá un momento.';
+      return tr(
+        'Demasiados intentos. Esperá un momento.',
+        'Too many attempts. Wait a moment.',
+      );
     case 'INVALID_RECONQUISTA_ACTION':
-      return 'La acción ya no es válida. Se actualizó la partida.';
+      return tr(
+        'La acción ya no es válida. Se actualizó la partida.',
+        'The action is no longer valid. The game was updated.',
+      );
     case 'INCOMPATIBLE_RECONQUISTA_CONTRACT':
-      return 'La acción tiene datos incompletos.';
+      return tr(
+        'La acción tiene datos incompletos.',
+        'The action has incomplete data.',
+      );
     case 'COLOR_IN_USE':
-      return 'Ese color ya estaba en uso. Elegimos otro libre.';
+      return tr(
+        'Ese color ya estaba en uso. Elegimos otro libre.',
+        'That color was already in use. We picked a free one.',
+      );
     case 'NICKNAME_IN_USE':
-      return 'Ese nombre ya está en uso. Elegí otro.';
+      return tr(
+        'Ese nombre ya está en uso. Elegí otro.',
+        'That name is already in use. Choose another.',
+      );
+    case 'GAME_PAUSED':
+      return tr('La partida está en pausa.', 'The game is paused.');
+    case 'BOT_CONTROLLED':
+      return tr(
+        'Un bot juega este asiento. Pedile al anfitrión que te lo devuelva.',
+        'A bot is playing this seat. Ask the host to give it back.',
+      );
+    case 'SEAT_TAKEN':
+      return tr(
+        'Ese asiento ya lo tomó otra persona.',
+        'Someone else already took that seat.',
+      );
+    case 'TOO_MANY_BOTS':
+      return tr(
+        'Tiene que quedar al menos un asiento para una persona.',
+        'At least one seat must stay for a person.',
+      );
     case 'STALE_REVISION':
-      return 'Otro jugador actuó antes. Se actualizó la partida.';
+      return tr(
+        'Otro jugador actuó antes. Se actualizó la partida.',
+        'Another player acted first. The game was updated.',
+      );
     default:
       return code
-        ? `No se pudo completar la acción (${code}).`
-        : 'No se pudo completar la acción.';
+        ? tr(
+            `No se pudo completar la acción (${code}).`,
+            `The action could not be completed (${code}).`,
+          )
+        : tr(
+            'No se pudo completar la acción.',
+            'The action could not be completed.',
+          );
   }
 }
 
@@ -133,7 +183,16 @@ export function useReconquistaGame(gameId: string) {
     mounted.current = true;
     void reconquistaRequest('/board')
       .then((value) => {
-        if (mounted.current) setBoard(reconquistaBoardSchema.parse(value));
+        if (mounted.current) {
+          const parsed = reconquistaBoardSchema.parse(value);
+          setBoard({
+            ...parsed,
+            countries: parsed.countries.map((c) => ({
+              ...c,
+              name: reconquistaCountryName(c.id, c.name),
+            })),
+          });
+        }
       })
       .catch(() => {
         if (mounted.current) setConnection('disconnected');
@@ -199,7 +258,7 @@ export function useReconquistaGame(gameId: string) {
       if (!view) return;
       pending.current ??= {
         protocolVersion: RECONQUISTA_PROTOCOL,
-        commandId: crypto.randomUUID(),
+        commandId: createCommandId(),
         revision: view.revision,
         action,
       };
@@ -235,7 +294,7 @@ export function useReconquistaGame(gameId: string) {
         current = reconquistaCommandResultSchema.parse(
           await reconquistaRequest('/games/' + gameId + '/commands', {
             protocolVersion: RECONQUISTA_PROTOCOL,
-            commandId: crypto.randomUUID(),
+            commandId: createCommandId(),
             revision: current.revision,
             action,
           }),
@@ -290,6 +349,19 @@ export interface Presentation {
   readonly round: number | undefined;
 }
 
+/** A condominio offered by whoever expelled one of a country's two occupants. */
+export function condominiumOffer(view: ReconquistaView) {
+  const occupation = view.campaign?.occupation;
+  if (occupation?.condominium !== 'proposed') return null;
+  const proposerId = occupation.arrivals[0]!.playerId;
+  const partnerId = view.territories
+    .find((t) => t.id === occupation.targetId)
+    ?.forces.find((f) => f.playerId !== proposerId && f.armies > 0)?.playerId;
+  return partnerId
+    ? { proposerId, partnerId, targetId: occupation.targetId }
+    : null;
+}
+
 /** Same role as game-presentation.ts in Classic: one current action per view. */
 export function reconquistaPresentation(view: ReconquistaView): Presentation {
   const me = view.self?.playerId;
@@ -297,7 +369,7 @@ export function reconquistaPresentation(view: ReconquistaView): Presentation {
   if (campaign) {
     const legal = view.self?.campaign?.legal;
     const phase = campaign.extraPass
-      ? 'Refuerzos extra'
+      ? tr('Refuerzos extra', 'Extra reinforcements')
       : (campaignPhaseNames[campaign.phase] ?? campaign.phase);
     const base = {
       actorId: legal?.actorId ?? campaign.actorId,
@@ -305,18 +377,28 @@ export function reconquistaPresentation(view: ReconquistaView): Presentation {
       round: campaign.round,
     };
     if (campaign.phase === 'finished')
-      return { ...base, mode: 'finished', mine: false, title: 'Resultado' };
+      return {
+        ...base,
+        mode: 'finished',
+        mine: false,
+        title: tr('Resultado', 'Result'),
+      };
     if (!view.self)
       return { ...base, mode: 'observer', mine: false, title: phase };
     if (campaign.eliminations[me!])
-      return { ...base, mode: 'observer', mine: false, title: 'Eliminado' };
+      return {
+        ...base,
+        mode: 'observer',
+        mine: false,
+        title: tr('Eliminado', 'Eliminated'),
+      };
     const occupation = legal?.occupation;
     if (occupation?.arrivals[0]?.playerId === me)
       return {
         ...base,
         mode: 'occupation',
         mine: true,
-        title: 'Traslado',
+        title: tr('Traslado', 'Move'),
       };
     // Menu names follow Classic.
     if (legal?.canReinforce)
@@ -324,14 +406,16 @@ export function reconquistaPresentation(view: ReconquistaView): Presentation {
         ...base,
         mode: 'placement',
         mine: true,
-        title: legal.canExchange ? 'Canje y refuerzos' : 'Refuerzos',
+        title: legal.canExchange
+          ? tr('Canje y refuerzos', 'Exchange and reinforcements')
+          : tr('Refuerzos', 'Reinforcements'),
       };
     if (campaign.zoneDecisions.some((d) => d.playerId === me))
       return {
         ...base,
         mode: 'zone',
         mine: true,
-        title: 'Zona internacional',
+        title: tr('Zona internacional', 'International zone'),
       };
     if (
       campaign.phase === 'attack' &&
@@ -341,11 +425,26 @@ export function reconquistaPresentation(view: ReconquistaView): Presentation {
         legal.attacks.length > 0 ||
         legal.missileShots.length > 0)
     )
-      return { ...base, mode: 'attack', mine: true, title: 'Ataque' };
+      return {
+        ...base,
+        mode: 'attack',
+        mine: true,
+        title: tr('Ataque', 'Attack'),
+      };
     if (legal?.canFinishRegroup || legal?.canFinishAllyRegroup)
-      return { ...base, mode: 'regroup', mine: true, title: 'Traslado' };
+      return {
+        ...base,
+        mode: 'regroup',
+        mine: true,
+        title: tr('Traslado', 'Move'),
+      };
     if (legal?.canFinishTurn)
-      return { ...base, mode: 'closing', mine: true, title: 'Cartas' };
+      return {
+        ...base,
+        mode: 'closing',
+        mine: true,
+        title: tr('Cartas', 'Cards'),
+      };
     return { ...base, mode: 'wait', mine: false, title: phase };
   }
   const legal = view.self?.legal;
@@ -364,20 +463,30 @@ export function reconquistaPresentation(view: ReconquistaView): Presentation {
       ...base,
       mode: 'reveal',
       mine: true,
-      title: 'Revelar situación',
+      title: tr('Revelar situación', 'Reveal situation'),
     };
   if (legal?.transfer)
     return {
       ...base,
       mode: 'transfer',
       mine: true,
-      title: 'Traslado',
+      title: tr('Traslado', 'Move'),
     };
   // First hostility uses the same Ataque and Traslado menus as full turns.
   if (view.stage === 'first-hostility' && legal && legal.actorId === me) {
     if (view.hostility?.phase === 'attack' && legal.attacks.length > 0)
-      return { ...base, mode: 'attack', mine: true, title: 'Ataque' };
-    return { ...base, mode: 'regroup', mine: true, title: 'Traslado' };
+      return {
+        ...base,
+        mode: 'attack',
+        mine: true,
+        title: tr('Ataque', 'Attack'),
+      };
+    return {
+      ...base,
+      mode: 'regroup',
+      mine: true,
+      title: tr('Traslado', 'Move'),
+    };
   }
   return { ...base, mode: 'wait', mine: false, title: phase };
 }

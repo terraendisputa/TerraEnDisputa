@@ -8,16 +8,34 @@ export const territory = (s: Campaign, id: string) => {
 };
 export const force = (t: CampaignTerritory, id: string) =>
   t.forces.find((f) => f.playerId === id);
+/** Continents and borders looked up once per board: bots ask for them all the time. */
+const lookups = new WeakMap<
+  PreparationBoard,
+  { continents: Map<string, string>; borders: Set<string> }
+>();
+function lookup(board: PreparationBoard) {
+  let known = lookups.get(board);
+  if (!known) {
+    known = {
+      continents: new Map(board.countries.map((c) => [c.id, c.continentId])),
+      borders: new Set(
+        board.connections.flatMap(({ endpoints: [x, y] }) => [
+          `${x}|${y}`,
+          `${y}|${x}`,
+        ]),
+      ),
+    };
+    lookups.set(board, known);
+  }
+  return known;
+}
 export const continent = (board: PreparationBoard, id: string) => {
-  const c = board.countries.find((c) => c.id === id);
-  if (!c) throw Error('Unknown country');
-  return c.continentId;
+  const c = lookup(board).continents.get(id);
+  if (c === undefined) throw Error('Unknown country');
+  return c;
 };
 export const adjacent = (board: PreparationBoard, a: string, b: string) =>
-  a !== b &&
-  board.connections.some(
-    (e) => e.endpoints.includes(a) && e.endpoints.includes(b),
-  );
+  a !== b && lookup(board).borders.has(`${a}|${b}`);
 export function blockedCountry(
   board: PreparationBoard,
   s: Campaign,

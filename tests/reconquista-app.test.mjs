@@ -1054,6 +1054,12 @@ void test('Stage4 full HTTP game: turns, live card deck, mandatory occupation, o
       `Game must reach victory, commands=${commands}`,
     );
     assert(v.campaign.winners.includes(first.id));
+    // Everyone sees the winners' objective cards once the game ends.
+    assert.deepEqual(
+      v.winnerObjectives.map((w) => w.playerId),
+      v.campaign.winners,
+    );
+    assert(v.winnerObjectives.every((w) => w.objectives[0]?.description));
     assert(captures >= 1);
     assert(rounds.size >= 2);
     const saved = JSON.parse(

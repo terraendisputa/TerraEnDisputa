@@ -266,7 +266,7 @@
   place-items: center;
   flex: 0 0 auto;
   min-width: 40px;
-  max-width: 88px;
+  max-width: 160px;
   height: 38px;
   min-height: 38px;
   padding: 5px 7px;
@@ -1042,6 +1042,7 @@
   }
   .game-shell.playing-shell .roster-player {
     min-width: 34px;
+    max-width: 88px;
     height: 34px;
     min-height: 34px;
     font-size: 10px;
@@ -1197,7 +1198,8 @@
 .game-shell.playing-shell .action-cluster,
 .game-shell.playing-shell .action-cluster:not(.mobile-actions-open) {
   width: max-content;
-  max-width: 154px;
+  /* Wide enough for «Bot Bombthrower's turn» and the situation name. */
+  max-width: 230px;
   max-height: calc(100dvh - 80px);
   bottom: max(var(--inset), env(safe-area-inset-bottom));
 }
@@ -1486,13 +1488,16 @@
 }
 
 /* Classic's menus use Reconquista's icon buttons. */
-.game-shell.playing-shell :is(.attack-card, .regroup-card) > .action-title {
+.game-shell.playing-shell
+  :is(.attack-card, .regroup-card)
+  > :is(.action-title, .muted-copy) {
   grid-column: 1 / -1;
 }
 .game-shell.playing-shell .contextual-panel-host .attack-card {
   grid-template-columns: minmax(0, 1fr) auto auto;
 }
 .game-shell.playing-shell .attack-card > :is(.attack-button, .end-attack) {
+  align-self: end;
   min-width: 36px;
   padding: 5px 8px;
 }
@@ -1799,7 +1804,7 @@ html:not([data-theme='dark']) .game-shell.playing-shell .player-popover {
 .game-shell.playing-shell .army-change text {
   fill: #fff;
   font:
-    700 15px system-ui,
+    700 10px system-ui,
     sans-serif;
   text-anchor: middle;
 }

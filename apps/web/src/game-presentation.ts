@@ -1,16 +1,20 @@
 import type { PlayerGameView } from '@game/protocol';
 import type { ConnectionStatus } from './live-game.js';
+import { tr } from './language.js';
 
 export const PHASE_LABELS: Record<
   NonNullable<PlayerGameView['turn']>['phase'],
   string
 > = {
-  territory_reinforcement: 'Refuerzos',
-  continent_reinforcement: 'Refuerzos continentales',
-  ordinary_exchange: 'Canje y refuerzos',
-  attack: 'Ataque',
-  regroup: 'Traslado',
-  end_of_turn_cards: 'Cartas',
+  territory_reinforcement: tr('Refuerzos', 'Reinforcements'),
+  continent_reinforcement: tr(
+    'Refuerzos continentales',
+    'Continent reinforcements',
+  ),
+  ordinary_exchange: tr('Canje y refuerzos', 'Exchange and reinforcements'),
+  attack: tr('Ataque', 'Attack'),
+  regroup: tr('Traslado', 'Move'),
+  end_of_turn_cards: tr('Cartas', 'Cards'),
 };
 
 /** Presentation only: permissions and available commands remain server supplied. */
@@ -40,43 +44,43 @@ export function gamePresentation(
         snapshot.private.cards.length > 5));
   const title =
     snapshot.status === 'FINISHED'
-      ? 'Resultado'
+      ? tr('Resultado', 'Result')
       : snapshot.status === 'LOBBY'
-        ? 'Sala de espera'
+        ? tr('Sala de espera', 'Waiting room')
         : setup
           ? snapshot.setup?.kind === 'card_deal_4_to_6' &&
             snapshot.setup.stage !== 'reinforcement'
-            ? 'Preparación'
-            : 'Distribución'
+            ? tr('Preparación', 'Preparation')
+            : tr('Distribución', 'Deployment')
           : snapshot.pendingAction
-            ? 'Traslado'
+            ? tr('Traslado', 'Move')
             : snapshot.turn?.phase === 'ordinary_exchange' && required
-              ? 'Canje'
+              ? tr('Canje', 'Exchange')
               : snapshot.turn
                 ? PHASE_LABELS[snapshot.turn.phase]
-                : 'Partida';
+                : tr('Partida', 'Game');
   const status =
     snapshot.status === 'FINISHED'
-      ? 'Partida finalizada'
+      ? tr('Partida finalizada', 'Game over')
       : mine
         ? required
-          ? 'Acción obligatoria'
-          : 'Tu turno'
+          ? tr('Acción obligatoria', 'Required action')
+          : tr('Tu turno', 'Your turn')
         : snapshot.players.find((p) => p.id === snapshot.selfPlayerId)
               ?.eliminated
-          ? 'Modo observación'
+          ? tr('Modo observación', 'Watching')
           : actor
-            ? `Turno de ${actor.nickname}`
-            : 'Preparando la partida';
+            ? tr(`Turno de ${actor.nickname}`, `${actor.nickname}'s turn`)
+            : tr('Preparando la partida', 'Preparing the game');
   const lock = snapshot.competitiveClock?.pauseReason
-    ? 'Partida pausada'
+    ? tr('Partida pausada', 'Game paused')
     : busy
-      ? 'Confirmando…'
+      ? tr('Confirmando…', 'Confirming…')
       : connection === 'connected'
         ? ''
         : connection === 'reconnecting' || connection === 'connecting'
-          ? 'Reconectando…'
-          : 'Sin conexión';
+          ? tr('Reconectando…', 'Reconnecting…')
+          : tr('Sin conexión', 'Offline');
   return {
     title,
     status,
@@ -126,26 +130,29 @@ export function gameContextSummary(
   const headline =
     snapshot.status === 'FINISHED'
       ? snapshot.result?.winnerId
-        ? `Ganó: ${player?.nickname ?? 'Jugador'}`
-        : 'Partida cerrada'
+        ? tr(
+            `Ganó: ${player?.nickname ?? 'Jugador'}`,
+            `Winner: ${player?.nickname ?? 'Player'}`,
+          )
+        : tr('Partida cerrada', 'Game closed')
       : player
-        ? `Juega: ${player.nickname}`
+        ? tr(`Juega: ${player.nickname}`, `Playing: ${player.nickname}`)
         : snapshot.status === 'LOBBY'
-          ? 'Sala de espera'
-          : 'Preparación';
+          ? tr('Sala de espera', 'Waiting room')
+          : tr('Preparación', 'Preparation');
   const detail = snapshot.pendingInheritance
-    ? 'Cartas heredadas pendientes'
+    ? tr('Cartas heredadas pendientes', 'Inherited cards pending')
     : snapshot.status === 'FINISHED'
-      ? 'Partida finalizada'
+      ? tr('Partida finalizada', 'Game over')
       : snapshot.status === 'SETUP'
-        ? 'Distribución inicial'
+        ? tr('Distribución inicial', 'Initial deployment')
         : snapshot.status === 'LOBBY'
-          ? 'Esperando jugadores'
+          ? tr('Esperando jugadores', 'Waiting for players')
           : !snapshot.pendingAction &&
               snapshot.turn?.phase === 'ordinary_exchange'
-            ? 'Canje'
+            ? tr('Canje', 'Exchange')
             : snapshot.turn?.phase === 'continent_reinforcement'
-              ? 'Refuerzos'
+              ? tr('Refuerzos', 'Reinforcements')
               : presentation.title;
   return { headline, detail, roundNumber };
 }

@@ -34,7 +34,8 @@ export type IconName =
   | 'missile'
   | 'nuke'
   | 'situation'
-  | 'copy';
+  | 'copy'
+  | 'textSize';
 
 const paths: Record<IconName, string> = {
   reinforcement:
@@ -89,6 +90,7 @@ const paths: Record<IconName, string> = {
   dice: 'M7 4h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Zm1 4h.01M12 12h.01M16 16h.01',
   close: 'm6 6 12 12M18 6 6 18',
   leave: 'M9 4H4v16h5m5-13 5 5-5 5M8 12h11',
+  textSize: 'M3 19 8 6l5 13M4.8 15h6.4M14 19l3.5-9 3.5 9m-5.8-3h4.6',
 };
 
 // Fine engraving stays inside the existing silhouettes and scales with them.

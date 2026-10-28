@@ -6,6 +6,7 @@ import {
   type ProtocolErrorCode,
   type PlayerGameView,
 } from '@game/protocol';
+import { parseServerJson } from './language.js';
 
 export class ApiError extends Error {
   constructor(
@@ -32,7 +33,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError('SERVER_ERROR', 0);
   }
   const body: unknown =
-    response.status === 204 ? undefined : ((await response.json()) as unknown);
+    response.status === 204
+      ? undefined
+      : parseServerJson(await response.text());
   if (!response.ok) {
     const code =
       typeof body === 'object' &&
@@ -70,12 +73,25 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ configuredPlayerCount, mode }),
     }),
-  configureGame: (gameId: string, configuredPlayerCount: number) =>
+  configureGame: (
+    gameId: string,
+    configuredPlayerCount: number,
+    competitiveDurationMinutes?: 60 | 80,
+    competitiveBotSeats?: number,
+    competitiveDeciding?: boolean,
+    classicExpress?: boolean,
+  ) =>
     request<{ gameId: string; revision: number }>(
       `/api/admin/games/${gameId}`,
       {
         method: 'PATCH',
-        body: JSON.stringify({ configuredPlayerCount }),
+        body: JSON.stringify({
+          configuredPlayerCount,
+          competitiveDurationMinutes,
+          competitiveBotSeats,
+          competitiveDeciding,
+          classicExpress,
+        }),
       },
     ),
   pauseGame: (gameId: string, paused: boolean) =>
@@ -83,6 +99,27 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ paused }),
     }),
+  configureBots: (
+    gameId: string,
+    change: {
+      readonly level?: 'easy' | 'normal' | 'hard';
+      readonly replaceAbsent?: boolean;
+    },
+  ) =>
+    request<{ revision: number }>(`/api/admin/games/${gameId}/bots`, {
+      method: 'PATCH',
+      body: JSON.stringify(change),
+    }),
+  assignBot: (gameId: string, playerId: string, enabled: boolean) =>
+    request<{ revision: number }>(
+      `/api/admin/games/${gameId}/players/${playerId}/bot`,
+      { method: 'POST', body: JSON.stringify({ enabled }) },
+    ),
+  markInactive: (gameId: string, playerId: string, enabled: boolean) =>
+    request<{ revision: number }>(
+      `/api/admin/games/${gameId}/players/${playerId}/inactive`,
+      { method: 'POST', body: JSON.stringify({ enabled }) },
+    ),
   startGame: (gameId: string) =>
     request<{ gameId: string; revision: number }>(
       `/api/admin/games/${gameId}/start`,
@@ -118,12 +155,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ nickname, color }),
     }),
-  takeSeat: (gameId: string, playerId: string) =>
+  takeSeat: (gameId: string, playerId: string, nickname?: string) =>
     request<{ authenticated: true; playerId: string }>(
       `/api/games/${gameId}/take-seat`,
       {
         method: 'POST',
-        body: JSON.stringify({ playerId }),
+        body: JSON.stringify({ playerId, nickname }),
       },
     ),
   leave: (gameId: string) =>

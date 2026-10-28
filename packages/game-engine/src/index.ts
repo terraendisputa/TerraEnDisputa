@@ -9,4 +9,5 @@ export * from './game-runtime.js';
 export * from './mode-policy.js';
 
 export * from './competitive-clock.js';
+export * from './competitive-bot.js';
 export * from './competitive-results.js';

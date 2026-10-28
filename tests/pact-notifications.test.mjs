@@ -1,6 +1,20 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { panelChanges } from '../apps/web/src/use-panel-notifications.ts';
+import { join } from 'node:path';
+import { build } from 'esbuild';
+
+// Bundled so the web module's own imports (./language.js) resolve.
+const bundle = await build({
+  entryPoints: [
+    join(import.meta.dirname, '../apps/web/src/use-panel-notifications.ts'),
+  ],
+  bundle: true,
+  write: false,
+  format: 'esm',
+});
+const { panelChanges } = await import(
+  `data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`
+);
 
 const proposal = {
   id: 'proposal-1',

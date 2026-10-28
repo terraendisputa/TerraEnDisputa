@@ -278,55 +278,108 @@ void test('pause and restart freeze both clocks, backward wall time does not ref
   assert.equal(earlyCommand.competitiveClock.updatedAtMs, now + 3000000);
   assert.equal(earlyCommand.competitiveClock.activationRemainingMs, 100000);
 });
-void test('technical wait adds eight minutes, pauses effective/turn time; reconnect retains balance', () => {
+void test('technical wait gives five minutes of grace, pauses effective/turn time; reconnect retains balance', () => {
   let { s, now, a } = fixture();
   s = tickCompetitiveClock(s, now + 30000, false, rng);
   assert.equal(s.competitiveClock.pauseReason, 'disconnection');
   assert.equal(s.competitiveClock.activationRemainingMs, 90000);
-  s = tickCompetitiveClock(s, now + 330000, false, rng);
-  assert.equal(s.competitiveClock.technicalRemainingMs, 180000);
+  s = tickCompetitiveClock(s, now + 230000, false, rng);
+  assert.equal(s.competitiveClock.technicalRemainingMs, 100000);
   assert.equal(s.competitiveClock.elapsedMs, 30000);
-  s = tickCompetitiveClock(s, now + 340000, true, rng);
+  s = tickCompetitiveClock(s, now + 240000, true, rng);
   assert.equal(s.competitiveClock.pauseReason, undefined);
   assert.equal(s.turn.playerId, a);
   assert.equal(s.competitiveClock.activationRemainingMs, 90000);
   assert.equal(s.competitiveClock.elapsedMs, 30000);
 });
-void test('technical expiry disqualifies permanently, keeps defenders/cards and skips future activations', () => {
+function borderTerms(s, a, b) {
+  const [from, to] = TERRITORY_IDS.flatMap((id) =>
+    s.territories[id].ownerId === a
+      ? TERRITORIES[id].adjacentTerritoryIds
+          .filter((t) => s.territories[t].ownerId === b)
+          .map((t) => [id, t])
+      : [],
+  )[0];
+  return { kind: 'border_non_aggression', territoryIds: [from, to] };
+}
+void test('after grace and turn time the player is absent: pacts end, turns pass alone until reconnection', () => {
   let { s, now, a } = fixture();
+  s = { ...s, competitiveBotsReplaceAbsent: false };
+  const b = s.players.find(
+    (p) =>
+      p.id !== a &&
+      TERRITORY_IDS.some(
+        (id) =>
+          s.territories[id].ownerId === a &&
+          TERRITORIES[id].adjacentTerritoryIds.some(
+            (t) => s.territories[t].ownerId === p.id,
+          ),
+      ),
+  ).id;
+  const proposalId = randomUUID();
+  s = perform(s, {
+    type: 'propose_pact',
+    playerId: a,
+    recipientId: b,
+    proposalId,
+    terms: borderTerms(s, a, b),
+  });
+  s = perform(s, {
+    type: 'accept_pact',
+    playerId: b,
+    proposalId,
+    pactId: randomUUID(),
+  });
   const before = s.territories;
   s = tickCompetitiveClock(s, now, false, rng);
-  s = tickCompetitiveClock(s, now + TECHNICAL_WAIT_MS, false, rng);
-  assert.equal(s.players.find((p) => p.id === a).disqualified, true);
+  s = tickCompetitiveClock(s, (now += TECHNICAL_WAIT_MS), false, rng);
+  assert.equal(s.competitiveClock.pauseReason, undefined);
+  assert.equal(s.turn.playerId, a);
+  // The turn clock now runs; reconnecting here would still let them play.
+  s = tickCompetitiveClock(s, (now += 119999), false, rng);
+  assert.equal(s.turn.playerId, a);
+  assert.equal(s.competitiveClock.elapsedMs, 119999);
+  s = tickCompetitiveClock(s, now + 1, false, rng);
+  const absent = s.players.find((p) => p.id === a);
+  assert.equal(absent.absent, true);
+  assert.equal(absent.disqualified, undefined);
+  assert.equal(s.pacts.active.length, 0);
   assert.deepEqual(s.territories, before);
   assert.notEqual(s.turn.playerId, a);
-  assert.equal(deriveLegalActions(s, a).readOnly, true);
-  assert.equal(
-    applyCommand(s, { type: 'advance_phase', playerId: a }).error.code,
-    'PLAYER_DISQUALIFIED',
-  );
-  for (let i = 0; i < 20 && s.status === 'ACTIVE'; i++) {
-    s = expire(s);
-    assert.notEqual(s.turn.playerId, a);
-    assertClassicInvariants(s);
-  }
+  assertClassicInvariants(s);
+  // While still away, their activations pass at once.
+  for (let i = 0; i < 20 && s.turn.playerId !== a; i++) s = expire(s);
+  assert.equal(s.turn.playerId, a);
+  now = s.competitiveClock.updatedAtMs;
+  s = tickCompetitiveClock(s, now + 1, false, rng);
+  assert.notEqual(s.turn.playerId, a);
+  assert.equal(s.competitiveClock.pauseReason, undefined);
+  for (let i = 0; i < 20 && s.turn.playerId !== a; i++) s = expire(s);
+  // Back online, they take their seat again.
+  now = s.competitiveClock.updatedAtMs;
+  s = tickCompetitiveClock(s, now + 1, true, rng);
+  assert.equal(s.turn.playerId, a);
+  assert.equal(s.players.find((p) => p.id === a).absent, undefined);
+  assert.equal(deriveLegalActions(s, a).readOnly, false);
+  assertClassicInvariants(s);
 });
-void test('disqualification during initial setup skips troops and still completes legal preparation', () => {
+void test('absence during initial setup places troops automatically and completes legal preparation', () => {
   let { s, now, a } = fixture(4, false);
+  s = { ...s, competitiveBotsReplaceAbsent: false };
   s = tickCompetitiveClock(s, now, false, rng);
-  s = tickCompetitiveClock(s, now + TECHNICAL_WAIT_MS, false, rng);
-  assert.equal(s.players.find((p) => p.id === a).disqualified, true);
+  s = tickCompetitiveClock(s, (now += TECHNICAL_WAIT_MS), false, rng);
+  s = tickCompetitiveClock(s, now + 120000, false, rng);
+  assert.equal(s.players.find((p) => p.id === a).absent, true);
+  assert.notEqual(s.setup.currentPlayerId, a);
   while (s.status === 'SETUP') {
     s = expire(s);
     assertClassicInvariants(s);
   }
   assertClassicInvariants(s);
-  assert.notEqual(s.turn.playerId, a);
+  const owned = TERRITORY_IDS.filter((t) => s.territories[t].ownerId === a);
   assert.equal(
-    TERRITORY_IDS.filter((t) => s.territories[t].ownerId === a).every(
-      (t) => s.territories[t].armies === 1,
-    ),
-    true,
+    owned.reduce((n, t) => n + s.territories[t].armies, 0),
+    owned.length + 8,
   );
 });
 void test('last selected own country is persisted and receives remaining ordinary armies on expiry', () => {
@@ -542,7 +595,7 @@ void test('new ruptures are blocked at announcement while established waits pers
     playerId: a,
     recipientId: b,
     proposalId: randomUUID(),
-    terms: { kind: 'general_non_aggression' },
+    terms: borderTerms(s, a, b),
   });
   const id = randomUUID();
   s = perform(s, {
@@ -703,26 +756,25 @@ void test('all owned countries may be zones: timeout loses only unplaceable armi
       ]),
     ),
   };
-  for (const country of ['alaska', 'yukon']) {
-    const proposalId = randomUUID();
-    s = perform(s, {
-      type: 'propose_pact',
-      playerId: a,
-      recipientId: b,
-      proposalId,
-      terms: {
+  // Zones are no longer offered in Competitive, but older games may hold them.
+  s = {
+    ...s,
+    pacts: {
+      ...s.pacts,
+      active: ['alaska', 'yukon'].map((country) => ({
         kind: 'international_zone',
-        territoryId: country,
-        firstExpectedConquerorId: b,
-      },
-    });
-    s = perform(s, {
-      type: 'accept_pact',
-      playerId: b,
-      proposalId,
-      pactId: randomUUID(),
-    });
-  }
+        id: randomUUID(),
+        parties: [a, b],
+        terms: {
+          kind: 'international_zone',
+          territoryId: country,
+          firstExpectedConquerorId: b,
+        },
+        expectedConquerorId: b,
+        withdrawal: { kind: 'none' },
+      })),
+    },
+  };
   assertClassicInvariants(s);
   while (!(
     s.turn.round.kind === 'normal' &&
@@ -747,7 +799,7 @@ void test('HTTP admin pause authorization and real WebSocket presence drive sche
   const directory = await mkdtemp(join(tmpdir(), 'ted-clock-http-'));
   const store = await FileGameStore.open(directory);
   const tokens = s.players.map(() => randomBytes(32).toString('base64url'));
-  const initial = durable(s);
+  const initial = durable({ ...s, competitiveBotsReplaceAbsent: false });
   initial.auth.players = Object.fromEntries(
     s.players.map((p, i) => [
       p.id,
@@ -905,12 +957,18 @@ void test('HTTP admin pause authorization and real WebSocket presence drive sche
     timestamp += TECHNICAL_WAIT_MS;
     await eventually(
       async () =>
-        (await store.loadGame(s.id)).state.players.find((p) => p.id === a)
-          .disqualified,
+        (await store.loadGame(s.id)).state.competitiveClock.pauseReason ===
+        undefined,
     );
-    const disqualified = await store.loadGame(s.id);
-    assert.notEqual(disqualified.state.turn.playerId, a);
-    assert.equal(disqualified.state.competitiveClock.elapsedMs, 10000);
+    timestamp += 110000;
+    await eventually(
+      async () =>
+        (await store.loadGame(s.id)).state.players.find((p) => p.id === a)
+          .absent,
+    );
+    const absent = await store.loadGame(s.id);
+    assert.notEqual(absent.state.turn.playerId, a);
+    assert.equal(absent.state.competitiveClock.elapsedMs, 120000);
   } finally {
     for (const socket of sockets) socket.terminate();
     await server.close();
@@ -980,15 +1038,13 @@ void test('paused/disqualified setup commands are rejected directly by engine', 
   assert.equal(applySetupCommand(s, command).error.code, 'PLAYER_DISQUALIFIED');
 });
 void test('if all remaining players are disqualified, close without inventing a winner or ranking', () => {
-  let { s, a, now } = fixture(4);
+  let { s, now } = fixture(4);
+  // Older games could disqualify players for disconnection.
   s = {
     ...s,
-    players: s.players.map((p) =>
-      p.id === a ? p : { ...p, disqualified: true },
-    ),
+    players: s.players.map((p) => ({ ...p, disqualified: true })),
   };
-  s = tickCompetitiveClock(s, now, false, rng);
-  s = tickCompetitiveClock(s, now + TECHNICAL_WAIT_MS, false, rng);
+  s = tickCompetitiveClock(s, now, true, rng);
   assert.equal(s.status, 'FINISHED');
   assert.equal(s.result.victoryReason.kind, 'no_competitors');
   assert.equal(s.result.winnerId, undefined);
@@ -1027,8 +1083,9 @@ void test('shutdown checkpoint failure preserves confirmed state and still close
   }
 });
 
-void test('reconnections share one technical budget, including admin pause and persistence', () => {
+void test('reconnections share the grace of one activation, including admin pause and persistence', () => {
   let { s, now, a } = fixture();
+  s = { ...s, competitiveBotsReplaceAbsent: false };
   s = tickCompetitiveClock(s, ++now, false, rng);
   now += TECHNICAL_WAIT_MS - 1000;
   s = tickCompetitiveClock(s, now, false, rng);
@@ -1044,13 +1101,17 @@ void test('reconnections share one technical budget, including admin pause and p
   assert.equal(s.competitiveClock.technicalRemainingMs, 999);
   now += 999;
   s = tickCompetitiveClock(s, now, false, rng);
-  assert.equal(s.players.find((p) => p.id === a).disqualified, true);
+  assert.equal(s.competitiveClock.pauseReason, undefined);
+  assert.equal(s.turn.playerId, a);
+  now += s.competitiveClock.activationRemainingMs;
+  s = tickCompetitiveClock(s, now, false, rng);
+  assert.equal(s.players.find((p) => p.id === a).absent, true);
   assert.notEqual(s.turn.playerId, a);
   assert.equal(s.competitiveClock.technicalRemainingMs, undefined);
   assertClassicInvariants(s);
 });
 
-void test('each player has one disconnection wait for the whole game, not one per activation', () => {
+void test('each activation renews the five minute grace', () => {
   let { s, now, a } = fixture();
   s = tickCompetitiveClock(s, ++now, false, rng);
   s = tickCompetitiveClock(s, (now += 30000), false, rng);
@@ -1062,28 +1123,14 @@ void test('each player has one disconnection wait for the whole game, not one pe
   s = close(s);
   assert.notEqual(s.turn.playerId, a);
   assert.equal(s.competitiveClock.technicalRemainingMs, undefined);
-  // Someone else still has the whole wait.
-  const b = s.turn.playerId;
   s = tickCompetitiveClock(s, ++now, false, rng);
   assert.equal(s.competitiveClock.technicalRemainingMs, TECHNICAL_WAIT_MS);
   s = tickCompetitiveClock(s, now + 5000, true, rng);
-  assert.deepEqual(s.competitiveClock.technicalRemainingByPlayer, {
-    [a]: TECHNICAL_WAIT_MS - 30001,
-    [b]: TECHNICAL_WAIT_MS - 5000,
-  });
-  // Back on turn, the first player only has what was left.
   for (let i = 0; i < 20 && s.turn.playerId !== a; i++) s = expire(s);
   assert.equal(s.turn.playerId, a);
   now = s.competitiveClock.updatedAtMs;
-  s = tickCompetitiveClock(s, ++now, false, rng);
-  assert.equal(
-    s.competitiveClock.technicalRemainingMs,
-    TECHNICAL_WAIT_MS - 30001,
-  );
-  s = decodeGame(encodeGame(durable(s))).game.state;
-  s = tickCompetitiveClock(s, now + TECHNICAL_WAIT_MS - 30001, false, rng);
-  assert.equal(s.players.find((p) => p.id === a).disqualified, true);
-  assert.equal(s.competitiveClock.technicalRemainingByPlayer[a], 0);
+  s = tickCompetitiveClock(s, now + 1, false, rng);
+  assert.equal(s.competitiveClock.technicalRemainingMs, TECHNICAL_WAIT_MS);
   assertClassicInvariants(s);
 });
 

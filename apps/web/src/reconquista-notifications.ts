@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReconquistaView } from '@game/protocol/reconquista';
 import type { PanelNotification } from './use-panel-notifications.js';
+import { tr } from './language.js';
 
 /** What changed for this player between two views, as in Classic's panelChanges. */
 function reconquistaPanelChanges(
@@ -18,14 +19,20 @@ function reconquistaPanelChanges(
   if (gained)
     changes.cards = {
       count: gained,
-      message: gained === 1 ? 'Carta nueva' : `${gained} cartas nuevas`,
+      message:
+        gained === 1
+          ? tr('Carta nueva', 'New card')
+          : tr(`${gained} cartas nuevas`, `${gained} new cards`),
     };
   if (
     (previous.self?.objectives.length ?? 0) > 0 &&
     JSON.stringify(previous.self?.objectives) !==
       JSON.stringify(next.self?.objectives)
   )
-    changes.objective = { count: 1, message: 'Tu objetivo cambió' };
+    changes.objective = {
+      count: 1,
+      message: tr('Tu objetivo cambió', 'Your objective changed'),
+    };
   if (next.revision > previous.revision && next.campaign) {
     // Pacts are public: everybody hears about proposals and acceptances by others.
     const before = new Map(
@@ -54,15 +61,22 @@ function reconquistaPanelChanges(
       )
         accepted++;
     }
+    const offer = next.campaign.occupation;
+    if (
+      offer?.condominium === 'proposed' &&
+      previous.campaign?.occupation?.condominium !== 'proposed' &&
+      offer.arrivals[0]?.playerId !== me
+    )
+      proposed++;
     const messages = [
       proposed > 0 &&
         (proposed === 1
-          ? 'Nueva propuesta de pacto'
-          : `${proposed} propuestas nuevas`),
+          ? tr('Nueva propuesta de pacto', 'New pact proposal')
+          : tr(`${proposed} propuestas nuevas`, `${proposed} new proposals`)),
       accepted > 0 &&
         (accepted === 1
-          ? 'Un jugador aceptó un pacto'
-          : `${accepted} pactos aceptados`),
+          ? tr('Un jugador aceptó un pacto', 'A player accepted a pact')
+          : tr(`${accepted} pactos aceptados`, `${accepted} pacts accepted`)),
     ].filter(Boolean);
     if (proposed + accepted > 0)
       changes.pacts = {
@@ -100,7 +114,7 @@ export function useReconquistaNotifications(
     if (seen) return;
     setUnread((current) => ({
       ...current,
-      objective: { count: 1, message: 'Tu objetivo' },
+      objective: { count: 1, message: tr('Tu objetivo', 'Your objective') },
     }));
     openPanel('objective');
     // Only the first view with objectives matters.

@@ -3,6 +3,7 @@ import cookie from '@fastify/cookie';
 import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
 import type { PlayerId, PlayerState } from '@game/game-engine';
+import { hasGameClock, humanSeats } from '@game/game-engine';
 import {
   MAX_WEBSOCKET_MESSAGE_BYTES,
   PROTOCOL_VERSION,
@@ -17,6 +18,8 @@ import {
   joinGameBodySchema,
   protocolErrorCodeSchema,
   updateGameConfigurationBodySchema,
+  configureBotsBodySchema,
+  assignBotBodySchema,
 } from '@game/protocol';
 import Fastify, {
   type FastifyInstance,
@@ -372,7 +375,9 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
       const discovered = await store.discoverGames();
       for (const [id, durable] of discovered.games)
         if (
-          durable.state.mode === 'competitive' &&
+          // Classic without Express still ticks while a bot plays a seat.
+          (hasGameClock(durable.state) ||
+            durable.state.players.some((p) => p.bot)) &&
           durable.state.status !== 'LOBBY' &&
           (durable.state.status !== 'FINISHED' ||
             durable.state.pendingInheritance)
@@ -441,6 +446,87 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
             server.log.warn({ err: error }, 'Technical pause failed');
           return reply.code(409).send({ code });
         }
+      },
+    );
+
+    const updateBots = async (
+      reply: FastifyReply,
+      gameId: string,
+      change: Parameters<GameService['updateBots']>[1],
+    ) => {
+      try {
+        const revision = await games.updateBots(gameId, change);
+        timedGames.add(gameId);
+        await broadcastCurrentGame(gameId);
+        return { revision };
+      } catch (error) {
+        const code =
+          error instanceof Error && error.message === 'GAME_NOT_FOUND'
+            ? 'GAME_NOT_FOUND'
+            : 'INVALID_PHASE';
+        if (code === 'INVALID_PHASE')
+          server.log.warn({ err: error }, 'Bot change failed');
+        return reply.code(code === 'GAME_NOT_FOUND' ? 404 : 409).send({ code });
+      }
+    };
+    server.patch(
+      '/api/admin/games/:gameId/bots',
+      { preHandler: requireOrigin },
+      async (request, reply) => {
+        const params = gameIdParamsSchema.safeParse(request.params);
+        const body = configureBotsBodySchema.safeParse(request.body);
+        if (!params.success || !body.success)
+          return reply.code(400).send({ code: 'MALFORMED_MESSAGE' });
+        if (!(await hasAdminAuthority(request)))
+          return reply.code(401).send({ code: 'UNAUTHENTICATED' });
+        return updateBots(reply, params.data.gameId, {
+          ...(body.data.level ? { level: body.data.level } : {}),
+          ...(body.data.replaceAbsent !== undefined
+            ? { replaceAbsent: body.data.replaceAbsent }
+            : {}),
+        });
+      },
+    );
+    server.post(
+      '/api/admin/games/:gameId/players/:playerId/bot',
+      { preHandler: requireOrigin },
+      async (request, reply) => {
+        const params = gamePlayerParamsSchema.safeParse(request.params);
+        const body = assignBotBodySchema.safeParse(request.body);
+        if (!params.success || !body.success)
+          return reply.code(400).send({ code: 'MALFORMED_MESSAGE' });
+        if (!(await hasAdminAuthority(request)))
+          return reply.code(401).send({ code: 'UNAUTHENTICATED' });
+        const result = await updateBots(reply, params.data.gameId, {
+          playerId: params.data.playerId,
+          enabled: body.data.enabled,
+        });
+        server.log.info(
+          { gameId: params.data.gameId, enabled: body.data.enabled },
+          'Administrator changed a bot seat',
+        );
+        return result;
+      },
+    );
+    server.post(
+      '/api/admin/games/:gameId/players/:playerId/inactive',
+      { preHandler: requireOrigin },
+      async (request, reply) => {
+        const params = gamePlayerParamsSchema.safeParse(request.params);
+        const body = assignBotBodySchema.safeParse(request.body);
+        if (!params.success || !body.success)
+          return reply.code(400).send({ code: 'MALFORMED_MESSAGE' });
+        if (!(await hasAdminAuthority(request)))
+          return reply.code(401).send({ code: 'UNAUTHENTICATED' });
+        const result = await updateBots(reply, params.data.gameId, {
+          playerId: params.data.playerId,
+          inactive: body.data.enabled,
+        });
+        server.log.info(
+          { gameId: params.data.gameId, inactive: body.data.enabled },
+          'Administrator changed an inactive player',
+        );
+        return result;
       },
     );
 
@@ -568,6 +654,10 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         const revision = await lifecycle.configure(
           params.data.gameId,
           body.data.configuredPlayerCount as 2 | 3 | 4 | 5 | 6,
+          body.data.competitiveDurationMinutes,
+          body.data.competitiveBotSeats,
+          body.data.competitiveDeciding,
+          body.data.classicExpress,
         );
         await broadcastCurrentGame(params.data.gameId);
         return { gameId: params.data.gameId, revision };
@@ -641,7 +731,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         status: durable.state.status,
         canJoin:
           durable.state.status === 'LOBBY' &&
-          durable.state.players.length < durable.state.configuredPlayerCount,
+          durable.state.players.length < humanSeats(durable.state),
         availableColors: [
           'blue',
           'red',
@@ -702,6 +792,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
           body.data.playerId as PlayerId,
           transportClass(request),
           existingToken,
+          body.data.nickname,
         );
         if (!token)
           return reply.code(409).send({ code: 'INVALID_GAME_COMMAND' });

@@ -1,6 +1,7 @@
 import {
   createCampaign,
   applyCampaign,
+  finishByTime,
   assertCampaign,
   type Campaign,
   type CampaignAction,
@@ -70,6 +71,8 @@ export interface ReconquistaSession {
 }
 export type SetupAction =
   | { readonly kind: 'start-campaign' }
+  /** Express clock: the final rounds are over. Only the server sends it. */
+  | { readonly kind: 'time-limit' }
   | { readonly kind: 'campaign'; readonly action: CampaignAction }
   | HostilityAction
   | {
@@ -240,6 +243,10 @@ export function applyReconquistaSetup(
     );
     return { ...state, campaign, hostility: null, stage: 'campaign' };
   }
+  if (action.kind === 'time-limit') {
+    if (!state.campaign) throw Error('Start full turns first');
+    return { ...state, campaign: finishByTime(state.campaign) };
+  }
   if (action.kind === 'campaign') {
     if (!state.campaign) throw Error('Start full turns first');
     return {
@@ -352,6 +359,17 @@ export function applyReconquistaSetup(
   };
 }
 /** Server chooses viewer from authenticated session; admin=null has no secrets. */
+/** A player's objectives; a destroy target someone else eliminated becomes 45 countries. */
+function playerObjectives(state: ReconquistaSession, playerId: string) {
+  return privateInitialObjectives(state.objectives, playerId).map((o) =>
+    o.targetPlayerId &&
+    state.campaign?.eliminations[o.targetPlayerId] &&
+    state.campaign.eliminations[o.targetPlayerId] !== playerId
+      ? { objectiveId: 'common_45' }
+      : o,
+  );
+}
+
 export function projectReconquistaSession(
   board: PreparationBoard,
   state: ReconquistaSession,
@@ -394,21 +412,17 @@ export function projectReconquistaSession(
       : null,
     restingPlayerId:
       (state.campaign?.activation ?? state.activation)?.restingPlayerId ?? null,
+    // Once the game is won, everyone sees the winners' objectives.
+    winnerObjectives: (state.campaign?.winners ?? []).map((playerId) => ({
+      playerId,
+      objectives: playerObjectives(state, playerId),
+    })),
     ...(viewerId
       ? {
           self: {
             playerId: viewerId,
             ...(campaign?.private ? { campaign: campaign.private } : {}),
-            objectives: privateInitialObjectives(
-              state.objectives,
-              viewerId,
-            ).map((o) =>
-              o.targetPlayerId &&
-              state.campaign?.eliminations[o.targetPlayerId] &&
-              state.campaign.eliminations[o.targetPlayerId] !== viewerId
-                ? { objectiveId: 'common_45' }
-                : o,
-            ),
+            objectives: playerObjectives(state, viewerId),
             legal: {
               ...reconquistaLegalActions(board, state, viewerId),
               ...(state.hostility
@@ -526,6 +540,10 @@ function checkedAction(value: unknown): SetupAction {
     if (value.kind === 'finish-attacks') {
       object(value, ['kind']);
       return { kind: 'finish-attacks' };
+    }
+    if (value.kind === 'time-limit') {
+      object(value, ['kind']);
+      return { kind: 'time-limit' };
     }
     if (value.kind === 'campaign') {
       const a = object(value, ['kind', 'action']);

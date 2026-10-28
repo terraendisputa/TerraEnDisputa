@@ -1,3 +1,4 @@
+import { tr } from './language.js';
 // Capture and erase the capability before bootstrap or any network operation.
 const fragment = new URLSearchParams(window.location.hash.slice(1));
 const launchToken =
@@ -23,7 +24,10 @@ export function redeemAdminLaunch(): Promise<void> {
   }).then((response) => {
     if (!response.ok)
       throw new Error(
-        'El acceso automático venció o no está disponible. Usá el código mostrado en la terminal.',
+        tr(
+          'El acceso automático venció o no está disponible. Usá el código mostrado en la terminal.',
+          'The automatic access expired or is not available. Use the code shown in the terminal.',
+        ),
       );
   }));
 }

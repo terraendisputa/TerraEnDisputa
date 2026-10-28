@@ -31,6 +31,12 @@ export const campaignActionSchema = z.discriminatedUnion('kind', [
   }),
   z.strictObject({ kind: z.literal('occupy'), armies: positive }),
   z.strictObject({ kind: z.literal('continue-invasion') }),
+  z.strictObject({ kind: z.literal('propose-condominium') }),
+  z.strictObject({
+    kind: z.literal('respond-condominium'),
+    accept: z.boolean(),
+  }),
+  z.strictObject({ kind: z.literal('abandon-invasion') }),
   z.strictObject({
     kind: z.literal('regroup-forces'),
     originId: id,
@@ -116,6 +122,7 @@ const occupation = z.strictObject({
   invasion: z.boolean(),
   continuing: z.boolean(),
   originalDefenders: ids,
+  condominium: z.enum(['proposed', 'accepted', 'rejected']).optional(),
 });
 const pact = z.strictObject({
   id,
@@ -185,6 +192,8 @@ export const campaignPublicSchema = z.strictObject({
   zoneDecisions: z.array(z.strictObject({ pactId: id, playerId: id })),
   eliminations: z.record(id, id),
   winners: ids,
+  /** Express ended by the clock; no winners means a full tie. */
+  timeLimit: z.literal(true).optional(),
   lastCombat: route
     .extend({
       attackRolls: z.array(positive.max(6)).max(4),

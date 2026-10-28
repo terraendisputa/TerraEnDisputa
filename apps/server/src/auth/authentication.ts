@@ -1,4 +1,5 @@
 import type { GameState, PlayerId, PlayerState } from '@game/game-engine';
+import { COMPETITIVE_BOT_NAMES, humanSeats } from '@game/game-engine';
 import { sameNickname } from '@game/protocol';
 
 import type { CommitResult, DurableGame } from '../persistence/types.js';
@@ -295,7 +296,7 @@ export class AuthenticationService {
           )
         )
           throw new AuthenticationOperationError('NICKNAME_ALREADY_IN_USE');
-        if (current.state.players.length >= current.state.configuredPlayerCount)
+        if (current.state.players.length >= humanSeats(current.state))
           throw new AuthenticationOperationError('INVALID_GAME_COMMAND');
         const candidate = this.transitions.createPlayer(
           current.auth,
@@ -383,6 +384,7 @@ export class AuthenticationService {
     playerId: PlayerId,
     transport: TransportClass,
     existingToken?: string,
+    chosenNickname?: string,
   ): Promise<string | undefined> {
     return this.mutateGame(gameId, (current) => {
       if (
@@ -402,11 +404,30 @@ export class AuthenticationService {
         record.recovery
       )
         return undefined;
+      // A person in a table bot's seat plays under their own name; other
+      // seats keep the name of whoever left them.
+      const botSeat = (COMPETITIVE_BOT_NAMES as readonly string[]).includes(
+        player.nickname,
+      );
+      if (botSeat && !chosenNickname) return undefined;
+      const nickname = botSeat ? chosenNickname! : player.nickname;
+      if (
+        current.state.players.some(
+          (p) => p.id !== playerId && sameNickname(p.nickname, nickname),
+        )
+      )
+        throw new AuthenticationOperationError('NICKNAME_ALREADY_IN_USE');
       const issued = issueSession(transport, this.clock.now());
+      const controlled = withController(current.state, playerId, 'controlled');
       return {
         durable: {
           ...current,
-          state: withController(current.state, playerId, 'controlled'),
+          state: {
+            ...controlled,
+            players: controlled.players.map((p) =>
+              p.id === playerId ? { ...p, nickname } : p,
+            ),
+          },
           revision: current.revision + 1,
           auth: {
             ...current.auth,

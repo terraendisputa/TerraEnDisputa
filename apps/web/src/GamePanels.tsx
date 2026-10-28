@@ -4,6 +4,7 @@ import { UiIcon } from './UiIcon.js';
 import type { IconName } from './UiIcon.js';
 import type { PlayerGameView } from '@game/protocol';
 import { hasNewCombat } from './combat-events.js';
+import { tr } from './language.js';
 
 export interface GamePanel {
   id: string;
@@ -84,7 +85,11 @@ export function GamePanels({
     <div className="information-content" hidden={!selected}>
       <header className="mobile-panel-heading">
         <strong>{panels.find((p) => p.id === selected)?.label}</strong>
-        <button type="button" aria-label="Cerrar panel" onClick={close}>
+        <button
+          type="button"
+          aria-label={tr('Cerrar panel', 'Close panel')}
+          onClick={close}
+        >
           <UiIcon name="close" />
         </button>
       </header>
@@ -99,9 +104,12 @@ export function GamePanels({
     <>
       <aside
         className={`floating-information${selected ? ' is-open' : ''}`}
-        aria-label="Información de la partida"
+        aria-label={tr('Información de la partida', 'Game information')}
       >
-        <nav className="information-tabs" aria-label="Paneles de la partida">
+        <nav
+          className="information-tabs"
+          aria-label={tr('Paneles de la partida', 'Game panels')}
+        >
           {navigation.map((p) => (
             <button
               key={p.id}
@@ -167,7 +175,10 @@ export function DicePanel({
     previousSnapshot.current = snapshot;
   }, [snapshot]);
   return (
-    <section className="floating-dice" aria-label="Última tirada">
+    <section
+      className="floating-dice"
+      aria-label={tr('Última tirada', 'Last roll')}
+    >
       <button
         className="dice-toggle"
         type="button"
@@ -177,7 +188,7 @@ export function DicePanel({
           setOpen(!open);
         }}
       >
-        <UiIcon name="dice" /> Dados
+        <UiIcon name="dice" /> {tr('Dados', 'Dice')}
         <span aria-hidden="true">{open ? '⌃' : '⌄'}</span>
       </button>
       <div id="floating-dice-content" hidden={!open}>

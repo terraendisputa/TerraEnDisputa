@@ -79,11 +79,44 @@ export const reconquistaCreateSchema = z.strictObject({
     z.literal(6),
   ]),
 });
+/** Host lobby settings: required players and the Express duration. */
+export const reconquistaConfigureSchema = z.strictObject({
+  playerCount: reconquistaCreateSchema.shape.playerCount.optional(),
+  express: z.boolean().optional(),
+  /** Seats bots take at the start; at least one stays for a person. */
+  bots: z.number().int().min(0).max(5).optional(),
+});
+export const reconquistaBotLevelSchema = z.enum(['easy', 'normal', 'hard']);
+/** Host changes to the bots of a started game, as in Classic. */
+export const reconquistaBotsSchema = z.union([
+  z.strictObject({
+    level: reconquistaBotLevelSchema.optional(),
+    replaceAbsent: z.boolean().optional(),
+  }),
+  z.strictObject({ playerId: z.string().uuid(), enabled: z.boolean() }),
+]);
+/** Express clock as a screen shows it; times are as of the reading. */
+export const reconquistaClockSchema = z.strictObject({
+  durationMs: count,
+  elapsedMs: count,
+  activationRemainingMs: count,
+  finalRound: count.optional(),
+  pauseReason: z.enum(['admin', 'restart', 'disconnection']).optional(),
+  disconnectedPlayerId: identifier.optional(),
+  technicalRemainingMs: count.optional(),
+  absentPlayerIds: z.array(identifier).max(6),
+});
+export type ReconquistaClock = z.infer<typeof reconquistaClockSchema>;
 export const reconquistaJoinSchema = z.strictObject({
   nickname: nicknameSchema(32),
   color: z.enum(['white', 'black', 'red', 'blue', 'yellow', 'green']),
 });
 const color = reconquistaJoinSchema.shape.color;
+/** A person takes a seat a table bot left free. */
+export const reconquistaTakeSeatSchema = z.strictObject({
+  playerId: z.string().uuid(),
+  nickname: reconquistaJoinSchema.shape.nickname,
+});
 const route = z.strictObject({ originId: identifier, targetId: identifier });
 const pending = z.strictObject({
   originId: identifier,
@@ -104,11 +137,16 @@ const player = z.strictObject({
   color,
   nickname: z.string(),
   ready: z.boolean(),
+  /** Who plays a seat for its person: a table bot, one the host put, or one replacing an absence. */
+  bot: z.enum(['table', 'admin', 'absent']).optional(),
+  /** A table bot's seat freed for anyone with the link. */
+  free: z.literal(true).optional(),
 });
 const secret = z.strictObject({
   objectiveId: identifier,
   targetPlayerId: identifier.optional(),
   description: z.string(),
+  descriptionEn: z.string().optional(),
 });
 /** Selection the player on turn shares; empty ids clear it. */
 export const reconquistaFocusSchema = z.strictObject({
@@ -125,6 +163,8 @@ export const reconquistaViewSchema = z.strictObject({
   gameId: z.string().uuid(),
   revision: count,
   playerCount: reconquistaCreateSchema.shape.playerCount,
+  express: z.literal(true).optional(),
+  clock: reconquistaClockSchema.optional(),
   stage: z.enum([
     'lobby',
     'initial-placement',
@@ -173,6 +213,15 @@ export const reconquistaViewSchema = z.strictObject({
     })
     .nullable(),
   restingPlayerId: identifier.nullable(),
+  winnerObjectives: z
+    .array(
+      z.strictObject({
+        playerId: identifier,
+        objectives: z.array(secret).max(2),
+      }),
+    )
+    .max(6)
+    .optional(),
   campaign: campaignPublicSchema.nullable(),
   hostility: z
     .strictObject({
@@ -240,8 +289,12 @@ export const reconquistaBoardSchema = z.strictObject({
 export type ReconquistaBoard = z.infer<typeof reconquistaBoardSchema>;
 export const reconquistaEntrySchema = z.strictObject({
   playerCount: reconquistaCreateSchema.shape.playerCount,
+  express: z.literal(true).optional(),
   stage: z.enum(['lobby', 'started']),
   players: z.array(player).max(6),
+  botSeats: z.number().int().min(1).max(5).optional(),
+  botLevel: reconquistaBotLevelSchema.optional(),
+  botsReplaceAbsent: z.boolean().optional(),
 });
 export type ReconquistaEntry = z.infer<typeof reconquistaEntrySchema>;
 export const reconquistaCreatedSchema = z.strictObject({
