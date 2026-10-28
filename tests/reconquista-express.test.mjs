@@ -20,7 +20,10 @@ import { buildServer } from '../apps/server/dist/app.js';
 import { FileGameStore } from '../apps/server/dist/persistence/file-game-store.js';
 import { AuthenticationService } from '../apps/server/dist/auth/authentication.js';
 import { registerReconquista } from '../apps/server/dist/reconquista/routes.js';
-import { reconquistaViewSchema } from '../packages/protocol/dist/reconquista.js';
+import {
+  RECONQUISTA_PROTOCOL,
+  reconquistaViewSchema,
+} from '../packages/protocol/dist/reconquista.js';
 
 const root = resolve(import.meta.dirname, '..');
 const catalog = JSON.parse(
@@ -277,6 +280,8 @@ void test('an Express game runs its clock: timeouts, disconnection, absence and 
     await s.store.tick(id, now, () => false);
     v = await view();
     assert(v.clock.absentPlayerIds.includes(waiting));
+    // A bot plays the absent seat until the person comes back.
+    assert.equal(v.players.find((p) => p.id === waiting).bot, 'absent');
     // The host pauses: commands wait and the clock stops.
     const paused = await s.request(
       'POST',
@@ -299,6 +304,114 @@ void test('an Express game runs its clock: timeouts, disconnection, absence and 
     await s.store.tick(id, now, online);
     v = await view();
     assert.equal(v.clock.pauseReason, undefined);
+    assert.equal(v.players.find((p) => p.id === waiting).bot, undefined);
+  } finally {
+    await s.app.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+void test('bots take table seats, play seats the host gives them and free their seat in Express', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'reconquista-bots-'));
+  const s = await server(directory);
+  try {
+    const prefix = '/api/reconquista';
+    const id = (
+      await s.request('POST', prefix + '/games', s.admin, { playerCount: 3 })
+    ).json().gameId;
+    const patch = (body) =>
+      s.request('PATCH', `${prefix}/games/${id}`, s.admin, body);
+    assert.equal((await patch({ bots: 3 })).statusCode, 409);
+    assert.equal((await patch({ bots: 2, express: true })).statusCode, 200);
+    const joined = await s.request('POST', `${prefix}/games/${id}/join`, '', {
+      nickname: 'Ana',
+      color: 'red',
+    });
+    const human = { id: joined.json().playerId, cookie: s.cookie(joined) };
+    const late = await s.request('POST', `${prefix}/games/${id}/join`, '', {
+      nickname: 'Beto',
+      color: 'blue',
+    });
+    assert.equal(late.statusCode, 409);
+    await s.request('POST', `${prefix}/games/${id}/ready`, human.cookie, {});
+    const started = await s.request(
+      'POST',
+      `${prefix}/games/${id}/start`,
+      s.admin,
+      {},
+    );
+    assert.equal(started.statusCode, 200, started.body);
+    let entry = (await s.request('GET', `${prefix}/games/${id}/entry`)).json();
+    const table = entry.players.filter((p) => p.bot === 'table');
+    assert.equal(table.length, 2);
+    assert.equal(new Set(entry.players.map((p) => p.color)).size, 3);
+    assert(table.every((p) => /^Bot /.test(p.nickname)));
+    assert.equal(entry.botLevel, 'hard');
+    // The host puts a bot in the person's seat: the whole table plays alone.
+    const bots = (body) =>
+      s.request('POST', `${prefix}/games/${id}/bots`, s.admin, body);
+    assert.equal(
+      (await bots({ playerId: human.id, enabled: true })).statusCode,
+      200,
+    );
+    assert.equal((await bots({ level: 'normal' })).statusCode, 200);
+    const view = async () =>
+      reconquistaViewSchema.parse(
+        (
+          await s.request(
+            'GET',
+            `${prefix}/games/${id}/state?observer=1`,
+            s.admin,
+          )
+        ).json(),
+      );
+    const before = (await view()).revision;
+    let now = Date.now();
+    for (let i = 0; i < 200; i++) {
+      now += 2_001;
+      await s.store.tick(id, now, (p) => p === human.id);
+    }
+    const v = await view();
+    assert(v.revision > before + 100, `bots moved ${v.revision - before}`);
+    assert(v.campaign, 'bots reach full turns');
+    // A seat a bot plays takes no commands from its person.
+    const refused = await s.request(
+      'POST',
+      `${prefix}/games/${id}/commands`,
+      human.cookie,
+      {
+        protocolVersion: RECONQUISTA_PROTOCOL,
+        commandId: '00000000-0000-4000-8000-000000000001',
+        revision: v.revision,
+        action: { kind: 'reveal' },
+      },
+    );
+    assert.equal(refused.json().code, 'BOT_CONTROLLED');
+    // Express frees a table bot's seat for a person with the link.
+    assert.equal(
+      (await bots({ playerId: table[0].id, enabled: false })).statusCode,
+      200,
+    );
+    entry = (await s.request('GET', `${prefix}/games/${id}/entry`)).json();
+    assert(entry.players.find((p) => p.id === table[0].id).free);
+    const taken = await s.request(
+      'POST',
+      `${prefix}/games/${id}/take-seat`,
+      '',
+      { playerId: table[0].id, nickname: 'Carla' },
+    );
+    assert.equal(taken.statusCode, 200, taken.body);
+    entry = (await s.request('GET', `${prefix}/games/${id}/entry`)).json();
+    const seat = entry.players.find((p) => p.id === table[0].id);
+    assert.equal(seat.nickname, 'Carla');
+    assert.equal(seat.free, undefined);
+    const again = await s.request(
+      'POST',
+      `${prefix}/games/${id}/take-seat`,
+      '',
+      { playerId: table[0].id, nickname: 'Dani' },
+    );
+    assert.equal(again.json().code, 'SEAT_TAKEN');
   } finally {
     await s.app.close();
     await rm(directory, { recursive: true, force: true });

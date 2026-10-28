@@ -7,6 +7,7 @@ import {
   loadSetupJournal,
   commitLoadedSetupCommand,
   preparationBoard,
+  chooseReconquistaBotMove,
   reconquistaActivationKey,
   reconquistaActivationMs,
   reconquistaActor,
@@ -14,14 +15,19 @@ import {
   reconquistaExpressDurationMs,
   reconquistaTimeoutMove,
   type PreparationBoard,
+  type ReconquistaBotMemory,
   type SetupAction,
   type SetupJournal,
 } from '@game/game-engine/reconquista';
+import { COMPETITIVE_BOT_NAMES } from '@game/game-engine';
 import {
   RECONQUISTA_DEFINITION,
   reconquistaJoinSchema,
   reconquistaCreateSchema,
   reconquistaConfigureSchema,
+  reconquistaBotLevelSchema,
+  reconquistaBotsSchema,
+  reconquistaTakeSeatSchema,
   sameNickname,
   type ReconquistaAction,
 } from '@game/protocol/reconquista';
@@ -39,6 +45,7 @@ import {
 } from '../persistence/atomic-file.js';
 import { DataDirectoryLock } from '../persistence/data-directory-lock.js';
 import { PerGameCoordinator } from '../games/per-game-coordinator.js';
+import { BOT_MOVE_GAP_MS } from '../games/game-service.js';
 const random = () => randomInt(0, 2 ** 48 - 1) / (2 ** 48 - 1);
 const definitionSchema = z.strictObject({
   editionId: z.literal('reconquista'),
@@ -55,6 +62,8 @@ const playerSchema = z.strictObject({
     digest: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
   }),
   expiresAt: z.string().datetime(),
+  bot: z.enum(['table', 'admin', 'absent']).optional(),
+  free: z.literal(true).optional(),
 });
 const envelopeSchema = z.strictObject({
   format: z.literal('reconquista-snapshot'),
@@ -84,6 +93,19 @@ const envelopeSchema = z.strictObject({
       technicalRemainingMs: z.number().int().nonnegative().optional(),
       absentPlayerIds: z.array(z.string().uuid()).max(6),
     })
+    .optional(),
+  /** Bots, as in Classic: seats they take at the start, level and absences. */
+  botSeats: z.number().int().min(1).max(5).optional(),
+  botLevel: reconquistaBotLevelSchema.optional(),
+  botsReplaceAbsent: z.literal(false).optional(),
+  botMemory: z
+    .record(
+      z.string().uuid(),
+      z.strictObject({
+        offeredTurn: z.string().max(40).optional(),
+        brokeTurn: z.string().max(40).optional(),
+      }),
+    )
     .optional(),
   journal: z.unknown(),
 });
@@ -179,6 +201,8 @@ export class ReconquistaStore {
   private readonly board: PreparationBoard;
   /** When each Express game's clock was last written to disk. */
   private readonly clockSaved = new Map<string, number>();
+  /** When a bot last moved in each game. */
+  private readonly botMoves = new Map<string, number>();
   private constructor(
     readonly directory: string,
     readonly catalog: unknown,
@@ -380,7 +404,10 @@ export class ReconquistaStore {
     return this.coordinator.run(id, async () => {
       const body = reconquistaJoinSchema.parse(input);
       const current = await this.load(id);
-      if (current.journal || current.players.length >= current.playerCount)
+      if (
+        current.journal ||
+        current.players.length >= current.playerCount - (current.botSeats ?? 0)
+      )
         throw new ReconquistaOperationError('LOBBY_CLOSED');
       if (current.players.some((p) => p.color === body.color))
         throw new ReconquistaOperationError('COLOR_IN_USE');
@@ -442,20 +469,26 @@ export class ReconquistaStore {
       if (current.journal) throw new ReconquistaOperationError('LOBBY_CLOSED');
       const playerCount = body.playerCount ?? current.playerCount;
       const express = body.express ?? current.express === true;
-      if (playerCount < current.players.length)
+      const bots = body.bots ?? current.botSeats ?? 0;
+      if (bots >= playerCount)
+        throw new ReconquistaOperationError('TOO_MANY_BOTS');
+      if (playerCount - bots < current.players.length)
         throw new ReconquistaOperationError('PLAYER_COUNT_TOO_LOW');
       if (
         playerCount === current.playerCount &&
-        express === (current.express === true)
+        express === (current.express === true) &&
+        bots === (current.botSeats ?? 0)
       )
         return current;
-      const { express: _express, ...rest } = current;
+      const { express: _express, botSeats: _bots, ...rest } = current;
       void _express;
+      void _bots;
       const candidate = {
         ...rest,
         revision: current.revision + 1,
         playerCount,
         ...(express ? { express: true as const } : {}),
+        ...(bots ? { botSeats: bots } : {}),
       };
       await this.persist(candidate);
       return candidate;
@@ -490,18 +523,42 @@ export class ReconquistaStore {
     return this.coordinator.run(id, async () => {
       const current = await this.load(id);
       if (current.journal) return current;
+      const bots = current.botSeats ?? 0;
       if (
-        current.players.length !== current.playerCount ||
+        current.players.length + bots !== current.playerCount ||
         current.players.some((p) => !p.ready)
       )
         throw new ReconquistaOperationError('PLAYERS_NOT_READY');
+      // Table bots sit at the start with the free colors and fun names.
+      const names = COMPETITIVE_BOT_NAMES.filter(
+        (name) => !current.players.some((p) => sameNickname(p.nickname, name)),
+      );
+      const colors = reconquistaJoinSchema.shape.color.options.filter(
+        (color) => !current.players.some((p) => p.color === color),
+      );
+      const table = Array.from({ length: bots }, (_, i) => {
+        const name = names.splice(randomInt(names.length), 1)[0]!;
+        return {
+          id: randomUUID(),
+          nickname: name,
+          color: colors[i]!,
+          ready: true,
+          session: hashSessionToken(generateSessionToken()),
+          expiresAt: new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+          bot: 'table' as const,
+        };
+      });
+      const players = [...current.players, ...table];
       const setup = newSetupJournal(
         this.catalog,
-        current.players.map(({ id, color }) => ({ id, color })),
+        players.map(({ id, color }) => ({ id, color })),
         this.randomness,
       );
       const candidate = {
         ...current,
+        players,
         revision: current.revision + 1,
         baseRevision: current.revision + 1,
         journal: setup.journal,
@@ -532,6 +589,8 @@ export class ReconquistaStore {
       if (!actor) throw new ReconquistaOperationError('UNAUTHORIZED');
       if (!current.journal || current.baseRevision === null)
         throw new ReconquistaOperationError('NOT_STARTED');
+      if (current.players.find((p) => p.id === actor)?.bot)
+        throw new ReconquistaOperationError('BOT_CONTROLLED');
       if (
         current.clock?.pauseReason === 'admin' ||
         current.clock?.pauseReason === 'restart'
@@ -573,12 +632,16 @@ export class ReconquistaStore {
       this.replay(current).state.campaign?.phase === 'finished'
     );
   }
-  /** Started Express games whose clock still runs or waits to resume. */
+  /** Started games the server moves: an Express clock or seats bots play. */
   async running(): Promise<string[]> {
     const ids = [];
     for (const id of await this.ids()) {
       const current = await this.load(id).catch(() => undefined);
-      if (current?.express && current.journal && !this.finished(current))
+      if (
+        current?.journal &&
+        (current.express || current.players.some((p) => p.bot)) &&
+        !this.finished(current)
+      )
         ids.push(id);
     }
     return ids;
@@ -614,7 +677,11 @@ export class ReconquistaStore {
   private settle(current: ReconquistaEnvelope, now: number) {
     if (!current.express || !current.journal) return current;
     let next = current;
-    for (const playerId of next.clock?.absentPlayerIds ?? [])
+    const bots = new Set(next.players.filter((p) => p.bot).map((p) => p.id));
+    // A bot answers for the seat it plays.
+    for (const playerId of (next.clock?.absentPlayerIds ?? []).filter(
+      (id) => !bots.has(id),
+    ))
       for (const action of reconquistaDeclines(
         this.replay(next).state,
         playerId,
@@ -669,9 +736,10 @@ export class ReconquistaStore {
     return next;
   }
   /**
-   * One second of an Express game, as Classic's clock tick: the turn time
-   * runs, a disconnected player gets five minutes, an absent seat's turns
-   * pass on their own. Returns whether screens should reload.
+   * One second of a game the server moves, as Classic's clock tick: the turn
+   * time runs, a disconnected player gets five minutes, an absent seat's turns
+   * pass on their own or a bot plays them, and bots move every two seconds.
+   * Returns whether screens should reload.
    */
   async tick(
     id: string,
@@ -680,97 +748,60 @@ export class ReconquistaStore {
   ): Promise<boolean> {
     return this.coordinator.run(id, async () => {
       const current = await this.load(id);
-      if (!current.express || !current.journal || this.finished(current))
-        return false;
-      if (!current.clock) {
-        await this.persist(this.settle(current, now));
-        return true;
-      }
-      let clock = current.clock;
-      if (clock.pauseReason === 'admin' || clock.pauseReason === 'restart')
-        return false;
-      now = Math.max(now, clock.updatedAtMs);
-      const state = this.replay(current).state;
-      const delta = Math.max(0, now - clock.updatedAtMs);
-      const actor = reconquistaActor(this.board, state)!;
-      const online = connected(actor);
+      if (!current.journal || this.finished(current)) return false;
+      let next = current;
       let changed = false;
-      // A returning player takes the seat back.
-      if (online && clock.absentPlayerIds.includes(actor)) {
-        clock = {
-          ...clock,
-          absentPlayerIds: clock.absentPlayerIds.filter((p) => p !== actor),
+      // A stopped clock waits for the host, people coming back included.
+      if (
+        current.clock?.pauseReason === 'admin' ||
+        current.clock?.pauseReason === 'restart'
+      )
+        return false;
+      // A person back at a seat a bot played for the absence takes it again.
+      const returned = current.players.filter(
+        (p) => p.bot === 'absent' && connected(p.id),
+      );
+      if (returned.length) {
+        const ids = new Set(returned.map((p) => p.id));
+        next = {
+          ...next,
+          players: next.players.map((p) => {
+            if (!ids.has(p.id)) return p;
+            const { bot: _bot, ...rest } = p;
+            void _bot;
+            return rest;
+          }),
+          ...(next.clock
+            ? {
+                clock: {
+                  ...next.clock,
+                  absentPlayerIds: next.clock.absentPlayerIds.filter(
+                    (p) => !ids.has(p),
+                  ),
+                },
+              }
+            : {}),
         };
         changed = true;
       }
-      let next: ReconquistaEnvelope;
-      if (clock.pauseReason === 'disconnection') {
-        const technical = Math.max(
-          0,
-          (clock.technicalRemainingMs ?? RECONQUISTA_TECHNICAL_WAIT_MS) - delta,
-        );
-        clock = { ...clock, updatedAtMs: now, technicalRemainingMs: technical };
-        // Once the wait is spent, the turn clock runs out the remaining time.
-        if (technical === 0 || online) {
-          clock = {
-            ...clock,
-            pauseReason: undefined,
-            disconnectedPlayerId: undefined,
-          };
-          changed = true;
-        }
-        next = { ...current, clock };
-      } else {
-        const used = Math.min(delta, clock.activationRemainingMs);
-        const elapsed = clock.elapsedMs + (state.campaign ? used : 0);
-        clock = {
-          ...clock,
-          updatedAtMs: now,
-          activationRemainingMs: clock.activationRemainingMs - used,
-          elapsedMs: elapsed,
-        };
-        if (
-          clock.finalRound === undefined &&
-          state.campaign &&
-          elapsed >= reconquistaExpressDurationMs(current.playerCount)
-        ) {
-          clock = { ...clock, finalRound: state.campaign.round + 2 };
-          changed = true;
-        }
-        next = { ...current, clock };
-        const absent = clock.absentPlayerIds.includes(actor);
-        if (absent && !online) {
-          next = this.expire(next);
-          changed = true;
-        } else if (
-          !online &&
-          (clock.technicalRemainingMs ?? RECONQUISTA_TECHNICAL_WAIT_MS) > 0
-        ) {
-          next = {
-            ...next,
-            clock: {
-              ...clock,
-              pauseReason: 'disconnection',
-              disconnectedPlayerId: actor,
-              technicalRemainingMs:
-                clock.technicalRemainingMs ?? RECONQUISTA_TECHNICAL_WAIT_MS,
-            },
-          };
-          changed = true;
-        } else if (clock.activationRemainingMs === 0) {
-          if (!online)
-            next = {
-              ...next,
-              clock: {
-                ...clock,
-                absentPlayerIds: [...clock.absentPlayerIds, actor],
-              },
-            };
-          next = this.expire(next);
+      if (next.express) {
+        const clocked = this.clockTick(next, now, connected);
+        if (clocked.changed) changed = true;
+        next = clocked.next;
+      }
+      // Bots wait while the clock is stopped.
+      if (
+        !next.clock?.pauseReason &&
+        now - (this.botMoves.get(id) ?? -Infinity) >= BOT_MOVE_GAP_MS
+      ) {
+        const moved = this.botMove(next);
+        if (moved) {
+          next = this.settle(moved, now);
+          this.botMoves.set(id, now);
           changed = true;
         }
       }
-      next = this.settle(next, now);
+      if (!next.express && !changed) return false;
       if (changed || next.revision !== current.revision) {
         await this.persist(next);
         this.clockSaved.set(id, now);
@@ -781,6 +812,305 @@ export class ReconquistaStore {
         this.clockSaved.set(id, now);
       } else this.committed.set(id, structuredClone(next));
       return false;
+    });
+  }
+  /** The Express clock's second; `changed` is false when only the time ran. */
+  private clockTick(
+    current: ReconquistaEnvelope,
+    now: number,
+    connected: (playerId: string) => boolean,
+  ): { next: ReconquistaEnvelope; changed: boolean } {
+    if (!current.clock)
+      return { next: this.settle(current, now), changed: true };
+    let clock = current.clock;
+    if (clock.pauseReason === 'admin' || clock.pauseReason === 'restart')
+      return { next: current, changed: false };
+    now = Math.max(now, clock.updatedAtMs);
+    const state = this.replay(current).state;
+    const delta = Math.max(0, now - clock.updatedAtMs);
+    const actor = reconquistaActor(this.board, state)!;
+    const seat = current.players.find((p) => p.id === actor);
+    const present = connected(actor);
+    // A bot never disconnects.
+    const online = present || !!seat?.bot;
+    let changed = false;
+    // A returning player takes the seat back.
+    if (present && clock.absentPlayerIds.includes(actor)) {
+      clock = {
+        ...clock,
+        absentPlayerIds: clock.absentPlayerIds.filter((p) => p !== actor),
+      };
+      changed = true;
+    }
+    let next: ReconquistaEnvelope;
+    if (clock.pauseReason === 'disconnection') {
+      const technical = Math.max(
+        0,
+        (clock.technicalRemainingMs ?? RECONQUISTA_TECHNICAL_WAIT_MS) - delta,
+      );
+      clock = { ...clock, updatedAtMs: now, technicalRemainingMs: technical };
+      // Once the wait is spent, the turn clock runs out the remaining time.
+      if (technical === 0 || online) {
+        clock = {
+          ...clock,
+          pauseReason: undefined,
+          disconnectedPlayerId: undefined,
+        };
+        changed = true;
+      }
+      next = { ...current, clock };
+    } else {
+      const used = Math.min(delta, clock.activationRemainingMs);
+      const elapsed = clock.elapsedMs + (state.campaign ? used : 0);
+      clock = {
+        ...clock,
+        updatedAtMs: now,
+        activationRemainingMs: clock.activationRemainingMs - used,
+        elapsedMs: elapsed,
+      };
+      if (
+        clock.finalRound === undefined &&
+        state.campaign &&
+        elapsed >= reconquistaExpressDurationMs(current.playerCount)
+      ) {
+        clock = { ...clock, finalRound: state.campaign.round + 2 };
+        changed = true;
+      }
+      next = { ...current, clock };
+      const absent = clock.absentPlayerIds.includes(actor);
+      if (absent && !online) {
+        next = this.expire(next);
+        changed = true;
+      } else if (
+        !online &&
+        (clock.technicalRemainingMs ?? RECONQUISTA_TECHNICAL_WAIT_MS) > 0
+      ) {
+        next = {
+          ...next,
+          clock: {
+            ...clock,
+            pauseReason: 'disconnection',
+            disconnectedPlayerId: actor,
+            technicalRemainingMs:
+              clock.technicalRemainingMs ?? RECONQUISTA_TECHNICAL_WAIT_MS,
+          },
+        };
+        changed = true;
+      } else if (clock.activationRemainingMs === 0) {
+        if (!online) {
+          next = {
+            ...next,
+            clock: {
+              ...clock,
+              absentPlayerIds: [...clock.absentPlayerIds, actor],
+            },
+          };
+          // A bot plays the absent seat's next turns, unless the host said no.
+          if (current.botsReplaceAbsent !== false && !seat?.free)
+            next = {
+              ...next,
+              players: next.players.map((p) =>
+                p.id === actor ? { ...p, bot: 'absent' as const } : p,
+              ),
+            };
+        }
+        next = this.expire(next);
+        changed = true;
+      }
+    }
+    next = this.settle(next, now);
+    return { next, changed: changed || next.revision !== current.revision };
+  }
+  /**
+   * One bot move: answers to offers first, from any seat a bot plays, then
+   * the bot on turn. A move the game rejects falls back to the timeout move.
+   */
+  private botMove(current: ReconquistaEnvelope): ReconquistaEnvelope | null {
+    const bots = current.players.filter((p) => p.bot);
+    if (!bots.length) return null;
+    const state = this.replay(current).state;
+    const actor = reconquistaActor(this.board, state);
+    const level = current.botLevel ?? 'hard';
+    const memory = structuredClone(current.botMemory ?? {}) as Record<
+      string,
+      ReconquistaBotMemory
+    >;
+    const answering = bots.find((p) => {
+      if (p.id === actor) return false;
+      const move = chooseReconquistaBotMove(
+        this.board,
+        state,
+        p.id,
+        level,
+        this.randomness,
+        {},
+      );
+      return (
+        move?.kind === 'campaign' && move.action.kind.startsWith('respond')
+      );
+    });
+    const player = answering ?? bots.find((p) => p.id === actor);
+    if (!player) return null;
+    const own = (memory[player.id] ??= {});
+    const move = chooseReconquistaBotMove(
+      this.board,
+      state,
+      player.id,
+      level,
+      this.randomness,
+      own,
+    );
+    const withMemory = (next: ReconquistaEnvelope) => ({
+      ...next,
+      botMemory: memory,
+    });
+    if (move)
+      try {
+        return withMemory(this.apply(current, player.id, move));
+      } catch {
+        this.sessions.delete(current.gameId);
+      }
+    if (player.id !== actor) return null;
+    const fallback = reconquistaTimeoutMove(
+      this.board,
+      this.replay(current).state,
+      this.randomness,
+    );
+    if (!fallback) return null;
+    try {
+      return withMemory(this.apply(current, fallback.actorId, fallback.action));
+    } catch {
+      this.sessions.delete(current.gameId);
+      return null;
+    }
+  }
+  /** Host changes to bots: level, absences, or a bot in a seat. */
+  async bots(id: string, input: unknown, now: number) {
+    return this.coordinator.run(id, async () => {
+      const change = reconquistaBotsSchema.parse(input);
+      const current = await this.load(id);
+      if (!current.journal || this.finished(current))
+        throw new ReconquistaOperationError('INVALID_PHASE');
+      let next: ReconquistaEnvelope;
+      if ('playerId' in change) {
+        const player = current.players.find((p) => p.id === change.playerId);
+        const campaign = this.replay(current).state.campaign;
+        if (!player || campaign?.eliminations[player.id])
+          throw new ReconquistaOperationError('INVALID_PHASE');
+        let players = current.players;
+        let clock = current.clock;
+        const without = () => {
+          const { bot: _bot, ...rest } = player;
+          void _bot;
+          return rest;
+        };
+        if (player.bot === 'table') {
+          // Express frees a table bot's seat; elsewhere table bots stay.
+          if (change.enabled || !current.express || !clock)
+            throw new ReconquistaOperationError('INVALID_PHASE');
+          players = players.map((p) =>
+            p.id === player.id ? { ...without(), free: true as const } : p,
+          );
+          // Its turns pass on their own until someone takes the seat.
+          clock = {
+            ...clock,
+            absentPlayerIds: [...clock.absentPlayerIds, player.id],
+          };
+        } else if (change.enabled) {
+          if (player.bot || player.free)
+            throw new ReconquistaOperationError('INVALID_PHASE');
+          players = players.map((p) =>
+            p.id === player.id ? { ...p, bot: 'admin' as const } : p,
+          );
+          if (clock?.disconnectedPlayerId === player.id)
+            clock = {
+              ...clock,
+              updatedAtMs: now,
+              pauseReason: undefined,
+              disconnectedPlayerId: undefined,
+            };
+        } else {
+          if (!player.bot) throw new ReconquistaOperationError('INVALID_PHASE');
+          players = players.map((p) => (p.id === player.id ? without() : p));
+          if (clock)
+            clock = {
+              ...clock,
+              absentPlayerIds: clock.absentPlayerIds.filter(
+                (p) => p !== player.id,
+              ),
+            };
+        }
+        next = {
+          ...current,
+          players,
+          ...(clock ? { clock } : {}),
+        };
+      } else {
+        const {
+          botLevel: _level,
+          botsReplaceAbsent: _absent,
+          ...rest
+        } = current;
+        void _level;
+        void _absent;
+        const level = change.level ?? current.botLevel ?? 'hard';
+        const replace =
+          change.replaceAbsent ?? current.botsReplaceAbsent !== false;
+        next = {
+          ...rest,
+          ...(level !== 'hard' ? { botLevel: level } : {}),
+          ...(replace ? {} : { botsReplaceAbsent: false as const }),
+        };
+      }
+      await this.persist(next);
+      return next;
+    });
+  }
+  /** A person takes a seat a table bot left free, under their own name. */
+  async takeSeat(id: string, input: unknown) {
+    return this.coordinator.run(id, async () => {
+      const body = reconquistaTakeSeatSchema.parse(input);
+      const current = await this.load(id);
+      const seat = current.players.find((p) => p.id === body.playerId);
+      if (!seat?.free || this.finished(current))
+        throw new ReconquistaOperationError('SEAT_TAKEN');
+      if (
+        current.players.some(
+          (p) => p.id !== seat.id && sameNickname(p.nickname, body.nickname),
+        )
+      )
+        throw new ReconquistaOperationError('NICKNAME_IN_USE');
+      const token = generateSessionToken();
+      const expiresAt = new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000,
+      ).toISOString();
+      const next: ReconquistaEnvelope = {
+        ...current,
+        players: current.players.map((p) =>
+          p.id === seat.id
+            ? {
+                id: p.id,
+                color: p.color,
+                ready: true,
+                nickname: body.nickname,
+                session: hashSessionToken(token),
+                expiresAt,
+              }
+            : p,
+        ),
+        ...(current.clock
+          ? {
+              clock: {
+                ...current.clock,
+                absentPlayerIds: current.clock.absentPlayerIds.filter(
+                  (p) => p !== seat.id,
+                ),
+              },
+            }
+          : {}),
+      };
+      await this.persist(next);
+      return { playerId: seat.id, token, expiresAt };
     });
   }
   /** The host stops or resumes the clock; a disconnection wait runs on its own. */

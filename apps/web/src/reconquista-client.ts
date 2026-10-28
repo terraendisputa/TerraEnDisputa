@@ -76,6 +76,12 @@ export function reconquistaErrorMessage(caught: unknown): string {
       return 'Ese nombre ya está en uso. Elegí otro.';
     case 'GAME_PAUSED':
       return 'La partida está en pausa.';
+    case 'BOT_CONTROLLED':
+      return 'Un bot juega este asiento. Pedile al anfitrión que te lo devuelva.';
+    case 'SEAT_TAKEN':
+      return 'Ese asiento ya lo tomó otra persona.';
+    case 'TOO_MANY_BOTS':
+      return 'Tiene que quedar al menos un asiento para una persona.';
     case 'STALE_REVISION':
       return 'Otro jugador actuó antes. Se actualizó la partida.';
     default:

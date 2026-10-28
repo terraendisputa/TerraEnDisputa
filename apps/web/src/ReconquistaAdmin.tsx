@@ -58,16 +58,26 @@ export function ReconquistaAdminDetail({
   if (!entry) return <p role="status">Cargando la partida…</p>;
   const reload = () => setAttempt((value) => value + 1);
   const lobby = entry.stage === 'lobby';
-  const missingPlayers = entry.playerCount - entry.players.length;
+  // A table with bots waits for its people; the bots sit at the start.
+  const bots = lobby ? (entry.botSeats ?? 0) : 0;
+  const missingPlayers = entry.playerCount - bots - entry.players.length;
   const ready = entry.players.filter((p) => p.ready).length;
   const missingReady = entry.players.length - ready;
   // Everyone who joined is ready: the table shrinks to them on start (user
-  // decision 2026-10-24).
-  const readyToStart = lobby && missingReady === 0 && entry.players.length >= 2;
+  // decision 2026-10-24). With bots, a single person can start.
+  const readyToStart =
+    lobby && missingReady === 0 && entry.players.length >= (bots ? 1 : 2);
   const configure = (settings: {
     readonly playerCount?: number;
     readonly express?: boolean;
+    readonly bots?: number;
   }) => reconquistaRequest(`/games/${gameId}`, settings, 'PATCH');
+  const setBots = (settings: object) =>
+    run(async () => {
+      await reconquistaRequest(`/games/${gameId}/bots`, settings);
+      reload();
+    });
+  const eliminated = (id: string) => !!view?.campaign?.eliminations[id];
   const presentation = view ? reconquistaPresentation(view) : undefined;
   const finished = view?.campaign?.phase === 'finished';
   const nickname = (id: string | undefined) =>
@@ -92,8 +102,39 @@ export function ReconquistaAdminDetail({
               }
             >
               {[2, 3, 4, 5, 6].map((count) => (
-                <option key={count} disabled={count < entry.players.length}>
+                <option
+                  key={count}
+                  disabled={
+                    count < entry.players.length + bots || count <= bots
+                  }
+                >
                   {count}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label
+            className="inline-control"
+            title="Asientos que ocupan bots al comenzar. Siempre queda al menos uno para una persona."
+          >
+            Bots
+            <select
+              disabled={busy || !lobby}
+              value={entry.botSeats ?? 0}
+              onChange={(event) =>
+                void run(async () => {
+                  await configure({ bots: Number(event.target.value) });
+                  reload();
+                })
+              }
+            >
+              {Array.from({ length: entry.playerCount }, (_, n) => (
+                <option
+                  key={n}
+                  value={n}
+                  disabled={entry.playerCount - n < entry.players.length}
+                >
+                  {n === 0 ? 'Sin bots' : n}
                 </option>
               ))}
             </select>
@@ -132,13 +173,18 @@ export function ReconquistaAdminDetail({
             >
               <span aria-hidden="true">{readyToStart ? '✓ ' : '◷ '}</span>
               {readyToStart && missingPlayers > 0
-                ? `Todos los que entraron están listos. Podés comenzar con ${entry.players.length} jugadores.`
+                ? `Todos los que entraron están listos. Podés comenzar con ${entry.players.length + bots} jugadores.`
                 : missingPlayers > 0
                   ? `Falta${missingPlayers === 1 ? '' : 'n'} ${missingPlayers} ${missingPlayers === 1 ? 'persona' : 'personas'} para completar la mesa.`
                   : missingReady > 0
                     ? `Esperando que ${missingReady} ${missingReady === 1 ? 'persona marque' : 'personas marquen'} «Estoy listo».`
                     : 'Todos están listos. Podés comenzar.'}{' '}
-              Listos: {ready}/{entry.playerCount}.
+              Listos: {ready}/{entry.playerCount - bots}.
+              {bots === 1
+                ? ' El bot se suma al comenzar.'
+                : bots
+                  ? ` Los ${bots} bots se suman al comenzar.`
+                  : ''}
             </p>
           )}
           <div className="button-row">
@@ -153,8 +199,10 @@ export function ReconquistaAdminDetail({
                 }
                 onClick={() =>
                   void run(async () => {
-                    if (entry.players.length !== entry.playerCount)
-                      await configure({ playerCount: entry.players.length });
+                    if (entry.players.length + bots !== entry.playerCount)
+                      await configure({
+                        playerCount: entry.players.length + bots,
+                      });
                     await reconquistaRequest(`/games/${gameId}/start`, {});
                     reload();
                   })
@@ -250,6 +298,38 @@ export function ReconquistaAdminDetail({
               </button>
             </section>
           )}
+          {!lobby && !finished && (
+            <section className="admin-bots">
+              {/* Without Express nobody turns absent: bots come in by hand. */}
+              {entry.express && (
+                <label className="inline-control">
+                  <input
+                    type="checkbox"
+                    disabled={busy}
+                    checked={entry.botsReplaceAbsent !== false}
+                    onChange={(event) =>
+                      void setBots({ replaceAbsent: event.target.checked })
+                    }
+                  />
+                  Reemplazar ausentes por bot
+                </label>
+              )}
+              <label className="inline-control">
+                Dificultad de los bots
+                <select
+                  disabled={busy}
+                  value={entry.botLevel ?? 'hard'}
+                  onChange={(event) =>
+                    void setBots({ level: event.target.value })
+                  }
+                >
+                  <option value="easy">Fácil</option>
+                  <option value="normal">Normal</option>
+                  <option value="hard">Difícil</option>
+                </select>
+              </label>
+            </section>
+          )}
           <ul className="player-list">
             {entry.players.map((player, index) => (
               <li key={player.id}>
@@ -258,10 +338,18 @@ export function ReconquistaAdminDetail({
                   aria-hidden="true"
                 />
                 <span className="admin-player-copy">
-                  <strong>{player.nickname}</strong>
+                  <strong>
+                    {player.nickname}
+                    {player.bot && player.bot !== 'table' ? ' (bot)' : ''}
+                  </strong>
                   <small>
                     {playerColorNames[player.color] ?? player.color} · Asiento{' '}
                     {index + 1}
+                    {player.bot === 'table'
+                      ? ' · bot de la mesa'
+                      : player.free
+                        ? ' · sin jugador'
+                        : ''}
                   </small>
                   {lobby && (
                     <span
@@ -278,6 +366,33 @@ export function ReconquistaAdminDetail({
                   )}
                 </span>
                 <div className="row-actions">
+                  {!lobby &&
+                    !finished &&
+                    !player.free &&
+                    !eliminated(player.id) &&
+                    // Express frees a table bot's seat for a person.
+                    (player.bot !== 'table' || !!entry.express) && (
+                      <button
+                        type="button"
+                        className="secondary"
+                        disabled={busy}
+                        title={
+                          player.bot === 'table'
+                            ? `Liberar el asiento de ${player.nickname}: sus turnos pasan solos hasta que lo tome una persona`
+                            : player.bot
+                              ? `Devolverle el lugar a ${player.nickname}`
+                              : `Poner un bot en lugar de ${player.nickname}`
+                        }
+                        onClick={() =>
+                          void setBots({
+                            playerId: player.id,
+                            enabled: !player.bot,
+                          })
+                        }
+                      >
+                        {player.bot ? 'Quitar bot' : 'Poner bot'}
+                      </button>
+                    )}
                   {lobby && (
                     <button
                       type="button"

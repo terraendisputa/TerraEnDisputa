@@ -291,6 +291,16 @@ export async function registerReconquista(
         ? 'Ocupar 45 países.'
         : assets.descriptions.get(o.objectiveId)!,
   });
+  /** Public seats: never the session digests. */
+  const seats = (current: ReconquistaEnvelope) =>
+    current.players.map(({ id, color, nickname, ready, bot, free }) => ({
+      id,
+      color,
+      nickname,
+      ready,
+      ...(bot ? { bot } : {}),
+      ...(free ? { free } : {}),
+    }));
   /** The Express clock for screens, without the server's bookkeeping. */
   const clock = (current: ReconquistaEnvelope) => {
     const c = current.clock;
@@ -325,12 +335,7 @@ export async function registerReconquista(
       ...(current.express ? { express: true } : {}),
       ...clock(current),
     };
-    const players = current.players.map(({ id, color, nickname, ready }) => ({
-      id,
-      color,
-      nickname,
-      ready,
-    }));
+    const players = seats(current);
     if (!current.journal)
       return reconquistaViewSchema.parse({
         ...base,
@@ -530,12 +535,10 @@ export async function registerReconquista(
         playerCount: current.playerCount,
         ...(current.express ? { express: true } : {}),
         stage: current.journal ? 'started' : 'lobby',
-        players: current.players.map(({ id, nickname, color, ready }) => ({
-          id,
-          nickname,
-          color,
-          ready,
-        })),
+        players: seats(current),
+        ...(current.botSeats ? { botSeats: current.botSeats } : {}),
+        botLevel: current.botLevel ?? 'hard',
+        botsReplaceAbsent: current.botsReplaceAbsent !== false,
       };
     });
     app.post(prefix + '/games/:gameId/join', async (request, reply) => {
@@ -546,6 +549,24 @@ export async function registerReconquista(
       const existing = store.authenticate(current, playerToken(request, id));
       if (existing) return { playerId: existing };
       const result = await store.join(id, request.body);
+      notify(id);
+      const cookie = createSessionCookie(
+        { kind: 'player', gameId: 'reconquista-' + id },
+        result.token,
+        transport(request),
+        result.expiresAt,
+      );
+      reply.setCookie(cookie.name, cookie.value, cookie.options);
+      return { playerId: result.playerId };
+    });
+    app.post(prefix + '/games/:gameId/take-seat', async (request, reply) => {
+      const id = params(request);
+      if (!limiter.consume('join', request.ip, id))
+        return reply.code(429).send({ code: 'RATE_LIMITED' });
+      const current = await store.load(id);
+      const existing = store.authenticate(current, playerToken(request, id));
+      if (existing) return { playerId: existing };
+      const result = await store.takeSeat(id, request.body);
       notify(id);
       const cookie = createSessionCookie(
         { kind: 'player', gameId: 'reconquista-' + id },
@@ -596,9 +617,21 @@ export async function registerReconquista(
       await requireAdmin(request);
       z.strictObject({}).parse(request.body ?? {});
       const started = await store.start(params(request));
-      if (started.express) ticking.add(started.gameId);
+      if (started.express || started.players.some((p) => p.bot))
+        ticking.add(started.gameId);
       notify(started.gameId);
       return view(started, null);
+    });
+    app.post(prefix + '/games/:gameId/bots', async (request) => {
+      await requireAdmin(request);
+      const current = await store.bots(
+        params(request),
+        request.body,
+        Date.now(),
+      );
+      if (current.players.some((p) => p.bot)) ticking.add(current.gameId);
+      notify(current.gameId);
+      return view(current, null);
     });
     app.post(prefix + '/games/:gameId/pause', async (request) => {
       await requireAdmin(request);

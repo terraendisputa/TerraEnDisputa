@@ -659,9 +659,17 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
           <small>
             {view.campaign?.eliminations[inspectedPlayer.id]
               ? 'Eliminado'
-              : inspectedPlayer.id === p.actorId
-                ? 'Jugando ahora'
-                : 'En partida'}
+              : inspectedPlayer.bot === 'table'
+                ? 'Bot de la mesa'
+                : inspectedPlayer.bot
+                  ? 'Juega un bot'
+                  : inspectedPlayer.free
+                    ? 'Sin jugador'
+                    : view.clock?.absentPlayerIds.includes(inspectedPlayer.id)
+                      ? 'Ausente · turnos automáticos'
+                      : inspectedPlayer.id === p.actorId
+                        ? 'Jugando ahora'
+                        : 'En partida'}
           </small>
         </section>
       )}
@@ -828,6 +836,7 @@ function ReconquistaLobby({
   const { entry, view } = game;
   const [nickname, setNickname] = useState('');
   const [color, setColor] = useState('');
+  const [seatChoice, setSeatChoice] = useState('');
   if (!entry) return null;
   const free = Object.keys(playerColorNames).filter(
     (c) => !entry.players.some((p) => p.color === c),
@@ -838,8 +847,12 @@ function ReconquistaLobby({
   const self = view?.self
     ? entry.players.find((p) => p.id === view.self!.playerId)
     : undefined;
-  const full = entry.players.length === entry.playerCount;
+  const bots = entry.botSeats ?? 0;
+  const full = entry.players.length >= entry.playerCount - bots;
   const started = entry.stage === 'started';
+  // Seats a table bot left free in an Express game.
+  const freeSeats = started ? entry.players.filter((p) => p.free) : [];
+  const seat = freeSeats.find((p) => p.id === seatChoice) ?? freeSeats[0];
   if (!self)
     return (
       <main className="entry-layout">
@@ -899,6 +912,45 @@ function ReconquistaLobby({
                 {game.busy ? 'Conectando…' : 'Unirme'}
               </button>
             </form>
+          ) : seat ? (
+            <form
+              onSubmit={(e: FormEvent) => {
+                e.preventDefault();
+                void game.run(async () => {
+                  await reconquistaRequest('/games/' + gameId + '/take-seat', {
+                    playerId: seat.id,
+                    nickname,
+                  });
+                  await game.refresh();
+                });
+              }}
+            >
+              <label>
+                Apodo
+                <input
+                  required
+                  maxLength={32}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                />
+              </label>
+              <label>
+                Asiento libre
+                <select
+                  value={seat.id}
+                  onChange={(e) => setSeatChoice(e.target.value)}
+                >
+                  {freeSeats.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {playerColorNames[p.color]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button disabled={game.busy} type="submit">
+                {game.busy ? 'Conectando…' : 'Tomar el asiento'}
+              </button>
+            </form>
           ) : (
             <p>No hay asientos disponibles.</p>
           )}
@@ -945,8 +997,15 @@ function ReconquistaLobby({
         <section className="panel lobby-main">
           <p className="eyebrow">Sala de espera</p>
           <h1>
-            {entry.players.length} de {entry.playerCount} jugadores
+            {entry.players.length} de {entry.playerCount - bots} jugadores
           </h1>
+          {bots > 0 && (
+            <p className="muted-copy">
+              {bots === 1
+                ? 'Un bot se suma al comenzar.'
+                : `${bots} bots se suman al comenzar.`}
+            </p>
+          )}
           <ul className="player-list">
             {entry.players.map((x, index) => (
               <li key={x.id} className={x.id === self.id ? 'self-player' : ''}>
