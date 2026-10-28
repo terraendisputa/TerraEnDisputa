@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PlayerGameView } from '@game/protocol';
+import { tr } from './language.js';
 
 export interface PanelNotification {
   readonly count: number;
@@ -13,13 +14,19 @@ export function panelChanges(previous: PlayerGameView, next: PlayerGameView) {
     ({ cardId }) => !oldCards.has(cardId),
   ).length;
   if (gained)
-    changes.cards = { count: gained, message: `${gained} cartas nuevas` };
+    changes.cards = {
+      count: gained,
+      message: tr(`${gained} cartas nuevas`, `${gained} new cards`),
+    };
   if (
     previous.private.secretObjectiveId !== next.private.secretObjectiveId ||
     previous.private.effectiveDestructionTargetPlayerId !==
       next.private.effectiveDestructionTargetPlayerId
   )
-    changes.objective = { count: 1, message: 'Tu objetivo cambió' };
+    changes.objective = {
+      count: 1,
+      message: tr('Tu objetivo cambió', 'Your objective changed'),
+    };
   const playerStatus = (view: PlayerGameView) =>
     JSON.stringify(
       view.players.map(({ id, nickname, color, eliminated }) => ({
@@ -33,7 +40,10 @@ export function panelChanges(previous: PlayerGameView, next: PlayerGameView) {
     previous.status !== next.status ||
     playerStatus(previous) !== playerStatus(next)
   )
-    changes.players = { count: 1, message: 'Hay novedades en la partida' };
+    changes.players = {
+      count: 1,
+      message: tr('Hay novedades en la partida', 'There is news in the game'),
+    };
   if (next.revision > previous.revision) {
     const oldProposals = new Set(
       previous.pacts?.proposals.map(({ id }) => id) ?? [],
@@ -55,12 +65,12 @@ export function panelChanges(previous: PlayerGameView, next: PlayerGameView) {
     const messages = [
       proposed > 0 &&
         (proposed === 1
-          ? 'Nueva propuesta de pacto'
-          : `${proposed} propuestas nuevas`),
+          ? tr('Nueva propuesta de pacto', 'New pact proposal')
+          : tr(`${proposed} propuestas nuevas`, `${proposed} new proposals`)),
       accepted > 0 &&
         (accepted === 1
-          ? 'Un jugador aceptó un pacto'
-          : `${accepted} pactos aceptados`),
+          ? tr('Un jugador aceptó un pacto', 'A player accepted a pact')
+          : tr(`${accepted} pactos aceptados`, `${accepted} pacts accepted`)),
     ].filter(Boolean);
     if (proposed + accepted > 0)
       changes.pacts = {
@@ -105,7 +115,11 @@ export function usePanelNotifications(snapshot: PlayerGameView | undefined) {
         ? snapshot.turn?.playerId === snapshot.selfPlayerId
         : snapshot.status === 'SETUP' &&
           snapshot.setup?.currentPlayerId === snapshot.selfPlayerId;
-    if (isYourTurn) notifications.players = { count: 1, message: 'Tu turno' };
+    if (isYourTurn)
+      notifications.players = {
+        count: 1,
+        message: tr('Tu turno', 'Your turn'),
+      };
     const pending =
       snapshot.pacts?.proposals.filter(
         (p) => p.recipientId === snapshot.selfPlayerId,
@@ -113,7 +127,13 @@ export function usePanelNotifications(snapshot: PlayerGameView | undefined) {
     if (pending)
       notifications.pacts = {
         count: Math.max(pending, unread.pacts?.count ?? 0),
-        message: [unread.pacts?.message, `${pending} propuestas pendientes`]
+        message: [
+          unread.pacts?.message,
+          tr(
+            `${pending} propuestas pendientes`,
+            `${pending} pending proposals`,
+          ),
+        ]
           .filter(Boolean)
           .join(' · '),
       };

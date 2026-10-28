@@ -3,6 +3,7 @@ import type { AdminConnectionResponse } from '@game/protocol';
 import { api } from './api.js';
 import { copyInvitation } from './copy-invitation.js';
 import { UiIcon } from './UiIcon.js';
+import { tr } from './language.js';
 
 type Invitation = ReturnType<typeof useInvitation>;
 
@@ -34,7 +35,12 @@ export function useInvitation(gameId: string) {
       })
       .catch(() => {
         if (active)
-          setMessage('No se pudieron consultar las direcciones. Reintentá.');
+          setMessage(
+            tr(
+              'No se pudieron consultar las direcciones. Reintentá.',
+              'Could not look up the addresses. Try again.',
+            ),
+          );
       });
     return () => {
       active = false;
@@ -58,24 +64,36 @@ export function InvitationNetwork({ invite }: { readonly invite: Invitation }) {
   const notes = [
     connection?.reason,
     connection?.choices.length
-      ? 'Si aparecen varias redes, elegí la compartida con tus amigos. La conexión desde otro equipo todavía no fue comprobada.'
+      ? tr(
+          'Si aparecen varias redes, elegí la compartida con tus amigos. La conexión desde otro equipo todavía no fue comprobada.',
+          'If several networks show up, choose the one you share with your friends. The connection from another computer has not been checked yet.',
+        )
       : undefined,
   ].filter((note): note is string => !!note);
   return (
     <section className="host-invitation host-network">
       {!connection && (
         <>
-          <p role="status">{message || 'Buscando direcciones de conexión…'}</p>
+          <p role="status">
+            {message ||
+              tr(
+                'Buscando direcciones de conexión…',
+                'Looking for connection addresses…',
+              )}
+          </p>
           {message && (
             <button type="button" className="secondary" onClick={retry}>
-              Reintentar
+              {tr('Reintentar', 'Retry')}
             </button>
           )}
         </>
       )}
       {!!connection?.choices.length && (
         <label>
-          Elegí una red donde iniciar la partida:
+          {tr(
+            'Elegí una red donde iniciar la partida:',
+            'Choose a network to start the game on:',
+          )}
           <select
             value={origin}
             onChange={(event) => {
@@ -83,7 +101,12 @@ export function InvitationNetwork({ invite }: { readonly invite: Invitation }) {
               setMessage('');
             }}
           >
-            <option value="">Elegí la red que usan tus amigos</option>
+            <option value="">
+              {tr(
+                'Elegí la red que usan tus amigos',
+                'Choose the network your friends use',
+              )}
+            </option>
             {connection.choices.map((choice) => (
               <option key={choice.origin} value={choice.origin}>
                 {choice.label}
@@ -99,17 +122,24 @@ export function InvitationNetwork({ invite }: { readonly invite: Invitation }) {
           ))}
           {!origin && (
             <li className="host-note-pending">
-              Elegí la red para compartir para ver el enlace.
+              {tr(
+                'Elegí la red para compartir para ver el enlace.',
+                'Choose the network to share to see the link.',
+              )}
             </li>
           )}
         </ul>
       )}
       <details open>
-        <summary>Ayuda de conexión avanzada</summary>
+        <summary>
+          {tr('Ayuda de conexión avanzada', 'Advanced connection help')}
+        </summary>
         <p className="host-lobby-notice host-neutral connection-help">
-          El enlace de red local no permite jugar por Internet por sí solo.
-          Revisá el firewall y la red compartida si otro equipo no puede
-          abrirlo. Para escuchar en la red: <code>ted --bind 0.0.0.0</code>.
+          {tr(
+            'El enlace de red local no permite jugar por Internet por sí solo. Revisá el firewall y la red compartida si otro equipo no puede abrirlo. Para escuchar en la red:',
+            'The local network link does not allow playing over the Internet on its own. Check the firewall and the shared network if another computer cannot open it. To listen on the network:',
+          )}{' '}
+          <code>ted --bind 0.0.0.0</code>.
         </p>
       </details>
     </section>
@@ -132,24 +162,30 @@ export function InvitationLink({
     <div className="host-invitation host-invitation-link">
       {!available && (
         <p className="host-lobby-notice host-neutral" role="status">
-          Invitación no disponible: la partida ya comenzó.
+          {tr(
+            'Invitación no disponible: la partida ya comenzó.',
+            'Invitation unavailable: the game already started.',
+          )}
         </p>
       )}
       <div className="copy-line">
         <input
-          aria-label="Enlace de invitación"
+          aria-label={tr('Enlace de invitación', 'Invitation link')}
           readOnly
           value={invitation}
-          placeholder="Primero elegí una red"
+          placeholder={tr('Primero elegí una red', 'Choose a network first')}
           onFocus={(event) => event.currentTarget.select()}
         />
         <button
           type="button"
           className="secondary copy-button"
-          aria-label="Copiar invitación"
-          title="Copiar invitación"
+          aria-label={tr('Copiar invitación', 'Copy invitation')}
+          title={tr('Copiar invitación', 'Copy invitation')}
           onClick={() => {
-            if (!invitation) setMessage('Primero elegí una red.');
+            if (!invitation)
+              setMessage(
+                tr('Primero elegí una red.', 'Choose a network first.'),
+              );
             else
               void copyInvitation(invitation, navigator.clipboard).then(
                 setMessage,
@@ -167,7 +203,7 @@ export function InvitationLink({
           target="_blank"
           rel="noopener noreferrer"
         >
-          Yo también voy a jugar
+          {tr('Yo también voy a jugar', 'I will play too')}
         </a>
       )}
     </div>

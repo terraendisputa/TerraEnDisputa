@@ -14,6 +14,7 @@ import { RECONQUISTA_NAME, playerColorNames } from './reconquista-labels.js';
 import { reconquistaExpressDurationMs } from '@game/game-engine/reconquista';
 import { clockState, durationText } from './admin-clock.js';
 import { clockText } from './TurnSummary.js';
+import { tr } from './language.js';
 
 /** Host detail for a Reconquista game, with the same blocks as Classic's admin detail. */
 export function ReconquistaAdminDetail({
@@ -55,7 +56,10 @@ export function ReconquistaAdminDetail({
       clearInterval(timer);
     };
   }, [gameId, attempt]);
-  if (!entry) return <p role="status">Cargando la partida…</p>;
+  if (!entry)
+    return (
+      <p role="status">{tr('Cargando la partida…', 'Loading the game…')}</p>
+    );
   const reload = () => setAttempt((value) => value + 1);
   const lobby = entry.stage === 'lobby';
   // A table with bots waits for its people; the bots sit at the start.
@@ -81,7 +85,7 @@ export function ReconquistaAdminDetail({
   const presentation = view ? reconquistaPresentation(view) : undefined;
   const finished = view?.campaign?.phase === 'finished';
   const nickname = (id: string | undefined) =>
-    entry.players.find((p) => p.id === id)?.nickname ?? 'jugador';
+    entry.players.find((p) => p.id === id)?.nickname ?? tr('jugador', 'player');
   return (
     <AdminBoxes
       key={gameId}
@@ -90,7 +94,7 @@ export function ReconquistaAdminDetail({
       seats={
         <>
           <label className="inline-control">
-            Jugadores requeridos
+            {tr('Jugadores requeridos', 'Required players')}
             <select
               disabled={busy || !lobby}
               value={entry.playerCount}
@@ -115,7 +119,10 @@ export function ReconquistaAdminDetail({
           </label>
           <label
             className="inline-control"
-            title="Asientos que ocupan bots al comenzar. Siempre queda al menos uno para una persona."
+            title={tr(
+              'Asientos que ocupan bots al comenzar. Siempre queda al menos uno para una persona.',
+              'Seats taken by bots at the start. At least one always stays for a person.',
+            )}
           >
             Bots
             <select
@@ -134,16 +141,19 @@ export function ReconquistaAdminDetail({
                   value={n}
                   disabled={entry.playerCount - n < entry.players.length}
                 >
-                  {n === 0 ? 'Sin bots' : n}
+                  {n === 0 ? tr('Sin bots', 'No bots') : n}
                 </option>
               ))}
             </select>
           </label>
           <label
             className="inline-control"
-            title="Express: turnos de 3 minutos y tiempo máximo de juego, después dos rondas finales."
+            title={tr(
+              'Express: turnos de 3 minutos y tiempo máximo de juego, después dos rondas finales.',
+              'Express: 3-minute turns and a maximum game time, then two final rounds.',
+            )}
           >
-            Duración
+            {tr('Duración', 'Duration')}
             <select
               disabled={busy || !lobby}
               value={entry.express ? 'express' : 'free'}
@@ -156,9 +166,9 @@ export function ReconquistaAdminDetail({
                 })
               }
             >
-              <option value="free">Sin límite</option>
+              <option value="free">{tr('Sin límite', 'No limit')}</option>
               <option value="express">
-                {`Express: ${durationText(reconquistaExpressDurationMs(entry.playerCount))} + 2 rondas`}
+                {`Express: ${durationText(reconquistaExpressDurationMs(entry.playerCount))} + 2 ${tr('rondas', 'rounds')}`}
               </option>
             </select>
           </label>
@@ -173,17 +183,35 @@ export function ReconquistaAdminDetail({
             >
               <span aria-hidden="true">{readyToStart ? '✓ ' : '◷ '}</span>
               {readyToStart && missingPlayers > 0
-                ? `Todos los que entraron están listos. Podés comenzar con ${entry.players.length + bots} jugadores.`
+                ? tr(
+                    `Todos los que entraron están listos. Podés comenzar con ${entry.players.length + bots} jugadores.`,
+                    `Everyone who joined is ready. You can start with ${entry.players.length + bots} players.`,
+                  )
                 : missingPlayers > 0
-                  ? `Falta${missingPlayers === 1 ? '' : 'n'} ${missingPlayers} ${missingPlayers === 1 ? 'persona' : 'personas'} para completar la mesa.`
+                  ? tr(
+                      `Falta${missingPlayers === 1 ? '' : 'n'} ${missingPlayers} ${missingPlayers === 1 ? 'persona' : 'personas'} para completar la mesa.`,
+                      `${missingPlayers} more ${missingPlayers === 1 ? 'person is' : 'people are'} needed to fill the table.`,
+                    )
                   : missingReady > 0
-                    ? `Esperando que ${missingReady} ${missingReady === 1 ? 'persona marque' : 'personas marquen'} «Estoy listo».`
-                    : 'Todos están listos. Podés comenzar.'}{' '}
-              Listos: {ready}/{entry.playerCount - bots}.
+                    ? tr(
+                        `Esperando que ${missingReady} ${missingReady === 1 ? 'persona marque' : 'personas marquen'} «Estoy listo».`,
+                        `Waiting for ${missingReady} ${missingReady === 1 ? 'person' : 'people'} to mark «I'm ready».`,
+                      )
+                    : tr(
+                        'Todos están listos. Podés comenzar.',
+                        'Everyone is ready. You can start.',
+                      )}{' '}
+              {tr('Listos', 'Ready')}: {ready}/{entry.playerCount - bots}.
               {bots === 1
-                ? ' El bot se suma al comenzar.'
+                ? tr(
+                    ' El bot se suma al comenzar.',
+                    ' The bot joins at the start.',
+                  )
                 : bots
-                  ? ` Los ${bots} bots se suman al comenzar.`
+                  ? tr(
+                      ` Los ${bots} bots se suman al comenzar.`,
+                      ` The ${bots} bots join at the start.`,
+                    )
                   : ''}
             </p>
           )}
@@ -195,7 +223,10 @@ export function ReconquistaAdminDetail({
                 title={
                   readyToStart
                     ? undefined
-                    : 'Todos los que entraron deben estar listos.'
+                    : tr(
+                        'Todos los que entraron deben estar listos.',
+                        'Everyone who joined must be ready.',
+                      )
                 }
                 onClick={() =>
                   void run(async () => {
@@ -208,7 +239,7 @@ export function ReconquistaAdminDetail({
                   })
                 }
               >
-                Comenzar partida
+                {tr('Comenzar partida', 'Start game')}
               </button>
             )}
           </div>
@@ -223,14 +254,16 @@ export function ReconquistaAdminDetail({
               {lobby ? (readyToStart ? '✓ ' : '◷ ') : '● '}
             </span>
             {readyToStart
-              ? 'Todo listo para comenzar'
+              ? tr('Todo listo para comenzar', 'All set to start')
               : lobby
-                ? 'Esperando jugadores'
+                ? tr('Esperando jugadores', 'Waiting for players')
                 : finished
-                  ? 'Finalizada'
-                  : 'En juego'}
+                  ? tr('Finalizada', 'Finished')
+                  : tr('En juego', 'Playing')}
           </p>
-          <h2>Partida {gameId.slice(0, 8)}</h2>
+          <h2>
+            {tr('Partida', 'Game')} {gameId.slice(0, 8)}
+          </h2>
           <small>
             {RECONQUISTA_NAME}
             {entry.express ? ' Express' : ''}
@@ -239,7 +272,7 @@ export function ReconquistaAdminDetail({
             <p className="admin-state-line">
               {[
                 presentation.round !== undefined
-                  ? `Ronda ${presentation.round}`
+                  ? `${tr('Ronda', 'Round')} ${presentation.round}`
                   : undefined,
                 presentation.phase,
               ]
@@ -248,18 +281,22 @@ export function ReconquistaAdminDetail({
               {presentation.actorId && (
                 <>
                   {' '}
-                  · turno de <strong>{nickname(presentation.actorId)}</strong>
+                  · {tr('turno de', 'turn:')}{' '}
+                  <strong>{nickname(presentation.actorId)}</strong>
                 </>
               )}
             </p>
           )}
           {finished && (
             <section className="objective-box admin-result">
-              <p className="eyebrow">Resultado final</p>
+              <p className="eyebrow">{tr('Resultado final', 'Final result')}</p>
               <h3>
                 {view?.campaign?.winners.length
-                  ? `Ganó ${view.campaign.winners.map(nickname).join(' y ')}`
-                  : 'Empate'}
+                  ? tr(
+                      `Ganó ${view.campaign.winners.map(nickname).join(' y ')}`,
+                      `${view.campaign.winners.map(nickname).join(' and ')} won`,
+                    )
+                  : tr('Empate', 'Tie')}
               </h3>
             </section>
           )}
@@ -267,13 +304,14 @@ export function ReconquistaAdminDetail({
             <section className="panel admin-clock">
               <dl>
                 <div>
-                  <dt>Duración de la partida</dt>
+                  <dt>{tr('Duración de la partida', 'Game duration')}</dt>
                   <dd>{Math.floor(view.clock.elapsedMs / 60000)} min</dd>
                 </div>
                 <div>
-                  <dt>Turno actual</dt>
+                  <dt>{tr('Turno actual', 'Current turn')}</dt>
                   <dd>
-                    {clockText(view.clock.activationRemainingMs)} restantes
+                    {clockText(view.clock.activationRemainingMs)}{' '}
+                    {tr('restantes', 'left')}
                   </dd>
                 </div>
               </dl>
@@ -293,8 +331,14 @@ export function ReconquistaAdminDetail({
                 }
               >
                 {view.clock.pauseReason
-                  ? 'Reanudar cuando todos estén disponibles'
-                  : 'Pausar por inconveniente técnico'}
+                  ? tr(
+                      'Reanudar cuando todos estén disponibles',
+                      'Resume when everyone is available',
+                    )
+                  : tr(
+                      'Pausar por inconveniente técnico',
+                      'Pause for a technical problem',
+                    )}
               </button>
             </section>
           )}
@@ -311,11 +355,14 @@ export function ReconquistaAdminDetail({
                       void setBots({ replaceAbsent: event.target.checked })
                     }
                   />
-                  Reemplazar ausentes por bot
+                  {tr(
+                    'Reemplazar ausentes por bot',
+                    'Replace absent players with a bot',
+                  )}
                 </label>
               )}
               <label className="inline-control">
-                Dificultad de los bots
+                {tr('Dificultad de los bots', 'Bot difficulty')}
                 <select
                   disabled={busy}
                   value={entry.botLevel ?? 'hard'}
@@ -323,9 +370,9 @@ export function ReconquistaAdminDetail({
                     void setBots({ level: event.target.value })
                   }
                 >
-                  <option value="easy">Fácil</option>
+                  <option value="easy">{tr('Fácil', 'Easy')}</option>
                   <option value="normal">Normal</option>
-                  <option value="hard">Difícil</option>
+                  <option value="hard">{tr('Difícil', 'Hard')}</option>
                 </select>
               </label>
             </section>
@@ -343,25 +390,29 @@ export function ReconquistaAdminDetail({
                     {player.bot && player.bot !== 'table' ? ' (bot)' : ''}
                   </strong>
                   <small>
-                    {playerColorNames[player.color] ?? player.color} · Asiento{' '}
-                    {index + 1}
+                    {playerColorNames[player.color] ?? player.color} ·{' '}
+                    {tr('Asiento', 'Seat')} {index + 1}
                     {player.bot === 'table'
-                      ? ' · bot de la mesa'
+                      ? tr(' · bot de la mesa', ' · table bot')
                       : player.free
-                        ? ' · sin jugador'
+                        ? tr(' · sin jugador', ' · no player')
                         : ''}
                   </small>
                   {lobby && (
                     <span
                       className={`host-status-badge host-player-ready ${player.ready ? 'host-ready' : 'host-waiting'}`}
                       title={
-                        player.ready ? 'Jugador listo' : 'Todavía no está listo'
+                        player.ready
+                          ? tr('Jugador listo', 'Player ready')
+                          : tr('Todavía no está listo', 'Not ready yet')
                       }
                     >
                       <span aria-hidden="true">
                         {player.ready ? '✓ ' : '◷ '}
                       </span>
-                      {player.ready ? 'Listo' : 'Pendiente'}
+                      {player.ready
+                        ? tr('Listo', 'Ready')
+                        : tr('Pendiente', 'Pending')}
                     </span>
                   )}
                 </span>
@@ -378,10 +429,19 @@ export function ReconquistaAdminDetail({
                         disabled={busy}
                         title={
                           player.bot === 'table'
-                            ? `Liberar el asiento de ${player.nickname}: sus turnos pasan solos hasta que lo tome una persona`
+                            ? tr(
+                                `Liberar el asiento de ${player.nickname}: sus turnos pasan solos hasta que lo tome una persona`,
+                                `Free ${player.nickname}'s seat: its turns pass on their own until a person takes it`,
+                              )
                             : player.bot
-                              ? `Devolverle el lugar a ${player.nickname}`
-                              : `Poner un bot en lugar de ${player.nickname}`
+                              ? tr(
+                                  `Devolverle el lugar a ${player.nickname}`,
+                                  `Give ${player.nickname} their place back`,
+                                )
+                              : tr(
+                                  `Poner un bot en lugar de ${player.nickname}`,
+                                  `Put a bot in place of ${player.nickname}`,
+                                )
                         }
                         onClick={() =>
                           void setBots({
@@ -390,14 +450,22 @@ export function ReconquistaAdminDetail({
                           })
                         }
                       >
-                        {player.bot ? 'Quitar bot' : 'Poner bot'}
+                        {player.bot
+                          ? tr('Quitar bot', 'Remove bot')
+                          : tr('Poner bot', 'Add bot')}
                       </button>
                     )}
                   {lobby && (
                     <button
                       type="button"
-                      aria-label={`Quitar a ${player.nickname}`}
-                      title={`Quitar a ${player.nickname}`}
+                      aria-label={tr(
+                        `Quitar a ${player.nickname}`,
+                        `Remove ${player.nickname}`,
+                      )}
+                      title={tr(
+                        `Quitar a ${player.nickname}`,
+                        `Remove ${player.nickname}`,
+                      )}
                       disabled={busy}
                       className="danger-quiet"
                       onClick={() =>
@@ -411,7 +479,9 @@ export function ReconquistaAdminDetail({
                         })
                       }
                     >
-                      <span className="remove-player-label">Quitar</span>
+                      <span className="remove-player-label">
+                        {tr('Quitar', 'Remove')}
+                      </span>
                       <span className="remove-player-icon" aria-hidden="true">
                         ×
                       </span>
@@ -425,7 +495,7 @@ export function ReconquistaAdminDetail({
       }
       advanced={
         <details open>
-          <summary>Opciones avanzadas</summary>
+          <summary>{tr('Opciones avanzadas', 'Advanced options')}</summary>
           <button
             disabled={busy}
             type="button"
@@ -435,8 +505,14 @@ export function ReconquistaAdminDetail({
                 if (
                   !window.confirm(
                     lobby
-                      ? `Eliminar definitivamente la partida ${gameId}?`
-                      : `La partida ${gameId} ya está en curso. Eliminarla es destructivo y terminará inmediatamente el acceso a la partida. ¿Eliminar definitivamente?`,
+                      ? tr(
+                          `Eliminar definitivamente la partida ${gameId}?`,
+                          `Delete game ${gameId} for good?`,
+                        )
+                      : tr(
+                          `La partida ${gameId} ya está en curso. Eliminarla es destructivo y terminará inmediatamente el acceso a la partida. ¿Eliminar definitivamente?`,
+                          `Game ${gameId} is already in progress. Deleting it is destructive and immediately ends access to the game. Delete it for good?`,
+                        ),
                   )
                 )
                   return;
@@ -449,7 +525,7 @@ export function ReconquistaAdminDetail({
               })
             }
           >
-            Eliminar partida
+            {tr('Eliminar partida', 'Delete game')}
           </button>
         </details>
       }

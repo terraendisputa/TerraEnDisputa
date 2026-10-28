@@ -146,6 +146,7 @@ const secret = z.strictObject({
   objectiveId: identifier,
   targetPlayerId: identifier.optional(),
   description: z.string(),
+  descriptionEn: z.string().optional(),
 });
 /** Selection the player on turn shares; empty ids clear it. */
 export const reconquistaFocusSchema = z.strictObject({

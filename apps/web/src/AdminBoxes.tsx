@@ -4,6 +4,7 @@ import {
   InvitationNetwork,
   useInvitation,
 } from './HostInvitation.js';
+import { tr } from './language.js';
 
 /**
  * The game's administration in three boxes, always shown: the server on the
@@ -31,19 +32,24 @@ export function AdminBoxes({
   const invite = useInvitation(gameId);
   return (
     <div className="admin-columns">
-      <section className="admin-box admin-game-box" aria-label="Partida">
+      <section
+        className="admin-box admin-game-box"
+        aria-label={tr('Partida', 'Game')}
+      >
         {status}
         {start}
       </section>
       <section
         className="admin-box admin-steps-box"
-        aria-label="Invitar y comenzar"
+        aria-label={tr('Invitar y comenzar', 'Invite and start')}
       >
         <div className="host-invite-intro">
-          <h3>Invitá a tus amigos</h3>
+          <h3>{tr('Invitá a tus amigos', 'Invite your friends')}</h3>
           <p>
-            Necesitan estar en la misma red local o en una red privada ya
-            configurada. Mantené Terra en disputa abierto mientras juegan.
+            {tr(
+              'Necesitan estar en la misma red local o en una red privada ya configurada. Mantené Terra en disputa abierto mientras juegan.',
+              'They need to be on the same local network or on a private network already set up. Keep Terra en disputa open while you play.',
+            )}
           </p>
         </div>
         {seats}
@@ -51,9 +57,11 @@ export function AdminBoxes({
       </section>
       <section
         className="admin-box admin-server-box"
-        aria-label="Administración del servidor"
+        aria-label={tr('Administración del servidor', 'Server administration')}
       >
-        <h2 className="admin-box-title">Administración del servidor</h2>
+        <h2 className="admin-box-title">
+          {tr('Administración del servidor', 'Server administration')}
+        </h2>
         <InvitationNetwork invite={invite} />
         {advanced}
       </section>

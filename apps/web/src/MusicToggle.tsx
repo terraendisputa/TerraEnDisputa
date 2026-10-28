@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { UiIcon } from './UiIcon.js';
+import { tr } from './language.js';
 
 // Background music: CC0 tracks from OpenGameArt bundled with the game. Each
 // moment of the game has its own tracks: calm while armies are placed, intense
@@ -194,8 +195,16 @@ export function MusicToggle({
     <button
       className="turn-sound music-toggle"
       type="button"
-      title={on ? 'Apagar música' : 'Encender música'}
-      aria-label={on ? 'Apagar música' : 'Encender música'}
+      title={
+        on
+          ? tr('Apagar música', 'Turn music off')
+          : tr('Encender música', 'Turn music on')
+      }
+      aria-label={
+        on
+          ? tr('Apagar música', 'Turn music off')
+          : tr('Encender música', 'Turn music on')
+      }
       aria-pressed={on}
       onClick={() => setOn(!on)}
     >

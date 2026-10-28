@@ -1,15 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, ApiError } from './api.js';
 import { errorMessage } from './errors.js';
+import { LanguageSelect } from './LanguageSelect.js';
 import { COMPETITIVE_BOT_NAMES } from '@game/game-engine';
 import {
   PLAYER_COLOR_LABELS,
   playerColorLabel,
   playerColorLabelLower,
 } from './colors.js';
+import { displayNickname, tr } from './language.js';
 
 const isBotSeat = (name: string) =>
-  (COMPETITIVE_BOT_NAMES as readonly string[]).includes(name);
+  COMPETITIVE_BOT_NAMES.some((bot) => displayNickname(bot) === name);
 
 export function PlayerEntry({
   gameId,
@@ -40,7 +42,10 @@ export function PlayerEntry({
       const replacement = next.availableColors[0] ?? '';
       setColorNotice(
         previous && replacement
-          ? `El ${playerColorLabelLower(previous)} ya estaba en uso. Se te asignó el ${playerColorLabelLower(replacement)}.`
+          ? tr(
+              `El ${playerColorLabelLower(previous)} ya estaba en uso. Se te asignó el ${playerColorLabelLower(replacement)}.`,
+              `${playerColorLabel(previous)} was already in use. You got ${playerColorLabelLower(replacement)}.`,
+            )
           : undefined,
       );
       return replacement;
@@ -69,11 +74,15 @@ export function PlayerEntry({
     <main className="entry-layout">
       <section className="panel entry-panel">
         <a className="text-link" href="/">
-          ← Inicio
+          {tr('← Inicio', '← Home')}
         </a>
-        <p className="eyebrow">Partida {gameId.slice(0, 8)}</p>
-        <h1>Entrar a la mesa</h1>
-        {!entry && !error && <p>Cargando asientos…</p>}
+        <p className="eyebrow">
+          {tr('Partida', 'Game')} {gameId.slice(0, 8)}
+        </p>
+        <h1>{tr('Entrar a la mesa', 'Join the table')}</h1>
+        {!entry && !error && (
+          <p>{tr('Cargando asientos…', 'Loading seats…')}</p>
+        )}
         {entry?.canJoin && (
           <form
             onSubmit={(event: FormEvent) => {
@@ -82,7 +91,7 @@ export function PlayerEntry({
             }}
           >
             <label>
-              Apodo
+              {tr('Apodo', 'Nickname')}
               <input
                 required
                 maxLength={40}
@@ -114,19 +123,24 @@ export function PlayerEntry({
               </p>
             )}
             <button disabled={busy || !color} type="submit">
-              {busy ? 'Conectando…' : 'Unirme'}
+              {busy ? tr('Conectando…', 'Connecting…') : tr('Unirme', 'Join')}
             </button>
           </form>
         )}
         {!!entry?.seats.length && (
-          <section aria-label="Asientos disponibles">
-            <h2>Asientos disponibles</h2>
-            <p>Continuás con sus países, cartas, objetivo y turno actuales.</p>
+          <section aria-label={tr('Asientos disponibles', 'Available seats')}>
+            <h2>{tr('Asientos disponibles', 'Available seats')}</h2>
+            <p>
+              {tr(
+                'Continuás con sus países, cartas, objetivo y turno actuales.',
+                'You continue with its current countries, cards, objective and turn.',
+              )}
+            </p>
             {/* A table bot's seat takes the name of the person who joins. */}
             {!entry.canJoin &&
               entry.seats.some((seat) => isBotSeat(seat.nickname)) && (
                 <label>
-                  Apodo
+                  {tr('Apodo', 'Nickname')}
                   <input
                     maxLength={40}
                     value={nickname}
@@ -143,7 +157,10 @@ export function PlayerEntry({
                 }
                 title={
                   isBotSeat(seat.nickname) && !nickname.trim()
-                    ? 'Escribí tu apodo para ocupar el asiento del bot.'
+                    ? tr(
+                        'Escribí tu apodo para ocupar el asiento del bot.',
+                        "Type your nickname to take the bot's seat.",
+                      )
                     : undefined
                 }
                 onClick={() =>
@@ -156,27 +173,35 @@ export function PlayerEntry({
                   )
                 }
               >
-                Ocupar asiento de {seat.nickname} ·{' '}
-                {playerColorLabel(seat.color)}
+                {tr(
+                  `Ocupar asiento de ${seat.nickname}`,
+                  `Take ${seat.nickname}'s seat`,
+                )}{' '}
+                · {playerColorLabel(seat.color)}
               </button>
             ))}
           </section>
         )}
         {entry && !entry.canJoin && !entry.seats.length && (
           <p>
-            No hay asientos disponibles. Un jugador debe elegir «Salir de la
-            partida» para liberar el suyo.
+            {tr(
+              'No hay asientos disponibles. Un jugador debe elegir «Salir de la partida» para liberar el suyo.',
+              'There are no seats available. A player must choose «Leave the game» to free theirs.',
+            )}
           </p>
         )}
         <p>
-          Cerrar el navegador o desconectarte no libera tu asiento. Usá el mismo
-          navegador para volver.
+          {tr(
+            'Cerrar el navegador o desconectarte no libera tu asiento. Usá el mismo navegador para volver.',
+            'Closing the browser or disconnecting does not free your seat. Use the same browser to come back.',
+          )}
         </p>
         {error && (
           <p className="error-banner" role="alert">
             {error}
           </p>
         )}
+        <LanguageSelect />
       </section>
     </main>
   );

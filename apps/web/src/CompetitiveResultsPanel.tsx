@@ -5,6 +5,7 @@ import {
   resultExport,
 } from './competitive-results.js';
 import { playerColorLabel } from './colors.js';
+import { tr } from './language.js';
 export function CompetitiveResultsPanel({
   game,
 }: {
@@ -20,55 +21,63 @@ export function CompetitiveResultsPanel({
     );
     const link = document.createElement('a');
     link.href = url;
-    link.download = `competitivo-${game.gameId}.${format}`;
+    link.download = `${tr('competitivo', 'competitive')}-${game.gameId}.${format}`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return (
     <section
       className="admin-competitive-results"
-      aria-label="Clasificación competitiva"
+      aria-label={tr('Clasificación competitiva', 'Competitive ranking')}
     >
-      <h3>Clasificación competitiva</h3>
+      <h3>{tr('Clasificación competitiva', 'Competitive ranking')}</h3>
       <p>
         {results.completedRounds === undefined
-          ? 'Rondas completas desconocidas'
-          : `${results.completedRounds} rondas normales completas`}{' '}
+          ? tr('Rondas completas desconocidas', 'Completed rounds unknown')
+          : tr(
+              `${results.completedRounds} rondas normales completas`,
+              `${results.completedRounds} normal rounds completed`,
+            )}{' '}
         ·{' '}
         {results.scoringEligible
-          ? 'Puntuación válida'
-          : 'Sin puntuación oficial'}
+          ? tr('Puntuación válida', 'Valid score')
+          : tr('Sin puntuación oficial', 'No official score')}
       </p>
       {results.exclusions.map((reason) => (
         <p key={reason}>{RESULT_EXCLUSIONS[reason]}</p>
       ))}
       <p>
-        Continente ocupado: todos sus países. Los empates comparten el promedio
-        exacto de los puestos ocupados.
+        {tr(
+          'Continente ocupado: todos sus países. Los empates comparten el promedio exacto de los puestos ocupados.',
+          'Occupied continent: all its countries. Ties share the exact average of the places they hold.',
+        )}
       </p>
       <div
         className="competitive-results-scroll"
         tabIndex={0}
         role="region"
-        aria-label="Tabla de resultados, desplazamiento horizontal"
+        aria-label={tr(
+          'Tabla de resultados, desplazamiento horizontal',
+          'Results table, horizontal scroll',
+        )}
       >
         <table>
-          <caption>Resultado por jugador</caption>
+          <caption>{tr('Resultado por jugador', 'Result by player')}</caption>
           <thead>
             <tr>
               {[
-                'Puesto',
-                'Jugador',
-                'Total',
-                'Estado',
-                'Países',
-                'Tropas',
-                'Canjes',
-                'Cartas',
-                'Base',
-                'Objetivo',
-                'Eliminaciones',
-                'Eliminado',
+                tr('Puesto', 'Place'),
+                tr('Jugador', 'Player'),
+                tr('Total', 'Total'),
+                tr('Estado', 'Status'),
+                tr('Países', 'Countries'),
+                tr('Tropas', 'Troops'),
+                tr('Canjes', 'Exchanges'),
+                tr('Cartas', 'Cards'),
+                tr('Base', 'Base'),
+                tr('Objetivo', 'Objective'),
+                tr('Eliminaciones', 'Eliminations'),
+                tr('Eliminado', 'Eliminated'),
               ].map((label) => (
                 <th key={label} scope="col">
                   {label}
@@ -84,14 +93,14 @@ export function CompetitiveResultsPanel({
                   <td>
                     {row.position === undefined
                       ? '—'
-                      : `${row.position}${row.tiedPlayers > 1 ? ' (empate)' : ''}`}
+                      : `${row.position}${row.tiedPlayers > 1 ? tr(' (empate)', ' (tie)') : ''}`}
                   </td>
                   <th scope="row">
                     {player.nickname} · {playerColorLabel(player.color)}
                     {row.bot === 'table'
-                      ? ' · bot de la mesa'
+                      ? tr(' · bot de la mesa', ' · table bot')
                       : row.bot === 'replacement'
-                        ? ' · lo reemplazó un bot'
+                        ? tr(' · lo reemplazó un bot', ' · replaced by a bot')
                         : ''}
                   </th>
                   <td>
@@ -99,10 +108,10 @@ export function CompetitiveResultsPanel({
                   </td>
                   <td>
                     {row.status === 'disqualified'
-                      ? 'Descalificado'
+                      ? tr('Descalificado', 'Disqualified')
                       : row.status === 'eliminated'
-                        ? 'Eliminado'
-                        : 'Superviviente'}
+                        ? tr('Eliminado', 'Eliminated')
+                        : tr('Superviviente', 'Survivor')}
                   </td>
                   <td>{row.metrics.territories}</td>
                   <td>{row.metrics.armies}</td>
@@ -119,8 +128,10 @@ export function CompetitiveResultsPanel({
         </table>
       </div>
       <p>
-        Los componentes muestran el cálculo; el total oficial es cero cuando la
-        partida no es válida o el jugador está descalificado.
+        {tr(
+          'Los componentes muestran el cálculo; el total oficial es cero cuando la partida no es válida o el jugador está descalificado.',
+          'The parts show the calculation; the official total is zero when the game is not valid or the player is disqualified.',
+        )}
       </p>
       <div className="button-row">
         <button
@@ -128,14 +139,14 @@ export function CompetitiveResultsPanel({
           className="secondary"
           onClick={() => download('json')}
         >
-          Exportar JSON
+          {tr('Exportar JSON', 'Export JSON')}
         </button>
         <button
           type="button"
           className="secondary"
           onClick={() => download('csv')}
         >
-          Exportar CSV
+          {tr('Exportar CSV', 'Export CSV')}
         </button>
       </div>
     </section>

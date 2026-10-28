@@ -3,12 +3,14 @@ import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react';
 import { api, ApiError, bootstrap } from './api.js';
 import { errorMessage } from './errors.js';
 import { PlayerEntry } from './PlayerEntry.js';
+import { LanguageSelect } from './LanguageSelect.js';
 import { invitationDestination } from './invitation.js';
 import './tactical.css';
 import './board-art.css';
 import './host.css';
 import './immersive.css';
 import './landing-art.css';
+import { tr } from './language.js';
 
 // Each screen loads only when its route needs it.
 const AdminScreen = lazy(() =>
@@ -30,7 +32,10 @@ const ReconquistaGameScreen = lazy(() =>
 function TransportWarning() {
   return (
     <div className="transport-warning" role="status">
-      La conexión no está cifrada. Usala solamente en una red confiable.
+      {tr(
+        'La conexión no está cifrada. Usala solamente en una red confiable.',
+        'The connection is not encrypted. Use it only on a trusted network.',
+      )}
     </div>
   );
 }
@@ -43,26 +48,36 @@ function Landing({ encrypted }: { readonly encrypted: boolean }) {
       {!encrypted && <TransportWarning />}
       <main className="landing">
         <header className="landing-hero">
-          <p className="eyebrow">Servidor propio · 2 a 6 jugadores</p>
+          <p className="eyebrow">
+            {tr(
+              'Servidor propio · 2 a 6 jugadores',
+              'Your own server · 2 to 6 players',
+            )}
+          </p>
           <h1>
             Terra en disputa,
             <br />
-            en tu propia red.
+            {tr('en tu propia red.', 'on your own network.')}
           </h1>
           <p>
-            Creá una partida o entrá con el enlace que compartió el
-            administrador.
+            {tr(
+              'Creá una partida o entrá con el enlace que compartió el administrador.',
+              'Create a game or join with the link the administrator shared.',
+            )}
           </p>
         </header>
         <section className="panel landing-card">
-          <h2>Entrar a una partida</h2>
+          <h2>{tr('Entrar a una partida', 'Join a game')}</h2>
           <form
             onSubmit={(event: FormEvent) => {
               event.preventDefault();
               const destination = invitationDestination(gameId);
               if (!destination) {
                 setInviteError(
-                  'Pegá un enlace de partida HTTP/HTTPS o un ID válido.',
+                  tr(
+                    'Pegá un enlace de partida HTTP/HTTPS o un ID válido.',
+                    'Paste an HTTP/HTTPS game link or a valid ID.',
+                  ),
                 );
                 return;
               }
@@ -70,7 +85,10 @@ function Landing({ encrypted }: { readonly encrypted: boolean }) {
             }}
           >
             <label>
-              Enlace de invitación o ID de partida
+              {tr(
+                'Enlace de invitación o ID de partida',
+                'Invitation link or game ID',
+              )}
               <input
                 required
                 placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -83,12 +101,13 @@ function Landing({ encrypted }: { readonly encrypted: boolean }) {
                 {inviteError}
               </p>
             )}
-            <button type="submit">Continuar</button>
+            <button type="submit">{tr('Continuar', 'Continue')}</button>
           </form>
           <hr />
           <a className="button-link secondary" href="/admin">
-            Administrar servidor
+            {tr('Administrar servidor', 'Manage the server')}
           </a>
+          <LanguageSelect />
         </section>
       </main>
     </>
@@ -98,7 +117,7 @@ function Landing({ encrypted }: { readonly encrypted: boolean }) {
 const seeking = (
   <main className="entry-layout">
     <section className="panel entry-panel" aria-live="polite">
-      <h1>Buscando tu asiento…</h1>
+      <h1>{tr('Buscando tu asiento…', 'Looking for your seat…')}</h1>
     </section>
   </main>
 );
@@ -123,7 +142,9 @@ function GameRoute({
   if (edition === 'checking') return seeking;
   if (edition === 'reconquista')
     return (
-      <Suspense fallback={<p>Preparando Reconquista…</p>}>
+      <Suspense
+        fallback={<p>{tr('Preparando Reconquista…', 'Preparing Retake…')}</p>}
+      >
         <ReconquistaGameScreen gameId={gameId} />
       </Suspense>
     );
@@ -190,14 +211,16 @@ export function App() {
       <main className="entry-layout">
         <section className="panel entry-panel" aria-live="polite">
           <p className={`connection ${server}`}>
-            {server === 'checking' ? 'Conectando' : 'Sin conexión'}
+            {server === 'checking'
+              ? tr('Conectando', 'Connecting')
+              : tr('Sin conexión', 'Offline')}
           </p>
           <h1>
             {server === 'checking'
-              ? 'Contactando al servidor…'
+              ? tr('Contactando al servidor…', 'Contacting the server…')
               : server === 'incompatible'
-                ? 'Versión incompatible'
-                : 'Servidor no disponible'}
+                ? tr('Versión incompatible', 'Incompatible version')
+                : tr('Servidor no disponible', 'Server unavailable')}
           </h1>
           {server !== 'checking' && (
             <p>
@@ -210,7 +233,7 @@ export function App() {
           )}
           {server !== 'checking' && (
             <button type="button" onClick={() => window.location.reload()}>
-              Reintentar
+              {tr('Reintentar', 'Retry')}
             </button>
           )}
         </section>

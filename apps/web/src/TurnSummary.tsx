@@ -1,6 +1,7 @@
 import type { PlayerGameView } from '@game/protocol';
 import { gameClockDurationMs } from '@game/game-engine';
 import { gameContextSummary, gamePresentation } from './game-presentation.js';
+import { tr } from './language.js';
 
 export function TurnSummary({
   snapshot,
@@ -22,13 +23,16 @@ export function TurnSummary({
     <div
       className="right-turn-summary"
       role="status"
-      title={`${summary.headline} · ${summary.roundNumber === undefined ? '' : `Ronda ${summary.roundNumber} · `}${detail}`}
+      title={`${summary.headline} · ${summary.roundNumber === undefined ? '' : `${tr('Ronda', 'Round')} ${summary.roundNumber} · `}${detail}`}
     >
       <strong>{summary.headline}</strong>
       <span>
         {summary.roundNumber !== undefined && (
           <>
-            <strong>Ronda {summary.roundNumber}</strong> ·{' '}
+            <strong>
+              {tr('Ronda', 'Round')} {summary.roundNumber}
+            </strong>{' '}
+            ·{' '}
           </>
         )}
         {detail}
@@ -42,14 +46,20 @@ export function TurnSummary({
               className="competitive-clock competitive-pause"
               title={
                 pause === 'disconnection'
-                  ? `El reloj está congelado mientras se espera que ${absent?.nickname ?? 'el jugador'} se reconecte.`
-                  : 'El reloj está congelado; el administrador debe reanudar la partida.'
+                  ? tr(
+                      `El reloj está congelado mientras se espera que ${absent?.nickname ?? 'el jugador'} se reconecte.`,
+                      `The clock is frozen while waiting for ${absent?.nickname ?? 'the player'} to reconnect.`,
+                    )
+                  : tr(
+                      'El reloj está congelado; el administrador debe reanudar la partida.',
+                      'The clock is frozen; the administrator must resume the game.',
+                    )
               }
             >
               <strong>
                 {pause === 'disconnection' ? (
                   <>
-                    Pausa · Esperando a{' '}
+                    {tr('Pausa · Esperando a', 'Paused · Waiting for')}{' '}
                     {absent && (
                       <span
                         className={`color-dot color-${absent.color}`}
@@ -57,16 +67,16 @@ export function TurnSummary({
                       />
                     )}{' '}
                     <span className="pause-player">
-                      {absent?.nickname ?? 'jugador'}
+                      {absent?.nickname ?? tr('jugador', 'player')}
                     </span>
                   </>
                 ) : (
-                  'Pausa · Administrador'
+                  tr('Pausa · Administrador', 'Paused · Administrator')
                 )}
               </strong>
               {pause === 'disconnection' && (
                 <span>
-                  Reconexión:{' '}
+                  {tr('Reconexión:', 'Reconnection:')}{' '}
                   {clockText(
                     snapshot.competitiveClock.technicalRemainingMs ?? 0,
                   )}
@@ -75,15 +85,25 @@ export function TurnSummary({
             </span>
           ) : (
             <span className="competitive-clock">
-              <span title="Tiempo restante para terminar el turno actual.">
-                Turno:{' '}
+              <span
+                title={tr(
+                  'Tiempo restante para terminar el turno actual.',
+                  'Time left to finish the current turn.',
+                )}
+              >
+                {tr('Turno:', 'Turn:')}{' '}
                 <strong>
                   {clockText(snapshot.competitiveClock.activationRemainingMs)}
                 </strong>
               </span>
               {/* The game clock counts down to the final rounds. */}
-              <span title="Tiempo de juego que queda, sin pausas ni preparación inicial. Al llegar a cero se anuncian las rondas finales.">
-                {`Partida: ${Math.max(
+              <span
+                title={tr(
+                  'Tiempo de juego que queda, sin pausas ni preparación inicial. Al llegar a cero se anuncian las rondas finales.',
+                  'Game time left, without pauses or the initial setup. When it reaches zero the final rounds are announced.',
+                )}
+              >
+                {`${tr('Partida', 'Game')}: ${Math.max(
                   0,
                   Math.ceil(
                     (gameClockDurationMs(snapshot) -
@@ -96,16 +116,20 @@ export function TurnSummary({
           )}
           {!!snapshot.competitiveClock.lastUnplacedArmiesLost && (
             <span>
-              Vencimiento anterior:{' '}
-              {snapshot.competitiveClock.lastUnplacedArmiesLost} refuerzos
-              perdidos por falta de destino legal.
+              {tr(
+                `Vencimiento anterior: ${snapshot.competitiveClock.lastUnplacedArmiesLost} refuerzos perdidos por falta de destino legal.`,
+                `Last timeout: ${snapshot.competitiveClock.lastUnplacedArmiesLost} reinforcements lost for lack of a legal destination.`,
+              )}
             </span>
           )}
           {snapshot.competitiveClock.finalRoundNumber !== undefined && (
             <span>
               {snapshot.mode === 'competitive'
-                ? 'Rondas finales anunciadas · No se pueden romper pactos'
-                : 'Rondas finales anunciadas'}
+                ? tr(
+                    'Rondas finales anunciadas · No se pueden romper pactos',
+                    'Final rounds announced · Pacts cannot be broken',
+                  )
+                : tr('Rondas finales anunciadas', 'Final rounds announced')}
             </span>
           )}
         </>

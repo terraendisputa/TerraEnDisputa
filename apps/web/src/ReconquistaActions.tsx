@@ -10,6 +10,7 @@ import { ActionTitle, Amount } from './GameplayControls.js';
 import { UiIcon } from './UiIcon.js';
 import { continentNames, playerColorNames } from './reconquista-labels.js';
 import type { Presentation } from './reconquista-client.js';
+import { tr } from './language.js';
 
 export type Weapon = 'dice' | 'missile';
 
@@ -281,11 +282,14 @@ export function ReconquistaActions(
           <button
             type="button"
             className="completion-action"
-            title="Revelar la carta de situación"
+            title={tr(
+              'Revelar la carta de situación',
+              'Reveal the situation card',
+            )}
             disabled={props.busy}
             onClick={() => void props.send({ kind: 'reveal' })}
           >
-            <UiIcon name="situation" /> Revelar
+            <UiIcon name="situation" /> {tr('Revelar', 'Reveal')}
           </button>
         </div>
       );
@@ -338,7 +342,7 @@ export function ReconquistaActions(
           <p className="turn-notice">
             {presentation.actorId ? (
               <>
-                Observando el turno de{' '}
+                {tr('Observando el turno de', 'Watching the turn of')}{' '}
                 <strong>{player(presentation.actorId)}</strong>.
               </>
             ) : (
@@ -368,7 +372,7 @@ function Placement({
   const countries = placementTargets(view, board, plan);
   const general = current.id === GENERAL;
   const poolName = (id: string) =>
-    id === GENERAL ? 'Generales' : (continentNames[id] ?? id);
+    id === GENERAL ? tr('Generales', 'General') : (continentNames[id] ?? id);
   const name = (id: string) =>
     board.countries.find((c) => c.id === id)?.name ?? id;
   const existing = (id: string) =>
@@ -405,7 +409,9 @@ function Placement({
   return (
     <div className="action-card action-layout primary-action-card reinforcement-card">
       {/* Like Classic's reinforcement card; the initial incorporation has no inner title. */}
-      {view.campaign && <ActionTitle title="Refuerzos" />}
+      {view.campaign && (
+        <ActionTitle title={tr('Refuerzos', 'Reinforcements')} />
+      )}
       <ActionRoute
         reserve={pending}
         target={canPlaceHere ? selected : undefined}
@@ -441,15 +447,18 @@ function Placement({
         <div
           className="missile-plan"
           role="group"
-          aria-label={`Misiles en ${name(selected)}`}
+          aria-label={tr(
+            `Misiles en ${name(selected)}`,
+            `Missiles in ${name(selected)}`,
+          )}
         >
           {conversions > 0 && (
             <>
               <button
                 type="button"
                 className="secondary compact-button"
-                aria-label="Deshacer un misil"
-                title="Deshacer un misil"
+                aria-label={tr('Deshacer un misil', 'Undo one missile')}
+                title={tr('Deshacer un misil', 'Undo one missile')}
                 disabled={busy}
                 onClick={() =>
                   update({
@@ -475,8 +484,14 @@ function Placement({
             data-shortcut="missile"
             title={
               maxConversions(selected, plan) > conversions
-                ? 'Convertir 6 ejércitos en 1 misil (M)'
-                : 'Convertir 6 ejércitos en 1 misil: tiene que quedar al menos 1 ejército en el país'
+                ? tr(
+                    'Convertir 6 ejércitos en 1 misil (M)',
+                    'Turn 6 armies into 1 missile (M)',
+                  )
+                : tr(
+                    'Convertir 6 ejércitos en 1 misil: tiene que quedar al menos 1 ejército en el país',
+                    'Turn 6 armies into 1 missile: at least 1 army must stay in the country',
+                  )
             }
             disabled={busy || maxConversions(selected, plan) <= conversions}
             onClick={() =>
@@ -489,7 +504,7 @@ function Placement({
                 ),
               })
             }
-            aria-label="Agregar 1 misil"
+            aria-label={tr('Agregar 1 misil', 'Add 1 missile')}
           >
             +1 <UiIcon name="missile" />
           </button>
@@ -510,7 +525,10 @@ function Placement({
                   {poolName(p.id)}: {p.left}
                   {p.id === current.id &&
                     p.id !== GENERAL &&
-                    `, solo en ${poolName(p.id)}`}
+                    tr(
+                      `, solo en ${poolName(p.id)}`,
+                      `, only in ${poolName(p.id)}`,
+                    )}
                 </button>
               </li>
             ))}
@@ -520,8 +538,8 @@ function Placement({
       <button
         type="button"
         className="icon-button confirm-placement"
-        aria-label="Confirmar colocación"
-        title="Confirmar colocación (Enter)"
+        aria-label={tr('Confirmar colocación', 'Confirm placement')}
+        title={tr('Confirmar colocación (Enter)', 'Confirm placement (Enter)')}
         data-shortcut="confirm"
         disabled={busy || !allPlaced}
         onClick={() => {
@@ -610,12 +628,14 @@ function Attack({
     <div
       className={`action-card action-layout primary-action-card attack-card${campaign ? ' with-missile' : ''}`}
     >
-      {missile && <ActionTitle title="Ataque con misil" />}
+      {missile && (
+        <ActionTitle title={tr('Ataque con misil', 'Missile attack')} />
+      )}
       {routes.length === 0 && (
         <p className="muted-copy">
           {missile
-            ? 'No hay disparos disponibles.'
-            : 'No hay ataques disponibles.'}
+            ? tr('No hay disparos disponibles.', 'No shots available.')
+            : tr('No hay ataques disponibles.', 'No attacks available.')}
         </p>
       )}
       <ActionRoute
@@ -634,7 +654,7 @@ function Attack({
       />
       {campaign && opponents.length > 1 && (
         <label className="defender-choice">
-          <small>Defensor</small>
+          <small>{tr('Defensor', 'Defender')}</small>
           <select
             value={chosenDefender}
             disabled={busy}
@@ -652,11 +672,18 @@ function Attack({
         type="button"
         className="icon-button attack-button"
         disabled={!ready || busy || rolling}
-        aria-label={missile ? 'Disparar misil' : 'Atacar'}
+        aria-label={
+          missile
+            ? tr('Disparar misil', 'Fire missile')
+            : tr('Atacar', 'Attack')
+        }
         title={
           missile && shot
-            ? `Misil · distancia ${shot.distance} · −${shot.damage} ejército${shot.damage > 1 ? 's' : ''}`
-            : 'Atacar (Enter)'
+            ? tr(
+                `Misil · distancia ${shot.distance} · −${shot.damage} ejército${shot.damage > 1 ? 's' : ''}`,
+                `Missile · distance ${shot.distance} · −${shot.damage} arm${shot.damage > 1 ? 'ies' : 'y'}`,
+              )
+            : tr('Atacar (Enter)', 'Attack (Enter)')
         }
         data-shortcut="confirm"
         onClick={() => {
@@ -690,8 +717,11 @@ function Attack({
           shortcut="missile"
           title={
             shots.length
-              ? 'Atacar con misil (M)'
-              : 'Ningún país tuyo puede disparar un misil ahora'
+              ? tr('Atacar con misil (M)', 'Missile attack (M)')
+              : tr(
+                  'Ningún país tuyo puede disparar un misil ahora',
+                  'None of your countries can fire a missile now',
+                )
           }
           disabled={busy || (!shots.length && !missile)}
           onToggle={() => onWeapon(missile ? 'dice' : 'missile')}
@@ -702,8 +732,8 @@ function Attack({
         <button
           type="button"
           className="secondary end-attack"
-          title="Terminar ataques"
-          aria-label="Terminar ataques"
+          title={tr('Terminar ataques', 'End attacks')}
+          aria-label={tr('Terminar ataques', 'End attacks')}
           disabled={busy || rolling || !!view.hostility?.pendingConquest}
           onClick={() =>
             campaign
@@ -778,7 +808,7 @@ function TransferCard({
       <button
         type="button"
         className="icon-button confirm-transfer"
-        aria-label="Confirmar traslado"
+        aria-label={tr('Confirmar traslado', 'Confirm move')}
         title={`${title} (Enter)`}
         data-shortcut="confirm"
         disabled={busy}
@@ -801,7 +831,7 @@ function Transfer({ view, board, busy, send, onPreview }: ActionProps) {
       targetId={transfer.targetId}
       maximum={transfer.maximum}
       busy={busy}
-      title="Confirmar traslado"
+      title={tr('Confirmar traslado', 'Confirm move')}
       onConfirm={(armies) => void send({ kind: 'transfer', armies })}
     />
   );
@@ -825,14 +855,20 @@ function Occupation({ view, board, busy, send, onPreview }: ActionProps) {
       ?.forces.find((f) => f.playerId !== arrival.playerId && f.armies > 0);
     const nickname =
       view.players.find((p) => p.id === occupant?.playerId)?.nickname ??
-      'Jugador';
+      tr('Jugador', 'Player');
     const waiting = occupation.condominium === 'proposed';
     return (
       <div className="action-card action-layout primary-action-card">
         <p className="muted-copy">
           {waiting
-            ? `Esperando que ${nickname} responda el condominio en ${name(occupation.targetId)}.`
-            : `${nickname} sigue en ${name(occupation.targetId)}.`}
+            ? tr(
+                `Esperando que ${nickname} responda el condominio en ${name(occupation.targetId)}.`,
+                `Waiting for ${nickname} to answer the condominium in ${name(occupation.targetId)}.`,
+              )
+            : tr(
+                `${nickname} sigue en ${name(occupation.targetId)}.`,
+                `${nickname} is still in ${name(occupation.targetId)}.`,
+              )}
         </p>
         {!waiting && (
           <>
@@ -840,8 +876,8 @@ function Occupation({ view, board, busy, send, onPreview }: ActionProps) {
               <button
                 type="button"
                 className="icon-button"
-                aria-label="Seguir atacando"
-                title="Seguir atacando"
+                aria-label={tr('Seguir atacando', 'Keep attacking')}
+                title={tr('Seguir atacando', 'Keep attacking')}
                 disabled={busy}
                 onClick={() => act({ kind: 'continue-invasion' })}
               >
@@ -852,8 +888,14 @@ function Occupation({ view, board, busy, send, onPreview }: ActionProps) {
               <button
                 type="button"
                 className="icon-button"
-                aria-label={`Proponer condominio a ${nickname}`}
-                title={`Proponer condominio a ${nickname}`}
+                aria-label={tr(
+                  `Proponer condominio a ${nickname}`,
+                  `Propose condominium to ${nickname}`,
+                )}
+                title={tr(
+                  `Proponer condominio a ${nickname}`,
+                  `Propose condominium to ${nickname}`,
+                )}
                 disabled={busy}
                 onClick={() => act({ kind: 'propose-condominium' })}
               >
@@ -863,8 +905,8 @@ function Occupation({ view, board, busy, send, onPreview }: ActionProps) {
             <button
               type="button"
               className="icon-button secondary"
-              aria-label="Dejar el país"
-              title="Dejar el país"
+              aria-label={tr('Dejar el país', 'Leave the country')}
+              title={tr('Dejar el país', 'Leave the country')}
               disabled={busy}
               onClick={() => act({ kind: 'abandon-invasion' })}
             >
@@ -886,8 +928,11 @@ function Occupation({ view, board, busy, send, onPreview }: ActionProps) {
       busy={busy}
       title={
         occupation.capturedMissiles > 0
-          ? `Confirmar traslado · capturás ${occupation.capturedMissiles} misil${occupation.capturedMissiles > 1 ? 'es' : ''}`
-          : 'Confirmar traslado'
+          ? tr(
+              `Confirmar traslado · capturás ${occupation.capturedMissiles} misil${occupation.capturedMissiles > 1 ? 'es' : ''}`,
+              `Confirm move · you capture ${occupation.capturedMissiles} missile${occupation.capturedMissiles > 1 ? 's' : ''}`,
+            )
+          : tr('Confirmar traslado', 'Confirm move')
       }
       onConfirm={(armies) => act({ kind: 'occupy', armies })}
     />
@@ -957,9 +1002,13 @@ function Regroup({
     <div
       className={`action-card action-layout primary-action-card regroup-card${route && route.missiles > 0 ? ' with-missile' : ''}`}
     >
-      {counting && <ActionTitle title="Traslado de misiles" />}
+      {counting && (
+        <ActionTitle title={tr('Traslado de misiles', 'Missile move')} />
+      )}
       {routes.length === 0 && (
-        <p className="muted-copy">No hay traslados disponibles.</p>
+        <p className="muted-copy">
+          {tr('No hay traslados disponibles.', 'No moves available.')}
+        </p>
       )}
       <ActionRoute
         source={sources.includes(selected) ? selected : undefined}
@@ -978,7 +1027,7 @@ function Regroup({
       {route &&
         (counting ? (
           <Amount
-            label="Misiles a trasladar"
+            label={tr('Misiles a trasladar', 'Missiles to move')}
             value={m}
             minimum={0}
             maximum={route.missiles}
@@ -1000,7 +1049,7 @@ function Regroup({
         <MissileToggle
           pressed={counting}
           count={m}
-          title="Trasladar misiles"
+          title={tr('Trasladar misiles', 'Move missiles')}
           disabled={busy}
           onToggle={() => setMissileMode(!missileMode)}
         />
@@ -1008,9 +1057,9 @@ function Regroup({
       <button
         type="button"
         className="icon-button"
-        title="Confirmar traslado (Enter)"
+        title={tr('Confirmar traslado (Enter)', 'Confirm move (Enter)')}
         data-shortcut="confirm"
-        aria-label="Confirmar traslado"
+        aria-label={tr('Confirmar traslado', 'Confirm move')}
         disabled={!route || busy || a + m === 0}
         onClick={() => {
           if (!route) return;
@@ -1037,8 +1086,8 @@ function Regroup({
       <button
         type="button"
         className="secondary icon-button"
-        title="Cancelar selección"
-        aria-label="Cancelar selección"
+        title={tr('Cancelar selección', 'Cancel selection')}
+        aria-label={tr('Cancelar selección', 'Cancel selection')}
         disabled={busy || (!selected && !target)}
         onClick={() => {
           onSelected('');
@@ -1052,8 +1101,8 @@ function Regroup({
         <button
           type="button"
           className="secondary finish-regroup"
-          title="Terminar reagrupamiento"
-          aria-label="Terminar reagrupamiento"
+          title={tr('Terminar reagrupamiento', 'End regroup')}
+          aria-label={tr('Terminar reagrupamiento', 'End regroup')}
           disabled={busy}
           onClick={() =>
             legal ? act({ kind: 'finish-regroup' }) : onFinishFirstHostility?.()
@@ -1068,13 +1117,13 @@ function Regroup({
           className="secondary finish-regroup"
           title={
             view.campaign?.phase === 'ally-regroup'
-              ? 'Terminar reagrupamiento del socio'
-              : 'Terminar participación del socio'
+              ? tr('Terminar reagrupamiento del socio', "End partner's regroup")
+              : tr('Terminar participación del socio', "End partner's turn")
           }
           aria-label={
             view.campaign?.phase === 'ally-regroup'
-              ? 'Terminar reagrupamiento del socio'
-              : 'Terminar participación del socio'
+              ? tr('Terminar reagrupamiento del socio', "End partner's regroup")
+              : tr('Terminar participación del socio', "End partner's turn")
           }
           disabled={busy}
           onClick={() => act({ kind: 'finish-ally-regroup' })}
@@ -1099,20 +1148,26 @@ function Zone({ view, busy, send }: ActionProps) {
     <div className="action-card action-layout primary-action-card attack-card">
       <button
         type="button"
-        title="Se aplicó la penalización. Mantener el pacto de zona."
+        title={tr(
+          'Se aplicó la penalización. Mantener el pacto de zona.',
+          'The penalty was applied. Keep the zone pact.',
+        )}
         disabled={busy}
         onClick={() => act(true)}
       >
-        Mantener zona
+        {tr('Mantener zona', 'Keep zone')}
       </button>
       <button
         type="button"
         className="secondary"
-        title="Se aplicó la penalización. Terminar el pacto de zona."
+        title={tr(
+          'Se aplicó la penalización. Terminar el pacto de zona.',
+          'The penalty was applied. End the zone pact.',
+        )}
         disabled={busy}
         onClick={() => act(false)}
       >
-        Cerrar zona
+        {tr('Cerrar zona', 'Close zone')}
       </button>
     </div>
   );
@@ -1124,7 +1179,9 @@ function Finished({ view }: { readonly view: ReconquistaView }) {
     (id) => view.players.find((p) => p.id === id) ?? [],
   );
   const objectives = (view.winnerObjectives ?? []).flatMap((w) =>
-    w.objectives.map((o) => o.description),
+    w.objectives.map((o) =>
+      tr(o.description, o.descriptionEn ?? o.description),
+    ),
   );
   // Express ends by the clock, with Classic's tiebreak.
   const timeLimit = !!view.campaign?.timeLimit;
@@ -1135,12 +1192,17 @@ function Finished({ view }: { readonly view: ReconquistaView }) {
     >
       <div className="finished-summary">
         <p className="eyebrow">
-          {winners.length > 1 ? 'Victoria compartida' : 'Partida finalizada'}
+          {winners.length > 1
+            ? tr('Victoria compartida', 'Shared victory')
+            : tr('Partida finalizada', 'Game over')}
         </p>
         <h1 id="finished-title">
           {winners.length === 0
-            ? 'Empate'
-            : `${winners.length > 1 ? 'Ganaron ' : 'Ganó '}${winners.map((p) => p.nickname).join(' y ')}`}
+            ? tr('Empate', 'Tie')
+            : tr(
+                `${winners.length > 1 ? 'Ganaron ' : 'Ganó '}${winners.map((p) => p.nickname).join(' y ')}`,
+                `${winners.map((p) => p.nickname).join(' and ')} won`,
+              )}
         </h1>
         {winners.map((p) => (
           <p className="winner-color" key={p.id}>
@@ -1155,11 +1217,20 @@ function Finished({ view }: { readonly view: ReconquistaView }) {
         <span>
           {timeLimit
             ? winners.length
-              ? 'Se terminó el tiempo: ganó por desempate (más países, después tropas, canjes y cartas).'
-              : 'Se terminó el tiempo con empate en países, tropas, canjes y cartas.'
+              ? tr(
+                  'Se terminó el tiempo: ganó por desempate (más países, después tropas, canjes y cartas).',
+                  'Time ran out: won on the tiebreak (most countries, then armies, exchanges and cards).',
+                )
+              : tr(
+                  'Se terminó el tiempo con empate en países, tropas, canjes y cartas.',
+                  'Time ran out with a tie in countries, armies, exchanges and cards.',
+                )
             : objectives.length
               ? objectives.join(' ')
-              : 'Cumplió su objetivo secreto.'}
+              : tr(
+                  'Cumplió su objetivo secreto.',
+                  'Completed their secret objective.',
+                )}
         </span>
         <svg className="victory-crest" aria-hidden="true" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r="20" />

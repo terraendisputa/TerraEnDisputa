@@ -1,3 +1,4 @@
+import { tr } from './language.js';
 /**
  * Copies with the textarea selection, the only way a page served over plain
  * HTTP from a network address can reach the clipboard.
@@ -25,12 +26,15 @@ export async function copyInvitation(
   try {
     if (clipboard?.writeText) {
       await clipboard.writeText(invitation);
-      return 'Invitación copiada.';
+      return tr('Invitación copiada.', 'Invitation copied.');
     }
   } catch {
     // Without permission, fall back to the selection below.
   }
   return copyBySelection(invitation)
-    ? 'Invitación copiada.'
-    : 'No se pudo copiar automáticamente. Seleccioná el enlace y copialo manualmente.';
+    ? tr('Invitación copiada.', 'Invitation copied.')
+    : tr(
+        'No se pudo copiar automáticamente. Seleccioná el enlace y copialo manualmente.',
+        'Could not copy automatically. Select the link and copy it by hand.',
+      );
 }

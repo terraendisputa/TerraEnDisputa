@@ -6,6 +6,7 @@ import {
   type ProtocolErrorCode,
   type PlayerGameView,
 } from '@game/protocol';
+import { parseServerJson } from './language.js';
 
 export class ApiError extends Error {
   constructor(
@@ -32,7 +33,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError('SERVER_ERROR', 0);
   }
   const body: unknown =
-    response.status === 204 ? undefined : ((await response.json()) as unknown);
+    response.status === 204
+      ? undefined
+      : parseServerJson(await response.text());
   if (!response.ok) {
     const code =
       typeof body === 'object' &&

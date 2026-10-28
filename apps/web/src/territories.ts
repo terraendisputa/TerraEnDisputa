@@ -4,6 +4,7 @@ const CLASSIC_TERRITORIES = resolveGameBoard(
 ).territories;
 import { APPROVED_SHARED_BOUNDARIES } from './approved-map-geometry.js';
 import { BOARD_MAP_GEOMETRY } from './board-map-geometry.js';
+import { classicCountryName } from './place-names.js';
 
 interface TerritoryPresentation {
   readonly id: string;
@@ -20,7 +21,7 @@ export const TERRITORIES: readonly TerritoryPresentation[] = Object.values(
   CLASSIC_TERRITORIES,
 ).map(({ id, displayName, continentId }) => ({
   id,
-  label: displayName,
+  label: classicCountryName(id, displayName),
   continent: continentId,
   ...BOARD_MAP_GEOMETRY[id]!,
 }));

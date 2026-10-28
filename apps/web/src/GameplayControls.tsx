@@ -10,6 +10,7 @@ import { useAmountShortcut } from './shortcuts.js';
 import { UiIcon } from './UiIcon.js';
 import { ClassicCardArt } from './ClassicCardArt.js';
 import { hasNewCombat } from './combat-events.js';
+import { tr } from './language.js';
 
 export function mapChoices(
   snapshot: PlayerGameView,
@@ -64,13 +65,15 @@ export function ActionTitle({
   return (
     <div className="action-title">
       <span className="eyebrow">
-        {required ? 'Acción obligatoria' : 'Acción actual'}
+        {required
+          ? tr('Acción obligatoria', 'Required action')
+          : tr('Acción actual', 'Current action')}
       </span>
       <h3>{title}</h3>
       {required && (
         <span
           className="panel-notification required-badge"
-          aria-label="Acción obligatoria"
+          aria-label={tr('Acción obligatoria', 'Required action')}
         >
           !
         </span>
@@ -91,7 +94,7 @@ export function Amount({
   maximum,
   onChange,
   disabled = false,
-  label = 'Cantidad de ejércitos',
+  label = tr('Cantidad de ejércitos', 'Number of armies'),
 }: {
   readonly value: number;
   readonly minimum?: number;
@@ -162,13 +165,13 @@ export function Amount({
       aria-label={label}
       ref={control}
     >
-      <span>Cantidad</span>
+      <span>{tr('Cantidad', 'Amount')}</span>
       <div className="amount-stepper">
         <button
           type="button"
           className="secondary compact-button"
           disabled={disabled || value <= minimum}
-          aria-label="Quitar un ejército"
+          aria-label={tr('Quitar un ejército', 'Remove one army')}
           onClick={() => onChange(clamp(value - 1))}
         >
           −
@@ -186,14 +189,14 @@ export function Amount({
           type="button"
           className="secondary compact-button"
           disabled={disabled || value >= maximum}
-          aria-label="Agregar un ejército"
+          aria-label={tr('Agregar un ejército', 'Add one army')}
           onClick={() => onChange(clamp(value + 1))}
         >
           +
         </button>
       </div>
       <small>
-        Permitido: {minimum}–{maximum}
+        {tr('Permitido', 'Allowed')}: {minimum}–{maximum}
       </small>
     </div>
   );
@@ -229,12 +232,12 @@ const symbolLabel = (
   symbol: PlayerGameView['private']['cards'][number]['symbol'],
 ) =>
   symbol === 'wildcard'
-    ? 'Comodín'
+    ? tr('Comodín', 'Wildcard')
     : symbol === 'galleon'
-      ? 'Galeón'
+      ? tr('Galeón', 'Galleon')
       : symbol === 'balloon'
-        ? 'Globo'
-        : 'Cañón';
+        ? tr('Globo', 'Balloon')
+        : tr('Cañón', 'Cannon');
 
 const symbolIcon = (
   symbol: PlayerGameView['private']['cards'][number]['symbol'],
@@ -308,14 +311,24 @@ export function PrivateHand({
   return (
     <>
       <details className="private-hand" open>
-        <summary>Cartas · {cards.length}</summary>
-        {cards.length === 0 && <p>Todavía no tenés cartas.</p>}
+        <summary>
+          {tr('Cartas', 'Cards')} · {cards.length}
+        </summary>
+        {cards.length === 0 && (
+          <p>{tr('Todavía no tenés cartas.', "You don't have cards yet.")}</p>
+        )}
         {mandatory && (
           <p className="action-help">
-            Superaste el límite: el canje es obligatorio.
+            {tr(
+              'Superaste el límite: el canje es obligatorio.',
+              'You went over the limit: the exchange is required.',
+            )}
           </p>
         )}
-        <div className="exchange-card-selection" aria-label="Tus cartas">
+        <div
+          className="exchange-card-selection"
+          aria-label={tr('Tus cartas', 'Your cards')}
+        >
           {cards.map(({ cardId, symbol, territoryBonusClaimed }) => {
             const selected = selectedCardIds.includes(cardId);
             const name = TERRITORY_LABELS[cardId] ?? cardId;
@@ -325,8 +338,14 @@ export function PrivateHand({
                 type="button"
                 className={`territory-card hand-card ${territoryBonusClaimed ? 'bonus-used' : 'bonus-available'} ${selected ? 'selected' : ''} ${newCardIds.includes(cardId) ? 'new-card' : ''}`}
                 aria-pressed={myTurn ? selected : undefined}
-                aria-label={`${name}, ${symbolLabel(symbol)}, bonificación ${territoryBonusClaimed ? 'usada' : 'disponible'}${selected ? ', seleccionada' : ''}`}
-                title={`${symbolLabel(symbol)} · bonificación ${territoryBonusClaimed ? 'usada' : 'disponible'}`}
+                aria-label={tr(
+                  `${name}, ${symbolLabel(symbol)}, bonificación ${territoryBonusClaimed ? 'usada' : 'disponible'}${selected ? ', seleccionada' : ''}`,
+                  `${name}, ${symbolLabel(symbol)}, bonus ${territoryBonusClaimed ? 'used' : 'available'}${selected ? ', selected' : ''}`,
+                )}
+                title={tr(
+                  `${symbolLabel(symbol)} · bonificación ${territoryBonusClaimed ? 'usada' : 'disponible'}`,
+                  `${symbolLabel(symbol)} · bonus ${territoryBonusClaimed ? 'used' : 'available'}`,
+                )}
                 disabled={busy || !myTurn}
                 onClick={() =>
                   setSelectedCardIds((current) =>
@@ -361,8 +380,8 @@ export function PrivateHand({
           <button
             type="button"
             className="icon-button text-icon claim-card"
-            title="Pedir carta"
-            aria-label="Pedir carta"
+            title={tr('Pedir carta', 'Draw card')}
+            aria-label={tr('Pedir carta', 'Draw card')}
             disabled={busy}
             onClick={() => {
               if (actions.includes('claim_card'))
@@ -370,10 +389,19 @@ export function PrivateHand({
               else
                 setRefused(
                   turn?.cardClaimEligible && cards.length >= 5
-                    ? 'No podés pedir carta: tenés la mano completa.'
+                    ? tr(
+                        'No podés pedir carta: tenés la mano completa.',
+                        "You can't draw a card: your hand is full.",
+                      )
                     : turn?.phase === 'end_of_turn_cards'
-                      ? 'Solo podés pedir una carta por turno, si conquistaste un país.'
-                      : 'Podés pedir carta al terminar el traslado, si conquistaste un país.',
+                      ? tr(
+                          'Solo podés pedir una carta por turno, si conquistaste un país.',
+                          'You can draw only one card per turn, if you conquered a country.',
+                        )
+                      : tr(
+                          'Podés pedir carta al terminar el traslado, si conquistaste un país.',
+                          'You can draw a card after the move, if you conquered a country.',
+                        ),
                 );
             }}
           >
@@ -384,13 +412,22 @@ export function PrivateHand({
             <button
               type="button"
               className="icon-button text-icon claim-bonus"
-              title={`Cobrar +${TERRITORY_BONUS} en ${TERRITORY_LABELS[bonusCard.cardId]}`}
-              aria-label={`Cobrar +${TERRITORY_BONUS} en ${TERRITORY_LABELS[bonusCard.cardId]}`}
+              title={tr(
+                `Cobrar +${TERRITORY_BONUS} en ${TERRITORY_LABELS[bonusCard.cardId]}`,
+                `Collect +${TERRITORY_BONUS} on ${TERRITORY_LABELS[bonusCard.cardId]}`,
+              )}
+              aria-label={tr(
+                `Cobrar +${TERRITORY_BONUS} en ${TERRITORY_LABELS[bonusCard.cardId]}`,
+                `Collect +${TERRITORY_BONUS} on ${TERRITORY_LABELS[bonusCard.cardId]}`,
+              )}
               disabled={busy}
               onClick={() => {
                 if (!bonusIds.includes(bonusCard.cardId)) {
                   setRefused(
-                    `Los +${TERRITORY_BONUS} se cobran al final del turno, después del traslado.`,
+                    tr(
+                      `Los +${TERRITORY_BONUS} se cobran al final del turno, después del traslado.`,
+                      `The +${TERRITORY_BONUS} is collected at the end of the turn, after the move.`,
+                    ),
                   );
                   return;
                 }
@@ -409,13 +446,30 @@ export function PrivateHand({
           <button
             type="button"
             className="icon-button exchange-submit"
-            title={reward ? `Canjear por ${reward} ejércitos` : 'Canjear'}
-            aria-label={reward ? `Canjear por ${reward} ejércitos` : 'Canjear'}
+            title={
+              reward
+                ? tr(
+                    `Canjear por ${reward} ejércitos`,
+                    `Exchange for ${reward} armies`,
+                  )
+                : tr('Canjear', 'Exchange')
+            }
+            aria-label={
+              reward
+                ? tr(
+                    `Canjear por ${reward} ejércitos`,
+                    `Exchange for ${reward} armies`,
+                  )
+                : tr('Canjear', 'Exchange')
+            }
             disabled={busy || !validSet}
             onClick={() => {
               if (!choice) {
                 setRefused(
-                  'El canje se hace al comienzo de tu turno, antes de incorporar ejércitos.',
+                  tr(
+                    'El canje se hace al comienzo de tu turno, antes de incorporar ejércitos.',
+                    'The exchange happens at the start of your turn, before placing armies.',
+                  ),
                 );
                 return;
               }
@@ -516,11 +570,11 @@ export function GameplayControls({
             role="status"
           >
             <div className="action-selection transfer-route" aria-live="polite">
-              <small>Origen</small>
+              <small>{tr('Origen', 'Origin')}</small>
               <span className="transfer-route-arrow" aria-hidden="true">
                 →
               </span>
-              <small>Destino</small>
+              <small>{tr('Destino', 'Destination')}</small>
               <strong>
                 {TERRITORY_LABELS[pending.fromTerritoryId]}:{' '}
                 {sourceBefore - transfer}
@@ -543,8 +597,8 @@ export function GameplayControls({
             <button
               type="button"
               className="confirm-transfer completion-action"
-              aria-label="Confirmar traslado"
-              title="Confirmar traslado (Enter)"
+              aria-label={tr('Confirmar traslado', 'Confirm move')}
+              title={tr('Confirmar traslado (Enter)', 'Confirm move (Enter)')}
               data-shortcut="confirm"
               disabled={busy}
               onClick={() =>
@@ -564,19 +618,28 @@ export function GameplayControls({
       })()
     ) : (
       <p className="turn-notice">
-        {actor?.nickname} está completando una conquista.
+        {tr(
+          `${actor?.nickname} está completando una conquista.`,
+          `${actor?.nickname} is completing a conquest.`,
+        )}
       </p>
     );
 
   if (!isActor)
     return (
       <p className="turn-notice">
-        Observando el turno de <strong>{actor?.nickname}</strong>.
+        {tr('Observando el turno de', 'Watching the turn of')}{' '}
+        <strong>{actor?.nickname}</strong>.
       </p>
     );
   if (snapshot.legalActions.readOnly)
     return (
-      <p className="turn-notice">Tu asiento está en modo de observación.</p>
+      <p className="turn-notice">
+        {tr(
+          'Tu asiento está en modo de observación.',
+          'Your seat is in watch mode.',
+        )}
+      </p>
     );
 
   return (
@@ -589,8 +652,8 @@ export function GameplayControls({
           <ActionTitle
             title={
               turn.phase === 'continent_reinforcement'
-                ? 'Refuerzos continentales'
-                : 'Refuerzos'
+                ? tr('Refuerzos continentales', 'Continent reinforcements')
+                : tr('Refuerzos', 'Reinforcements')
             }
           />
           <ActionRoute
@@ -627,8 +690,11 @@ export function GameplayControls({
           <button
             type="button"
             className="confirm-placement completion-action"
-            aria-label="Confirmar colocación"
-            title="Confirmar colocación (Enter)"
+            aria-label={tr('Confirmar colocación', 'Confirm placement')}
+            title={tr(
+              'Confirmar colocación (Enter)',
+              'Confirm placement (Enter)',
+            )}
             data-shortcut="confirm"
             disabled={busy || placementDue === 0 || remainingPlacement !== 0}
             onClick={() => submit({ type: 'place_reinforcements', placements })}
@@ -642,8 +708,11 @@ export function GameplayControls({
           {snapshot.legalActions.attackChoices.length === 0 && (
             <p className="muted-copy">
               {loneCountryArmies(snapshot) !== undefined
-                ? 'Con un solo país no podés atacar hasta tener más de 4 ejércitos en él.'
-                : 'No hay ataques disponibles.'}
+                ? tr(
+                    'Con un solo país no podés atacar hasta tener más de 4 ejércitos en él.',
+                    "With a single country you can't attack until it has more than 4 armies.",
+                  )
+                : tr('No hay ataques disponibles.', 'No attacks available.')}
             </p>
           )}
           <ActionRoute
@@ -669,8 +738,8 @@ export function GameplayControls({
             type="button"
             className="icon-button attack-button"
             disabled={!selectedSource || !selected || busy}
-            aria-label="Atacar"
-            title="Atacar (Enter)"
+            aria-label={tr('Atacar', 'Attack')}
+            title={tr('Atacar (Enter)', 'Attack (Enter)')}
             data-shortcut="confirm"
             onClick={() =>
               selectedSource &&
@@ -684,8 +753,8 @@ export function GameplayControls({
             <button
               type="button"
               className="secondary end-attack"
-              title="Terminar ataques"
-              aria-label="Terminar ataques"
+              title={tr('Terminar ataques', 'End attacks')}
+              aria-label={tr('Terminar ataques', 'End attacks')}
               disabled={busy}
               onClick={() => submit({ type: 'advance_phase' })}
             >
@@ -697,7 +766,9 @@ export function GameplayControls({
       {turn.phase === 'regroup' && (
         <div className="action-card action-layout primary-action-card regroup-card">
           {snapshot.legalActions.regroupChoices.length === 0 && (
-            <p className="muted-copy">No hay traslados disponibles.</p>
+            <p className="muted-copy">
+              {tr('No hay traslados disponibles.', 'No moves available.')}
+            </p>
           )}
           <ActionRoute
             source={selectedSource}
@@ -732,9 +803,9 @@ export function GameplayControls({
           <button
             type="button"
             className="icon-button confirm-regroup"
-            title="Confirmar traslado (Enter)"
+            title={tr('Confirmar traslado (Enter)', 'Confirm move (Enter)')}
             data-shortcut="confirm"
-            aria-label="Confirmar traslado"
+            aria-label={tr('Confirmar traslado', 'Confirm move')}
             disabled={
               !regroup || amount < 1 || busy || regroup.maximumArmies < 1
             }
@@ -754,8 +825,11 @@ export function GameplayControls({
           <button
             type="button"
             className="secondary icon-button"
-            title="Cancelar selección (Escape)"
-            aria-label="Cancelar selección"
+            title={tr(
+              'Cancelar selección (Escape)',
+              'Cancel selection (Escape)',
+            )}
+            aria-label={tr('Cancelar selección', 'Cancel selection')}
             disabled={busy || (!selectedSource && !selected)}
             onClick={() => {
               onSource(undefined);
@@ -769,8 +843,8 @@ export function GameplayControls({
             <button
               type="button"
               className="secondary finish-regroup"
-              title="Terminar reagrupamiento"
-              aria-label="Terminar reagrupamiento"
+              title={tr('Terminar reagrupamiento', 'End regroup')}
+              aria-label={tr('Terminar reagrupamiento', 'End regroup')}
               disabled={busy}
               onClick={() => submit({ type: 'advance_phase' })}
             >
@@ -785,8 +859,14 @@ export function GameplayControls({
         <p className="muted-copy end-turn-hint">
           {actions.includes('claim_card') ||
           snapshot.legalActions.territoryBonusCardIds.length > 0
-            ? 'Pedí tu carta o cobrá los +2 en el menú Cartas. Terminá el turno con la bandera.'
-            : 'Terminá el turno con la bandera.'}
+            ? tr(
+                'Pedí tu carta o cobrá los +2 en el menú Cartas. Terminá el turno con la bandera.',
+                'Draw your card or collect the +2 in the Cards menu. End the turn with the flag.',
+              )
+            : tr(
+                'Terminá el turno con la bandera.',
+                'End the turn with the flag.',
+              )}
         </p>
       )}
       <div className="button-row action-footer phase-actions">
@@ -795,8 +875,8 @@ export function GameplayControls({
           turn.phase !== 'regroup' && (
             <button
               type="button"
-              title="Continuar"
-              aria-label="Continuar"
+              title={tr('Continuar', 'Continue')}
+              aria-label={tr('Continuar', 'Continue')}
               disabled={busy}
               onClick={() => submit({ type: 'advance_phase' })}
             >
@@ -810,7 +890,7 @@ export function GameplayControls({
 
 const continents: Record<string, { label: string; ids: readonly string[] }> = {
   north_america: {
-    label: 'América del Norte',
+    label: tr('América del Norte', 'North America'),
     ids: [
       'alaska',
       'yukon',
@@ -825,11 +905,11 @@ const continents: Record<string, { label: string; ids: readonly string[] }> = {
     ],
   },
   south_america: {
-    label: 'América del Sur',
+    label: tr('América del Sur', 'South America'),
     ids: ['colombia', 'peru', 'brazil', 'chile', 'argentina', 'uruguay'],
   },
   europe: {
-    label: 'Europa',
+    label: tr('Europa', 'Europe'),
     ids: [
       'iceland',
       'great_britain',
@@ -843,7 +923,7 @@ const continents: Record<string, { label: string; ids: readonly string[] }> = {
     ],
   },
   africa: {
-    label: 'África',
+    label: tr('África', 'Africa'),
     ids: ['sahara', 'egypt', 'ethiopia', 'zaire', 'south_africa', 'madagascar'],
   },
   asia: {
@@ -867,7 +947,7 @@ const continents: Record<string, { label: string; ids: readonly string[] }> = {
     ],
   },
   oceania: {
-    label: 'Oceanía',
+    label: tr('Oceanía', 'Oceania'),
     ids: ['sumatra', 'borneo', 'java', 'australia'],
   },
 };
@@ -893,7 +973,11 @@ function CombatDie({
   return (
     <strong
       className={`die pip-die${defender ? ' defender-die' : ''}${rolling ? ' die-rolling' : ''}`}
-      aria-label={rolling ? 'Lanzando dado' : `Dado ${value}`}
+      aria-label={
+        rolling
+          ? tr('Lanzando dado', 'Rolling die')
+          : tr(`Dado ${value}`, `Die ${value}`)
+      }
     >
       {Array.from({ length: 9 }, (_, index) => (
         <i
@@ -967,28 +1051,32 @@ export function CombatDice({
     >
       <div className="panel-heading-row">
         <div>
-          <p className="eyebrow">Último combate</p>
+          <p className="eyebrow">{tr('Último combate', 'Last combat')}</p>
           <h2>
             {rolling
-              ? 'Lanzando dados…'
+              ? tr('Lanzando dados…', 'Rolling dice…')
               : result.conquered
-                ? 'Territorio conquistado'
-                : 'Resultado del combate'}
+                ? tr('Territorio conquistado', 'Territory conquered')
+                : tr('Resultado del combate', 'Combat result')}
           </h2>
         </div>
         <span
           className={`result-badge ${!rolling && result.conquered ? 'success-badge' : ''}`}
         >
           {rolling
-            ? 'En combate'
+            ? tr('En combate', 'In combat')
             : result.conquered
-              ? 'Conquista'
-              : 'Sin conquista'}
+              ? tr('Conquista', 'Conquest')
+              : tr('Sin conquista', 'No conquest')}
         </span>
       </div>
       <div className="dice-results">
         <div>
-          <span role="img" aria-label="Atacante" title="Atacante">
+          <span
+            role="img"
+            aria-label={tr('Atacante', 'Attacker')}
+            title={tr('Atacante', 'Attacker')}
+          >
             <UiIcon name="sword" />
           </span>
           <div>
@@ -998,7 +1086,11 @@ export function CombatDice({
           </div>
         </div>
         <div>
-          <span role="img" aria-label="Defensor" title="Defensor">
+          <span
+            role="img"
+            aria-label={tr('Defensor', 'Defender')}
+            title={tr('Defensor', 'Defender')}
+          >
             <UiIcon name="shield" />
           </span>
           <div>
@@ -1032,18 +1124,20 @@ export function FinishedPanel({
       aria-labelledby="finished-title"
     >
       <div className="finished-summary">
-        <p className="eyebrow">Partida finalizada</p>
+        <p className="eyebrow">{tr('Partida finalizada', 'Game over')}</p>
         <h1 id="finished-title">
           {winner
-            ? `Ganó ${winner.nickname}`
+            ? tr(`Ganó ${winner.nickname}`, `${winner.nickname} won`)
             : reason?.kind === 'time_limit' && snapshot.mode === 'classic'
-              ? 'Empate'
-              : 'Partida cerrada'}
+              ? tr('Empate', 'Tie')
+              : tr('Partida cerrada', 'Game closed')}
         </h1>
         {snapshot.result?.scoringEligible === false && (
           <p>
-            Sin puntuación oficial. El administrador puede consultar el motivo
-            en los resultados.
+            {tr(
+              'Sin puntuación oficial. El administrador puede consultar el motivo en los resultados.',
+              'No official score. The administrator can check the reason in the results.',
+            )}
           </p>
         )}
         {winner && (
@@ -1058,23 +1152,41 @@ export function FinishedPanel({
       <p className="winning-objective">
         <span>
           {reason?.kind === 'control_all_territories'
-            ? 'Conquistó los 50 territorios.'
+            ? tr(
+                'Conquistó los 50 territorios.',
+                'Conquered all 50 territories.',
+              )
             : reason?.kind === 'control_territories'
-              ? 'Controló 30 territorios.'
+              ? tr('Controló 30 territorios.', 'Controlled 30 territories.')
               : reason?.kind === 'time_limit' && snapshot.mode === 'classic'
                 ? winner
-                  ? 'Se terminó el tiempo: ganó por desempate (más países, después tropas, canjes y cartas).'
-                  : 'Se terminó el tiempo con empate en países, tropas, canjes y cartas.'
+                  ? tr(
+                      'Se terminó el tiempo: ganó por desempate (más países, después tropas, canjes y cartas).',
+                      'Time ran out: won on the tiebreak (most countries, then troops, exchanges and cards).',
+                    )
+                  : tr(
+                      'Se terminó el tiempo con empate en países, tropas, canjes y cartas.',
+                      'Time ran out with a tie in countries, troops, exchanges and cards.',
+                    )
                 : reason?.kind === 'time_limit'
-                  ? 'Se completaron las dos rondas finales. El administrador puede consultar la clasificación.'
+                  ? tr(
+                      'Se completaron las dos rondas finales. El administrador puede consultar la clasificación.',
+                      'The two final rounds were completed. The administrator can check the ranking.',
+                    )
                   : reason?.kind === 'no_competitors'
-                    ? 'No quedan jugadores habilitados para continuar.'
+                    ? tr(
+                        'No quedan jugadores habilitados para continuar.',
+                        'No eligible players are left to continue.',
+                      )
                     : reason?.kind === 'secret_objective'
                       ? objectiveText(
                           reason.objectiveId,
                           reason.effectiveDestructionTargetColor,
                         )
-                      : 'Cumplió su objetivo secreto.'}
+                      : tr(
+                          'Cumplió su objetivo secreto.',
+                          'Completed their secret objective.',
+                        )}
         </span>
         <svg className="victory-crest" aria-hidden="true" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r="20" />
@@ -1113,7 +1225,7 @@ export function PactsPanel({
     const p = players.get(id);
     return (
       <span className="pact-participant">
-        {p?.nickname ?? 'Jugador'}
+        {p?.nickname ?? tr('Jugador', 'Player')}
         {p && (
           <span
             className={`color-dot color-${p.color}`}
@@ -1136,11 +1248,13 @@ export function PactsPanel({
               className={`color-dot color-${owner?.color ?? 'unknown'}`}
               role="img"
               aria-label={
-                owner ? playerColorLabel(owner.color) : 'Sin propietario'
+                owner
+                  ? playerColorLabel(owner.color)
+                  : tr('Sin propietario', 'No owner')
               }
             />
             <span>
-              {owner?.nickname ?? 'Sin propietario'} ·{' '}
+              {owner?.nickname ?? tr('Sin propietario', 'No owner')} ·{' '}
               {TERRITORY_LABELS[territoryId] ?? territoryId}
             </span>
           </span>
@@ -1152,21 +1266,27 @@ export function PactsPanel({
     value: NonNullable<PlayerGameView['pacts']>['proposals'][number]['terms'],
   ) =>
     value.kind === 'general_non_aggression'
-      ? 'No agresión general'
+      ? tr('No agresión general', 'General non-aggression')
       : value.kind === 'border_non_aggression'
-        ? `Frontera ${value.territoryIds.map((id) => TERRITORY_LABELS[id]).join(' / ')}`
-        : `Zona internacional: ${TERRITORY_LABELS[value.territoryId]}`;
+        ? `${tr('Frontera', 'Border')} ${value.territoryIds.map((id) => TERRITORY_LABELS[id]).join(' / ')}`
+        : `${tr('Zona internacional', 'International zone')}: ${TERRITORY_LABELS[value.territoryId]}`;
   if (
     snapshot.mode === 'competitive' &&
     snapshot.configuredPlayerCount - (snapshot.competitiveBotSeats ?? 0) === 4
   )
     return (
       <section className="panel pacts-panel">
-        <h2>Pactos</h2>
+        <h2>{tr('Pactos', 'Pacts')}</h2>
         <p>
           {snapshot.competitiveBotSeats
-            ? 'La mesa de cuatro jugadores y dos bots se juega sin pactos.'
-            : 'Competitivo de cuatro jugadores se juega sin pactos.'}
+            ? tr(
+                'La mesa de cuatro jugadores y dos bots se juega sin pactos.',
+                'The table of four players and two bots is played without pacts.',
+              )
+            : tr(
+                'Competitivo de cuatro jugadores se juega sin pactos.',
+                'Four-player Competitive is played without pacts.',
+              )}
         </p>
       </section>
     );
@@ -1175,7 +1295,7 @@ export function PactsPanel({
       <details open>
         <summary className="pacts-heading">
           <div>
-            <h2>Pactos</h2>
+            <h2>{tr('Pactos', 'Pacts')}</h2>
           </div>
           <span className="count-badge">
             {(snapshot.pacts?.active.length ?? 0) +
@@ -1183,19 +1303,24 @@ export function PactsPanel({
           </span>
         </summary>
         {(snapshot.pacts?.active.length ?? 0) === 0 && (
-          <p className="muted-copy">No hay pactos activos.</p>
+          <p className="muted-copy">
+            {tr('No hay pactos activos.', 'No active pacts.')}
+          </p>
         )}
         {(snapshot.pacts?.active ?? []).map((pact) => (
           <div key={pact.id} className="pact-row">
             <span className="pact-copy">
               <small>
                 {'withdrawal' in pact && pact.withdrawal.kind === 'announced'
-                  ? 'Retiro anunciado · aún vigente'
-                  : 'Activo'}
+                  ? tr(
+                      'Retiro anunciado · aún vigente',
+                      'Withdrawal announced · still in force',
+                    )
+                  : tr('Activo', 'Active')}
               </small>
               <strong>
                 {pact.terms.kind === 'border_non_aggression'
-                  ? 'Frontera'
+                  ? tr('Frontera', 'Border')
                   : terms(pact.terms)}
               </strong>
               {pact.terms.kind === 'border_non_aggression' &&
@@ -1208,7 +1333,10 @@ export function PactsPanel({
               )}
               {'withdrawal' in pact && pact.withdrawal.kind === 'announced' && (
                 <span>
-                  Espera las activaciones de:{' '}
+                  {tr(
+                    'Espera las activaciones de:',
+                    'Waits for the activations of:',
+                  )}{' '}
                   {pact.withdrawal.waitingForPlayerIds.map((id, index) => (
                     <span key={id}>
                       {index > 0 && ', '}
@@ -1226,16 +1354,25 @@ export function PactsPanel({
                 onClick={() =>
                   window.confirm(
                     snapshot.mode === 'competitive'
-                      ? 'El otro jugador queda libre inmediatamente. Debés esperar dos incorporaciones completas suyas para atacar en el alcance del pacto. ¿Romper?'
+                      ? tr(
+                          'El otro jugador queda libre inmediatamente. Debés esperar dos incorporaciones completas suyas para atacar en el alcance del pacto. ¿Romper?',
+                          "The other player is free right away. You must wait for two of their full placements to attack within the pact's scope. Break it?",
+                        )
                       : pact.kind === 'international_zone'
-                        ? 'La zona seguirá vigente hasta que los demás jugadores supervivientes completen una fase de hostilidad. Durante la espera se mantienen sus obligaciones. ¿Anunciar la ruptura?'
-                        : 'Retirarte anuncia la ruptura y conserva temporalmente tu obligación. ¿Continuar?',
+                        ? tr(
+                            'La zona seguirá vigente hasta que los demás jugadores supervivientes completen una fase de hostilidad. Durante la espera se mantienen sus obligaciones. ¿Anunciar la ruptura?',
+                            'The zone stays in force until the other surviving players complete a hostility phase. Its obligations hold while waiting. Announce the break?',
+                          )
+                        : tr(
+                            'Retirarte anuncia la ruptura y conserva temporalmente tu obligación. ¿Continuar?',
+                            'Withdrawing announces the break and keeps your obligation for a while. Continue?',
+                          ),
                   ) && submit({ type: 'withdraw_pact', pactId: pact.id })
                 }
               >
                 {pact.kind === 'international_zone'
-                  ? 'Romper zona'
-                  : 'Retirarme'}
+                  ? tr('Romper zona', 'Break zone')
+                  : tr('Retirarme', 'Withdraw')}
               </button>
             )}
           </div>
@@ -1243,12 +1380,19 @@ export function PactsPanel({
         {(snapshot.pacts?.competitiveWithdrawals ?? []).map((wait) => (
           <div key={wait.id} className="pact-row">
             <span className="pact-copy">
-              <strong>Ruptura: {terms(wait.terms)}</strong>
+              <strong>
+                {tr('Ruptura', 'Break')}: {terms(wait.terms)}
+              </strong>
               <small>
-                {participant(wait.withdrawingPlayerId)} debe esperar{' '}
-                {wait.incorporationsRemaining} incorporaciones completas de{' '}
-                {participant(wait.recipientId)} para atacar en el alcance del
-                pacto. El destinatario ya está libre de este acuerdo.
+                {participant(wait.withdrawingPlayerId)}{' '}
+                {tr('debe esperar', 'must wait for')}{' '}
+                {wait.incorporationsRemaining}{' '}
+                {tr('incorporaciones completas de', 'full placements by')}{' '}
+                {participant(wait.recipientId)}{' '}
+                {tr(
+                  'para atacar en el alcance del pacto. El destinatario ya está libre de este acuerdo.',
+                  "to attack within the pact's scope. The recipient is already free of this agreement.",
+                )}
               </small>
             </span>
           </div>
@@ -1256,7 +1400,7 @@ export function PactsPanel({
         {(snapshot.pacts?.proposals ?? []).map((proposal) => (
           <div key={proposal.id} className="pact-row">
             <span className="pact-copy">
-              <small>Propuesta pendiente</small>
+              <small>{tr('Propuesta pendiente', 'Pending proposal')}</small>
               <strong>{terms(proposal.terms)}</strong>
               {proposal.terms.kind === 'border_non_aggression' &&
                 borderSides(proposal.terms.territoryIds)}
@@ -1281,7 +1425,7 @@ export function PactsPanel({
                     })
                   }
                 >
-                  Aceptar
+                  {tr('Aceptar', 'Accept')}
                 </button>
                 <button
                   type="button"
@@ -1291,7 +1435,7 @@ export function PactsPanel({
                     submit({ type: 'reject_pact', proposalId: proposal.id })
                   }
                 >
-                  Rechazar
+                  {tr('Rechazar', 'Reject')}
                 </button>
               </>
             )}
@@ -1306,7 +1450,7 @@ export function PactsPanel({
                   submit({ type: 'cancel_pact', proposalId: proposal.id })
                 }
               >
-                Cancelar
+                {tr('Cancelar', 'Cancel')}
               </button>
             )}
           </div>
@@ -1322,22 +1466,26 @@ export function PactsPanel({
             );
             return minutes > 0 ? (
               <p key={r.recipientId} className="muted-copy">
-                {participant(r.recipientId)} rechazó tu pacto. Podés volver a
-                proponerle en {minutes} {minutes === 1 ? 'minuto' : 'minutos'}{' '}
-                de partida.
+                {participant(r.recipientId)}{' '}
+                {tr(
+                  `rechazó tu pacto. Podés volver a proponerle en ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'} de partida.`,
+                  `rejected your pact. You can propose again in ${minutes} game ${minutes === 1 ? 'minute' : 'minutes'}.`,
+                )}
               </p>
             ) : null;
           })}
         {choices.length > 0 && (
           <div className="pact-proposal-form">
             <label>
-              Proponer a
+              {tr('Proponer a', 'Propose to')}
               <select
                 value={choice ? pactProposalChoiceKey(choice) : ''}
                 disabled={busy}
                 onChange={(e) => setSelectedChoiceKey(e.target.value)}
               >
-                <option value="">Elegí jugador y acuerdo</option>
+                <option value="">
+                  {tr('Elegí jugador y acuerdo', 'Choose player and agreement')}
+                </option>
                 {choices.map((item) => (
                   <option
                     key={pactProposalChoiceKey(item)}
@@ -1355,18 +1503,25 @@ export function PactsPanel({
             </label>
             {choice && (
               <p className="pact-summary">
-                <small>Vista previa · todavía no enviada</small>
+                <small>
+                  {tr(
+                    'Vista previa · todavía no enviada',
+                    'Preview · not sent yet',
+                  )}
+                </small>
                 <strong>
                   {choice.terms.kind === 'general_non_aggression'
-                    ? 'No agresión general'
+                    ? tr('No agresión general', 'General non-aggression')
                     : choice.terms.kind === 'border_non_aggression'
-                      ? 'No agresión'
+                      ? tr('No agresión', 'Non-aggression')
                       : terms(choice.terms)}
                 </strong>
                 {choice.terms.kind === 'border_non_aggression' &&
                   borderSides(choice.terms.territoryIds)}
                 {choice.terms.kind !== 'border_non_aggression' && (
-                  <span>con {participant(choice.recipientId)}</span>
+                  <span>
+                    {tr('con', 'with')} {participant(choice.recipientId)}
+                  </span>
                 )}
               </p>
             )}
@@ -1379,7 +1534,7 @@ export function PactsPanel({
                 setSelectedChoiceKey(undefined);
               }}
             >
-              Proponer pacto
+              {tr('Proponer pacto', 'Propose pact')}
             </button>
           </div>
         )}
@@ -1457,16 +1612,20 @@ export function InheritanceControls({
   if (pending.playerId !== snapshot.selfPlayerId)
     return (
       <p className="muted-copy">
-        El conquistador está eligiendo cartas heredadas.
+        {tr(
+          'El conquistador está eligiendo cartas heredadas.',
+          'The conqueror is choosing inherited cards.',
+        )}
       </p>
     );
   return (
     <section className="panel">
-      <h2>Cartas heredadas</h2>
+      <h2>{tr('Cartas heredadas', 'Inherited cards')}</h2>
       <p>
-        Elegí {pending.takeCount} para completar tu mano hasta cinco. Si vence
-        tu tiempo o estás ausente, el servidor elige al azar. El excedente se
-        descarta.
+        {tr(
+          `Elegí ${pending.takeCount} para completar tu mano hasta cinco. Si vence tu tiempo o estás ausente, el servidor elige al azar. El excedente se descarta.`,
+          `Choose ${pending.takeCount} to fill your hand up to five. If your time runs out or you are absent, the server picks at random. The rest is discarded.`,
+        )}
       </p>
       {cards.map((card) => (
         <label key={card.cardId} className="inline-control">
@@ -1487,15 +1646,7 @@ export function InheritanceControls({
               )
             }
           />
-          {TERRITORY_LABELS[card.cardId]} ·{' '}
-          {
-            {
-              galleon: 'Galeón',
-              balloon: 'Globo',
-              cannon: 'Cañón',
-              wildcard: 'Comodín',
-            }[card.symbol]
-          }
+          {TERRITORY_LABELS[card.cardId]} · {symbolLabel(card.symbol)}
         </label>
       ))}
       <button
@@ -1509,7 +1660,7 @@ export function InheritanceControls({
           submit({ type: 'select_inherited_cards', cardIds: [...chosen] })
         }
       >
-        Conservar cartas elegidas
+        {tr('Conservar cartas elegidas', 'Keep the chosen cards')}
       </button>
     </section>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ReconquistaView } from '@game/protocol/reconquista';
 import { clockText } from './TurnSummary.js';
+import { tr } from './language.js';
 
 /** Time passed since the view arrived, so the clock counts down between readings. */
 function useSince(view: ReconquistaView) {
@@ -32,14 +33,20 @@ export function ReconquistaClock({ view }: { readonly view: ReconquistaView }) {
           className="competitive-clock competitive-pause"
           title={
             pause === 'disconnection'
-              ? `El reloj está congelado mientras se espera que ${absent?.nickname ?? 'el jugador'} se reconecte.`
-              : 'El reloj está congelado; el administrador debe reanudar la partida.'
+              ? tr(
+                  `El reloj está congelado mientras se espera que ${absent?.nickname ?? 'el jugador'} se reconecte.`,
+                  `The clock is frozen while waiting for ${absent?.nickname ?? 'the player'} to reconnect.`,
+                )
+              : tr(
+                  'El reloj está congelado; el administrador debe reanudar la partida.',
+                  'The clock is frozen; the administrator must resume the game.',
+                )
           }
         >
           <strong>
             {pause === 'disconnection' ? (
               <>
-                Pausa · Esperando a{' '}
+                {tr('Pausa · Esperando a', 'Paused · Waiting for')}{' '}
                 {absent && (
                   <span
                     className={`color-dot color-${absent.color}`}
@@ -47,16 +54,16 @@ export function ReconquistaClock({ view }: { readonly view: ReconquistaView }) {
                   />
                 )}{' '}
                 <span className="pause-player">
-                  {absent?.nickname ?? 'jugador'}
+                  {absent?.nickname ?? tr('jugador', 'player')}
                 </span>
               </>
             ) : (
-              'Pausa · Administrador'
+              tr('Pausa · Administrador', 'Paused · Administrator')
             )}
           </strong>
           {pause === 'disconnection' && (
             <span>
-              Reconexión:{' '}
+              {tr('Reconexión:', 'Reconnection:')}{' '}
               {clockText(
                 Math.max(0, (clock.technicalRemainingMs ?? 0) - since),
               )}
@@ -65,15 +72,27 @@ export function ReconquistaClock({ view }: { readonly view: ReconquistaView }) {
         </span>
       ) : (
         <span className="competitive-clock">
-          <span title="Tiempo restante para terminar el turno actual.">
-            Turno: <strong>{clockText(turn)}</strong>
+          <span
+            title={tr(
+              'Tiempo restante para terminar el turno actual.',
+              'Time left to finish the current turn.',
+            )}
+          >
+            {tr('Turno:', 'Turn:')} <strong>{clockText(turn)}</strong>
           </span>
-          <span title="Tiempo de juego que queda, sin pausas ni preparación inicial. Al llegar a cero se anuncian las rondas finales.">
-            {`Partida: ${Math.max(0, Math.ceil((clock.durationMs - elapsed) / 60000))} min`}
+          <span
+            title={tr(
+              'Tiempo de juego que queda, sin pausas ni preparación inicial. Al llegar a cero se anuncian las rondas finales.',
+              'Game time left, without pauses or the initial setup. When it reaches zero the final rounds are announced.',
+            )}
+          >
+            {`${tr('Partida', 'Game')}: ${Math.max(0, Math.ceil((clock.durationMs - elapsed) / 60000))} min`}
           </span>
         </span>
       )}
-      {clock.finalRound !== undefined && <span>Rondas finales anunciadas</span>}
+      {clock.finalRound !== undefined && (
+        <span>{tr('Rondas finales anunciadas', 'Final rounds announced')}</span>
+      )}
     </>
   );
 }

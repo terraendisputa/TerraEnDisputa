@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { GamePanels, type GamePanel } from './GamePanels.js';
 import { CombatDice } from './GameplayControls.js';
 import { ThemeToggle } from './ThemeToggle.js';
+import { LanguageSelect } from './LanguageSelect.js';
 import { TurnSound } from './PlayerRoster.js';
 import { MusicToggle } from './MusicToggle.js';
 import { UiIcon, type IconName } from './UiIcon.js';
@@ -41,12 +42,13 @@ import type {
 } from '@game/protocol/reconquista';
 import { RECONQUISTA_NAME, playerColorNames } from './reconquista-labels.js';
 import './reconquista-game.css';
+import { tr } from './language.js';
 
 const connectionLabels = {
-  connecting: 'Conectando',
-  connected: 'Conectado',
-  disconnected: 'Desconectado',
-} as const;
+  connecting: tr('Conectando', 'Connecting'),
+  connected: tr('Conectado', 'Connected'),
+  disconnected: tr('Desconectado', 'Disconnected'),
+};
 
 const modeIcon: Partial<Record<ActionMode, IconName>> = {
   placement: 'reinforcement',
@@ -229,11 +231,14 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
           <h1>{RECONQUISTA_NAME}</h1>
           <p>
             {game.connection === 'disconnected'
-              ? 'La partida de Reconquista no está disponible en este servidor.'
-              : 'Cargando la partida…'}
+              ? tr(
+                  'La partida de Reconquista no está disponible en este servidor.',
+                  'The Retake game is not available on this server.',
+                )
+              : tr('Cargando la partida…', 'Loading the game…')}
           </p>
           <a className="button-link" href="/admin">
-            Volver al panel del anfitrión
+            {tr('Volver al panel del anfitrión', "Back to the host's panel")}
           </a>
         </section>
       </main>
@@ -336,7 +341,10 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
     : 0;
   if (incoming)
     notifications.pacts = {
-      message: [unread.pacts?.message, 'Propuesta de pacto pendiente']
+      message: [
+        unread.pacts?.message,
+        tr('Propuesta de pacto pendiente', 'Pending pact proposal'),
+      ]
         .filter(Boolean)
         .join(' · '),
       count: Math.max(incoming, unread.pacts?.count ?? 0),
@@ -349,28 +357,35 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
         legal.continentIds.length > 0 ||
         legal.bonusCardIds.length > 0)
     )
-      notifications.cards = { message: 'Podés solicitar cartas', count: 1 };
+      notifications.cards = {
+        message: tr('Podés solicitar cartas', 'You can request cards'),
+        count: 1,
+      };
   } else if (p.mine && !(p.mode === 'placement' && plan !== emptyPlan))
     // Refuerzos keeps its «!» until the first army is added.
-    notifications[p.mode] = { message: 'Tu turno', count: 1 };
+    notifications[p.mode] = { message: tr('Tu turno', 'Your turn'), count: 1 };
   const actionKinds: { mode: ActionMode; label: string; icon: IconName }[] = [
     {
       mode: 'placement',
-      label: 'Refuerzos / Distribución',
+      label: tr('Refuerzos / Distribución', 'Reinforcements / Deployment'),
       icon: 'reinforcement',
     },
-    { mode: 'attack', label: 'Ataque', icon: 'sword' },
-    { mode: 'regroup', label: 'Traslado / Reagrupamiento', icon: 'movement' },
+    { mode: 'attack', label: tr('Ataque', 'Attack'), icon: 'sword' },
+    {
+      mode: 'regroup',
+      label: tr('Traslado / Reagrupamiento', 'Move / Regroup'),
+      icon: 'movement',
+    },
   ];
   const panels: GamePanel[] = [
     {
       id: 'objective',
-      label: 'Objetivo',
+      label: tr('Objetivo', 'Objective'),
       content: <ReconquistaObjective view={view} />,
     },
     {
       id: 'cards',
-      label: `Cartas · ${view.self?.campaign?.hand.length ?? 0}`,
+      label: `${tr('Cartas', 'Cards')} · ${view.self?.campaign?.hand.length ?? 0}`,
       content: (
         <div className="reconquista-cards-panel">
           <ReconquistaCards
@@ -385,7 +400,7 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
     },
     {
       id: 'pacts',
-      label: 'Pactos',
+      label: tr('Pactos', 'Pacts'),
       content: (
         <ReconquistaPacts
           view={view}
@@ -408,7 +423,7 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
           <section
             className="panel phase-panel action-dock"
             id="contextual-actions"
-            aria-label="Acciones contextuales"
+            aria-label={tr('Acciones contextuales', 'Contextual actions')}
           >
             <div className="gameplay-actions">
               <ReconquistaActions
@@ -453,7 +468,10 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
           label: current ? p.title : label,
           icon: current ? (modeIcon[p.mode] ?? icon) : icon,
           disabled: !(current && (p.mine || p.mode === 'finished')),
-          disabledReason: 'Disponible en la fase correspondiente de tu turno',
+          disabledReason: tr(
+            'Disponible en la fase correspondiente de tu turno',
+            'Available in the matching phase of your turn',
+          ),
           content: null,
         };
       },
@@ -485,7 +503,10 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
         !legal?.canEndTurn ||
         (legal.endTurnMayForfeit &&
           !window.confirm(
-            'Todavía podés pedir cartas o premios. ¿Terminar el turno igual?',
+            tr(
+              'Todavía podés pedir cartas o premios. ¿Terminar el turno igual?',
+              'You can still request cards or rewards. End the turn anyway?',
+            ),
           ))
       )
         return undefined;
@@ -502,10 +523,13 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
       className="end-turn-tab"
       title={
         canEndTurn
-          ? 'Terminar turno'
-          : 'Colocá todos tus ejércitos para terminar el turno'
+          ? tr('Terminar turno', 'End turn')
+          : tr(
+              'Colocá todos tus ejércitos para terminar el turno',
+              'Place all your armies to end the turn',
+            )
       }
-      aria-label="Terminar turno"
+      aria-label={tr('Terminar turno', 'End turn')}
       disabled={game.busy || !canEndTurn}
       onClick={endTurn}
     >
@@ -515,7 +539,10 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
       {endTurnReminder && canEndTurn && (
         <span
           className="panel-notification"
-          title="No te olvides de terminar el turno"
+          title={tr(
+            'No te olvides de terminar el turno',
+            "Don't forget to end your turn",
+          )}
           aria-hidden="true"
         >
           !
@@ -538,13 +565,13 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
           aria-expanded={!toolbarCollapsed}
           aria-label={
             toolbarCollapsed
-              ? 'Desplegar herramientas'
-              : 'Colapsar herramientas'
+              ? tr('Desplegar herramientas', 'Show tools')
+              : tr('Colapsar herramientas', 'Hide tools')
           }
           title={
             toolbarCollapsed
-              ? 'Desplegar herramientas'
-              : 'Colapsar herramientas'
+              ? tr('Desplegar herramientas', 'Show tools')
+              : tr('Colapsar herramientas', 'Hide tools')
           }
           onClick={() => setToolbarCollapsed(!toolbarCollapsed)}
         >
@@ -566,8 +593,8 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
           <button
             type="button"
             className="secondary seat-exit-button"
-            aria-label="Salir de la partida"
-            title="Salir de la partida"
+            aria-label={tr('Salir de la partida', 'Leave the game')}
+            title={tr('Salir de la partida', 'Leave the game')}
             onClick={() => window.location.assign('/admin')}
           >
             <UiIcon name="leave" />
@@ -589,7 +616,10 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
               : 'calm'
         }
       />
-      <nav className="player-roster" aria-label="Jugadores y turno">
+      <nav
+        className="player-roster"
+        aria-label={tr('Jugadores y turno', 'Players and turn')}
+      >
         <span
           className="roster-brand"
           title={`${GAME_SHORT_NAME} ${RECONQUISTA_NAME}`}
@@ -599,7 +629,10 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
         </span>
         <div
           className="roster-seats"
-          aria-label="Jugadores; desplazá para ver más"
+          aria-label={tr(
+            'Jugadores; desplazá para ver más',
+            'Players; scroll to see more',
+          )}
         >
           {(view.campaign?.order ?? view.circle).map((id) => {
             const x = player(id);
@@ -612,7 +645,10 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
                 className={`roster-player color-${x.color}${eliminated ? ' is-eliminated' : ''}${id === me ? ' is-self' : ''}`}
                 aria-current={id === p.actorId ? 'true' : undefined}
                 aria-expanded={inspected === id}
-                aria-label={`Ver información de ${x.nickname}${id === p.actorId ? ', turno actual' : ''}`}
+                aria-label={tr(
+                  `Ver información de ${x.nickname}${id === p.actorId ? ', turno actual' : ''}`,
+                  `Show ${x.nickname}'s information${id === p.actorId ? ', current turn' : ''}`,
+                )}
                 title={x.nickname}
                 onClick={() => {
                   setInspected(inspected === id ? null : id);
@@ -631,45 +667,57 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
       {inspectedPlayer && (
         <section
           className="player-popover"
-          aria-label={`Información de ${inspectedPlayer.nickname}`}
+          aria-label={tr(
+            `Información de ${inspectedPlayer.nickname}`,
+            `${inspectedPlayer.nickname}'s information`,
+          )}
         >
           <header>
             <strong>
               {inspectedPlayer.nickname}
-              {inspectedPlayer.id === me ? ' · vos' : ''}
+              {inspectedPlayer.id === me ? tr(' · vos', ' · you') : ''}
             </strong>
             <button
               type="button"
-              aria-label="Cerrar información del jugador"
+              aria-label={tr(
+                'Cerrar información del jugador',
+                "Close the player's information",
+              )}
               onClick={() => setInspected(null)}
             >
               <UiIcon name="close" />
             </button>
           </header>
           <p className="player-stat">
-            <strong>{countryCount(inspectedPlayer.id)}</strong> países
+            <strong>{countryCount(inspectedPlayer.id)}</strong>{' '}
+            {tr('países', 'countries')}
           </p>
           {publicCards(inspectedPlayer.id) && (
             <p>
               <UiIcon name="cards" />{' '}
-              {publicCards(inspectedPlayer.id)!.cardCount} cartas ·{' '}
-              {publicCards(inspectedPlayer.id)!.exchanges} canjes
+              {publicCards(inspectedPlayer.id)!.cardCount}{' '}
+              {tr('cartas', 'cards')} ·{' '}
+              {publicCards(inspectedPlayer.id)!.exchanges}{' '}
+              {tr('canjes', 'exchanges')}
             </p>
           )}
           <small>
             {view.campaign?.eliminations[inspectedPlayer.id]
-              ? 'Eliminado'
+              ? tr('Eliminado', 'Eliminated')
               : inspectedPlayer.bot === 'table'
-                ? 'Bot de la mesa'
+                ? tr('Bot de la mesa', 'Table bot')
                 : inspectedPlayer.bot
-                  ? 'Juega un bot'
+                  ? tr('Juega un bot', 'A bot is playing')
                   : inspectedPlayer.free
-                    ? 'Sin jugador'
+                    ? tr('Sin jugador', 'No player')
                     : view.clock?.absentPlayerIds.includes(inspectedPlayer.id)
-                      ? 'Ausente · turnos automáticos'
+                      ? tr(
+                          'Ausente · turnos automáticos',
+                          'Absent · automatic turns',
+                        )
                       : inspectedPlayer.id === p.actorId
-                        ? 'Jugando ahora'
-                        : 'En partida'}
+                        ? tr('Jugando ahora', 'Playing now')
+                        : tr('En partida', 'In the game')}
           </small>
         </section>
       )}
@@ -711,7 +759,10 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
                   {game.error}
                 </p>
               )}
-              <section className="floating-dice" aria-label="Última tirada">
+              <section
+                className="floating-dice"
+                aria-label={tr('Última tirada', 'Last roll')}
+              >
                 <button
                   className="dice-toggle"
                   type="button"
@@ -719,7 +770,7 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
                   aria-controls="floating-dice-content"
                   onClick={() => setDiceOpen(!diceOpen)}
                 >
-                  <UiIcon name="dice" /> Dados
+                  <UiIcon name="dice" /> {tr('Dados', 'Dice')}
                   <span aria-hidden="true">{diceOpen ? '⌃' : '⌄'}</span>
                 </button>
                 <div id="floating-dice-content" hidden={!diceOpen}>
@@ -744,13 +795,18 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
                     <section className="panel combat-result">
                       <div className="panel-heading-row">
                         <div>
-                          <p className="eyebrow">Último misil</p>
+                          <p className="eyebrow">
+                            {tr('Último misil', 'Last missile')}
+                          </p>
                           <h2>
                             {name(missile.originId)} → {name(missile.targetId)}
                           </h2>
                         </div>
                         <span className="result-badge">
-                          {missile.damage} baja{missile.damage === 1 ? '' : 's'}
+                          {tr(
+                            `${missile.damage} baja${missile.damage === 1 ? '' : 's'}`,
+                            `${missile.damage} ${missile.damage === 1 ? 'casualty' : 'casualties'}`,
+                          )}
                         </span>
                       </div>
                     </section>
@@ -772,7 +828,10 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
                   <small>{p.mine ? '' : p.phase}</small>
                 </span>
                 {p.mine && (
-                  <span className="panel-notification" aria-label="Tu turno">
+                  <span
+                    className="panel-notification"
+                    aria-label={tr('Tu turno', 'Your turn')}
+                  >
                     !
                   </span>
                 )}
@@ -786,15 +845,21 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
                 >
                   <strong>
                     {p.mine
-                      ? 'Tu turno'
+                      ? tr('Tu turno', 'Your turn')
                       : p.actorId
-                        ? `Turno de ${player(p.actorId)?.nickname ?? ''}`
+                        ? tr(
+                            `Turno de ${player(p.actorId)?.nickname ?? ''}`,
+                            `${player(p.actorId)?.nickname ?? ''}'s turn`,
+                          )
                         : p.phase}
                   </strong>
                   <span>
                     {p.round !== undefined && (
                       <>
-                        <strong>Ronda {p.round}</strong> ·{' '}
+                        <strong>
+                          {tr('Ronda', 'Round')} {p.round}
+                        </strong>{' '}
+                        ·{' '}
                       </>
                     )}
                     {p.phase}
@@ -858,10 +923,12 @@ function ReconquistaLobby({
       <main className="entry-layout">
         <section className="panel entry-panel">
           <a className="text-link" href="/">
-            ← Inicio
+            {tr('← Inicio', '← Home')}
           </a>
-          <p className="eyebrow">Partida {gameId.slice(0, 8)}</p>
-          <h1>Entrar a la mesa</h1>
+          <p className="eyebrow">
+            {tr('Partida', 'Game')} {gameId.slice(0, 8)}
+          </p>
+          <h1>{tr('Entrar a la mesa', 'Join the table')}</h1>
           {!full && !started ? (
             <form
               onSubmit={(e: FormEvent) => {
@@ -881,7 +948,7 @@ function ReconquistaLobby({
               }}
             >
               <label>
-                Apodo
+                {tr('Apodo', 'Nickname')}
                 <input
                   required
                   maxLength={32}
@@ -904,12 +971,16 @@ function ReconquistaLobby({
               </label>
               {colorTaken && (
                 <p className="muted-copy" role="status">
-                  El {playerColorNames[color]} ya estaba en uso. Se te asignó el{' '}
-                  {playerColorNames[chosenColor]}.
+                  {tr(
+                    `El ${playerColorNames[color]} ya estaba en uso. Se te asignó el ${playerColorNames[chosenColor]}.`,
+                    `${playerColorNames[color]} was already in use. You got ${playerColorNames[chosenColor]}.`,
+                  )}
                 </p>
               )}
               <button disabled={game.busy || !chosenColor} type="submit">
-                {game.busy ? 'Conectando…' : 'Unirme'}
+                {game.busy
+                  ? tr('Conectando…', 'Connecting…')
+                  : tr('Unirme', 'Join')}
               </button>
             </form>
           ) : seat ? (
@@ -926,7 +997,7 @@ function ReconquistaLobby({
               }}
             >
               <label>
-                Apodo
+                {tr('Apodo', 'Nickname')}
                 <input
                   required
                   maxLength={32}
@@ -935,7 +1006,7 @@ function ReconquistaLobby({
                 />
               </label>
               <label>
-                Asiento libre
+                {tr('Asiento libre', 'Free seat')}
                 <select
                   value={seat.id}
                   onChange={(e) => setSeatChoice(e.target.value)}
@@ -948,21 +1019,31 @@ function ReconquistaLobby({
                 </select>
               </label>
               <button disabled={game.busy} type="submit">
-                {game.busy ? 'Conectando…' : 'Tomar el asiento'}
+                {game.busy
+                  ? tr('Conectando…', 'Connecting…')
+                  : tr('Tomar el asiento', 'Take the seat')}
               </button>
             </form>
           ) : (
-            <p>No hay asientos disponibles.</p>
+            <p>
+              {tr(
+                'No hay asientos disponibles.',
+                'There are no seats available.',
+              )}
+            </p>
           )}
           <p>
-            Cerrar el navegador o desconectarte no libera tu asiento. Usá el
-            mismo navegador para volver.
+            {tr(
+              'Cerrar el navegador o desconectarte no libera tu asiento. Usá el mismo navegador para volver.',
+              'Closing the browser or disconnecting does not free your seat. Use the same browser to come back.',
+            )}
           </p>
           {game.error && (
             <p className="error-banner" role="alert">
               {game.error}
             </p>
           )}
+          <LanguageSelect />
         </section>
       </main>
     );
@@ -995,15 +1076,19 @@ function ReconquistaLobby({
       )}
       <div className="lobby-layout">
         <section className="panel lobby-main">
-          <p className="eyebrow">Sala de espera</p>
+          <p className="eyebrow">{tr('Sala de espera', 'Waiting room')}</p>
           <h1>
-            {entry.players.length} de {entry.playerCount - bots} jugadores
+            {entry.players.length} {tr('de', 'of')} {entry.playerCount - bots}{' '}
+            {tr('jugadores', 'players')}
           </h1>
           {bots > 0 && (
             <p className="muted-copy">
               {bots === 1
-                ? 'Un bot se suma al comenzar.'
-                : `${bots} bots se suman al comenzar.`}
+                ? tr('Un bot se suma al comenzar.', 'A bot joins at the start.')
+                : tr(
+                    `${bots} bots se suman al comenzar.`,
+                    `${bots} bots join at the start.`,
+                  )}
             </p>
           )}
           <ul className="player-list">
@@ -1016,23 +1101,27 @@ function ReconquistaLobby({
                 <span>
                   <strong>
                     {x.nickname}
-                    {x.id === self.id ? ' (vos)' : ''}
+                    {x.id === self.id ? tr(' (vos)', ' (you)') : ''}
                   </strong>
-                  <small>Asiento {index + 1}</small>
+                  <small>
+                    {tr('Asiento', 'Seat')} {index + 1}
+                  </small>
                   <small>{playerColorNames[x.color]}</small>
                 </span>
                 <span className={x.ready ? 'ready' : 'waiting'}>
-                  {x.ready ? 'Listo' : 'Esperando'}
+                  {x.ready ? tr('Listo', 'Ready') : tr('Esperando', 'Waiting')}
                 </span>
               </li>
             ))}
           </ul>
         </section>
         <aside className="panel lobby-actions">
-          <h2>Tu estado</h2>
+          <h2>{tr('Tu estado', 'Your status')}</h2>
           <p>
-            El anfitrión inicia la partida cuando estén todos los asientos
-            ocupados y listos.
+            {tr(
+              'El anfitrión inicia la partida cuando estén todos los asientos ocupados y listos.',
+              'The host starts the game when every seat is taken and ready.',
+            )}
           </p>
           <button
             type="button"
@@ -1044,8 +1133,9 @@ function ReconquistaLobby({
               })
             }
           >
-            {self.ready ? 'Listo' : 'Estoy listo'}
+            {self.ready ? tr('Listo', 'Ready') : tr('Estoy listo', "I'm ready")}
           </button>
+          <LanguageSelect />
         </aside>
       </div>
     </main>

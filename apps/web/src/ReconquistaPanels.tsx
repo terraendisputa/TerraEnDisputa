@@ -18,6 +18,7 @@ import {
   specialCardNames,
   symbolNames,
 } from './reconquista-labels.js';
+import { language, tr } from './language.js';
 
 interface PanelProps {
   readonly view: ReconquistaView;
@@ -61,20 +62,32 @@ export function ReconquistaObjective({
 }) {
   return (
     <section className="panel private-panel">
-      <span className="privacy-badge">INFORMACIÓN PRIVADA</span>
+      <span className="privacy-badge">
+        {tr('INFORMACIÓN PRIVADA', 'PRIVATE INFORMATION')}
+      </span>
       <details open>
         <summary className="objective-heading">
           <h2>
             {view.self && view.self.objectives.length > 1
-              ? 'Tus objetivos'
-              : 'Tu objetivo'}
+              ? tr('Tus objetivos', 'Your objectives')
+              : tr('Tu objetivo', 'Your objective')}
           </h2>
         </summary>
         <div className="objective-box">
           {!view.self ? (
-            <p>Los observadores no ven los objetivos de los jugadores.</p>
+            <p>
+              {tr(
+                'Los observadores no ven los objetivos de los jugadores.',
+                "Observers don't see the players' objectives.",
+              )}
+            </p>
           ) : view.self.objectives.length === 0 ? (
-            <p>Todavía no se asignaron objetivos.</p>
+            <p>
+              {tr(
+                'Todavía no se asignaron objetivos.',
+                'No objectives assigned yet.',
+              )}
+            </p>
           ) : (
             view.self.objectives.map((o) => {
               // Manual: a color not in play, or the player's own, means the
@@ -92,22 +105,32 @@ export function ReconquistaObjective({
               return (
                 <Fragment key={o.objectiveId}>
                   <p>
-                    {o.description}
+                    {tr(o.description, o.descriptionEn ?? o.description)}
                     {fallback &&
-                      ' De no ser posible, al jugador de la derecha.'}
+                      tr(
+                        ' De no ser posible, al jugador de la derecha.',
+                        ' If not possible, the player on the right.',
+                      )}
                   </p>
                   {target &&
                     (fallback ? (
                       <p className="objective-target">
-                        Resultado:{' '}
+                        {tr('Resultado:', 'Result:')}{' '}
                         <PlayerChip view={view} playerId={target.id} />.{' '}
                         {own
-                          ? `El ${colorName} sos vos.`
-                          : `El ${colorName} no está en juego.`}
+                          ? tr(
+                              `El ${colorName} sos vos.`,
+                              `${colorName} is you.`,
+                            )
+                          : tr(
+                              `El ${colorName} no está en juego.`,
+                              `${colorName} is not in play.`,
+                            )}
                       </p>
                     ) : (
                       <p className="objective-target">
-                        Jugador: <PlayerChip view={view} playerId={target.id} />
+                        {tr('Jugador:', 'Player:')}{' '}
+                        <PlayerChip view={view} playerId={target.id} />
                       </p>
                     ))}
                 </Fragment>
@@ -144,8 +167,11 @@ export function ReconquistaCards({
     board.countries.find((c) => c.id === id)?.name ?? id;
   if (!view.campaign || !self)
     return (
-      <section className="panel cards-panel" aria-label="Tus cartas">
-        <p>Todavía no tenés cartas.</p>
+      <section
+        className="panel cards-panel"
+        aria-label={tr('Tus cartas', 'Your cards')}
+      >
+        <p>{tr('Todavía no tenés cartas.', "You don't have cards yet.")}</p>
       </section>
     );
   const publicSelf = view.campaign.players.find((p) => p.playerId === me);
@@ -175,10 +201,17 @@ export function ReconquistaCards({
     view.campaign.phase === 'closing' && !!legal?.canFinishTurn;
   const myTurn = view.campaign.actorId === me;
   return (
-    <section className="panel cards-panel" aria-label="Tus cartas">
+    <section
+      className="panel cards-panel"
+      aria-label={tr('Tus cartas', 'Your cards')}
+    >
       <details className="private-hand" open>
-        <summary>Cartas · {self.hand.length}/5</summary>
-        {self.hand.length === 0 && <p>Todavía no tenés cartas.</p>}
+        <summary>
+          {tr('Cartas', 'Cards')} · {self.hand.length}/5
+        </summary>
+        {self.hand.length === 0 && (
+          <p>{tr('Todavía no tenés cartas.', "You don't have cards yet.")}</p>
+        )}
         <div className="exchange-card-selection">
           {self.hand.map((card) => {
             const selected = selectedCards.includes(card.id);
@@ -194,10 +227,16 @@ export function ReconquistaCards({
                 disabled={busy || (!canExchange && !bonus)}
                 title={
                   bonus && card.countryId
-                    ? `Cobrar +3 en ${name(card.countryId)}`
+                    ? tr(
+                        `Cobrar +3 en ${name(card.countryId)}`,
+                        `Collect +3 on ${name(card.countryId)}`,
+                      )
                     : undefined
                 }
-                aria-label={`${card.countryId ? name(card.countryId) : 'Comodín sin país'}, ${symbolNames[card.symbol]}${inherited ? ', heredada, solo para canje' : card.bonusUsed ? ', +3 usado' : bonus ? ', cobrar +3' : ''}${selected ? ', seleccionada' : ''}`}
+                aria-label={tr(
+                  `${card.countryId ? name(card.countryId) : 'Comodín sin país'}, ${symbolNames[card.symbol]}${inherited ? ', heredada, solo para canje' : card.bonusUsed ? ', +3 usado' : bonus ? ', cobrar +3' : ''}${selected ? ', seleccionada' : ''}`,
+                  `${card.countryId ? name(card.countryId) : 'Wildcard without a country'}, ${symbolNames[card.symbol]}${inherited ? ', inherited, only for exchange' : card.bonusUsed ? ', +3 used' : bonus ? ', collect +3' : ''}${selected ? ', selected' : ''}`,
+                )}
                 onClick={() =>
                   setCards(
                     canExchange
@@ -211,7 +250,9 @@ export function ReconquistaCards({
                 {/* Every card: country on top, drawing, then (special cards
                     only) the type and its rule. */}
                 <strong className="card-name">
-                  {card.countryId ? name(card.countryId) : 'Comodín'}
+                  {card.countryId
+                    ? name(card.countryId)
+                    : tr('Comodín', 'Wildcard')}
                 </strong>
                 <span
                   className={`card-symbol symbol-${card.symbol}`}
@@ -231,10 +272,14 @@ export function ReconquistaCards({
                 )}
                 <span className="card-badges">
                   {inherited && (
-                    <small className="card-badge">Solo para canje</small>
+                    <small className="card-badge">
+                      {tr('Solo para canje', 'Only for exchange')}
+                    </small>
                   )}
                   {!inherited && card.bonusUsed && (
-                    <small className="card-badge">+3 usado</small>
+                    <small className="card-badge">
+                      {tr('+3 usado', '+3 used')}
+                    </small>
                   )}
                   {bonus && <strong className="card-badge">+3</strong>}
                   {selected && (
@@ -262,7 +307,7 @@ export function ReconquistaCards({
                   <ContinentArt continentId={id} />
                 </span>
                 <span className="card-copy">
-                  <small>Continente</small>
+                  <small>{tr('Continente', 'Continent')}</small>
                   <small className="card-hint">{continentCardHint(id)}</small>
                 </span>
                 {selected && (
@@ -282,8 +327,8 @@ export function ReconquistaCards({
           <button
             type="button"
             className="icon-button text-icon claim-card"
-            title="Solicitar carta de país"
-            aria-label="Solicitar carta de país"
+            title={tr('Solicitar carta de país', 'Request country card')}
+            aria-label={tr('Solicitar carta de país', 'Request country card')}
             disabled={busy}
             onClick={() => {
               if (closingTurn && legal?.canClaimCountry)
@@ -300,23 +345,35 @@ export function ReconquistaCards({
                 key={id}
                 type="button"
                 className="icon-button text-icon claim-continent"
-                title={`Solicitar carta de ${continentNames[id]}`}
-                aria-label={`Solicitar carta de ${continentNames[id]}`}
+                title={tr(
+                  `Solicitar carta de ${continentNames[id]}`,
+                  `Request the ${continentNames[id]} card`,
+                )}
+                aria-label={tr(
+                  `Solicitar carta de ${continentNames[id]}`,
+                  `Request the ${continentNames[id]} card`,
+                )}
                 disabled={busy}
                 onClick={() =>
                   void act({ kind: 'claim-continent', continentId: id })
                 }
               >
                 <UiIcon name="cards" />
-                <span>Continente</span>
+                <span>{tr('Continente', 'Continent')}</span>
               </button>
             ))}
           {bonusCard?.countryId && (
             <button
               type="button"
               className="icon-button text-icon claim-bonus"
-              title={`Cobrar +3 en ${name(bonusCard.countryId)}`}
-              aria-label={`Cobrar +3 en ${name(bonusCard.countryId)}`}
+              title={tr(
+                `Cobrar +3 en ${name(bonusCard.countryId)}`,
+                `Collect +3 on ${name(bonusCard.countryId)}`,
+              )}
+              aria-label={tr(
+                `Cobrar +3 en ${name(bonusCard.countryId)}`,
+                `Collect +3 on ${name(bonusCard.countryId)}`,
+              )}
               disabled={busy}
               onClick={() =>
                 void act({ kind: 'claim-bonus', cardId: bonusCard.id }).then(
@@ -331,8 +388,8 @@ export function ReconquistaCards({
             <button
               type="button"
               className="icon-button exchange-submit"
-              title="Canjear selección"
-              aria-label="Canjear selección"
+              title={tr('Canjear selección', 'Exchange selection')}
+              aria-label={tr('Canjear selección', 'Exchange selection')}
               disabled={busy || !validExchange}
               onClick={() =>
                 void act({
@@ -355,12 +412,15 @@ export function ReconquistaCards({
       {refused && (
         // Only after trying to request a card that cannot be requested.
         <p className="muted-copy card-refusal" role="status">
-          No podés solicitar una carta.
+          {tr('No podés solicitar una carta.', "You can't request a card.")}
         </p>
       )}
       {self.hand.length === 5 && (
         <p className="action-help">
-          Mano completa: no recibís otra carta por conquista.
+          {tr(
+            'Mano completa: no recibís otra carta por conquista.',
+            'Full hand: you get no card for conquering.',
+          )}
         </p>
       )}
     </section>
@@ -410,7 +470,7 @@ export function ReconquistaPacts({
     const p = view.players.find((player) => player.id === id);
     return (
       <span className="pact-participant">
-        {p?.nickname ?? 'Jugador'}
+        {p?.nickname ?? tr('Jugador', 'Player')}
         {p && (
           <span
             className={`color-dot color-${p.color}`}
@@ -425,7 +485,9 @@ export function ReconquistaPacts({
   if (!campaign)
     return (
       <section className="panel pacts-panel">
-        <p className="muted-copy">No hay pactos activos.</p>
+        <p className="muted-copy">
+          {tr('No hay pactos activos.', 'No active pacts.')}
+        </p>
       </section>
     );
   const disabled =
@@ -439,7 +501,7 @@ export function ReconquistaPacts({
   const owns = (countryId: string, playerId: string | undefined) =>
     !!playerId && !!armiesOf(countryId, playerId);
   const countries = [...board.countries].sort((a, b) =>
-    a.name.localeCompare(b.name, 'es'),
+    a.name.localeCompare(b.name, language),
   );
   const partners = view.players.filter(
     (p) => p.id !== me && !campaign.eliminations[p.id],
@@ -623,7 +685,10 @@ export function ReconquistaPacts({
         : []),
     ].join(': ');
   const condominium = (a: (typeof campaign.alliances)[number]) =>
-    `Condominio: ${name(a.originId)} y ${name(a.allyOriginId)} → ${name(a.targetId)}`;
+    tr(
+      `Condominio: ${name(a.originId)} y ${name(a.allyOriginId)} → ${name(a.targetId)}`,
+      `Condominium: ${name(a.originId)} and ${name(a.allyOriginId)} → ${name(a.targetId)}`,
+    );
   const countrySelect = (
     label: string,
     value: string,
@@ -637,7 +702,7 @@ export function ReconquistaPacts({
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
       >
-        <option value="">Elegí país</option>
+        <option value="">{tr('Elegí país', 'Choose country')}</option>
         {options.map((c) => (
           <option key={c.id} value={c.id}>
             {c.name}
@@ -659,7 +724,7 @@ export function ReconquistaPacts({
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
       >
-        <option value="">Elegí continente</option>
+        <option value="">{tr('Elegí continente', 'Choose continent')}</option>
         {options.map((id) => (
           <option key={id} value={id}>
             {continentNames[id]}
@@ -680,7 +745,7 @@ export function ReconquistaPacts({
   const answer = (onAccept: () => void, onReject: () => void) => (
     <>
       <button type="button" disabled={disabled} onClick={onAccept}>
-        Aceptar
+        {tr('Aceptar', 'Accept')}
       </button>
       <button
         type="button"
@@ -688,7 +753,7 @@ export function ReconquistaPacts({
         disabled={disabled}
         onClick={onReject}
       >
-        Rechazar
+        {tr('Rechazar', 'Reject')}
       </button>
     </>
   );
@@ -697,7 +762,7 @@ export function ReconquistaPacts({
       <details open>
         <summary className="pacts-heading">
           <div>
-            <h2>Pactos</h2>
+            <h2>{tr('Pactos', 'Pacts')}</h2>
           </div>
           <span className="count-badge">
             {campaign.pacts.length +
@@ -706,13 +771,20 @@ export function ReconquistaPacts({
           </span>
         </summary>
         {active.length + activeAlliances.length === 0 && (
-          <p className="muted-copy">No hay pactos activos.</p>
+          <p className="muted-copy">
+            {tr('No hay pactos activos.', 'No active pacts.')}
+          </p>
         )}
         {active.map((p) => (
           <div key={p.id} className="pact-row">
             <span className="pact-copy">
               <small>
-                {p.withdrawal ? 'Retiro anunciado · aún vigente' : 'Activo'}
+                {p.withdrawal
+                  ? tr(
+                      'Retiro anunciado · aún vigente',
+                      'Withdrawal announced · still in force',
+                    )
+                  : tr('Activo', 'Active')}
               </small>
               <strong>{terms(p)}</strong>
               <span>
@@ -730,11 +802,14 @@ export function ReconquistaPacts({
                   disabled={disabled}
                   onClick={() =>
                     window.confirm(
-                      'Retirarte anuncia la ruptura y conserva temporalmente tu obligación. ¿Continuar?',
+                      tr(
+                        'Retirarte anuncia la ruptura y conserva temporalmente tu obligación. ¿Continuar?',
+                        'Withdrawing announces the break and keeps your obligation for a while. Continue?',
+                      ),
                     ) && void act({ kind: 'withdraw-pact', pactId: p.id })
                   }
                 >
-                  Retirarme
+                  {tr('Retirarme', 'Withdraw')}
                 </button>
               )}
           </div>
@@ -744,8 +819,8 @@ export function ReconquistaPacts({
             <span className="pact-copy">
               <small>
                 {a.status === 'accepted'
-                  ? 'Activo'
-                  : 'Ataque conjunto en curso'}
+                  ? tr('Activo', 'Active')
+                  : tr('Ataque conjunto en curso', 'Joint attack in progress')}
               </small>
               <strong>{condominium(a)}</strong>
               <span>
@@ -764,7 +839,7 @@ export function ReconquistaPacts({
                     void act({ kind: 'start-alliance', allianceId: a.id })
                   }
                 >
-                  Atacar juntos
+                  {tr('Atacar juntos', 'Attack together')}
                 </button>
               )}
             {view.self &&
@@ -778,7 +853,7 @@ export function ReconquistaPacts({
                   disabled={disabled}
                   onClick={() => void act({ kind: 'stop-alliance' })}
                 >
-                  Detener
+                  {tr('Detener', 'Stop')}
                 </button>
               )}
           </div>
@@ -786,7 +861,7 @@ export function ReconquistaPacts({
         {proposals.map((p) => (
           <div key={p.id} className="pact-row">
             <span className="pact-copy">
-              <small>Propuesta pendiente</small>
+              <small>{tr('Propuesta pendiente', 'Pending proposal')}</small>
               <strong>{terms(p)}</strong>
               <span>
                 {participant(p.proposerId)} → {participant(p.partnerId)}
@@ -813,7 +888,7 @@ export function ReconquistaPacts({
         {allianceProposals.map((a) => (
           <div key={a.id} className="pact-row">
             <span className="pact-copy">
-              <small>Propuesta pendiente</small>
+              <small>{tr('Propuesta pendiente', 'Pending proposal')}</small>
               <strong>{condominium(a)}</strong>
               <span>
                 {participant(a.proposerId)} → {participant(a.allyId)}
@@ -840,8 +915,10 @@ export function ReconquistaPacts({
         {offer && (
           <div className="pact-row">
             <span className="pact-copy">
-              <small>Propuesta pendiente</small>
-              <strong>Condominio: {name(offer.targetId)}</strong>
+              <small>{tr('Propuesta pendiente', 'Pending proposal')}</small>
+              <strong>
+                {tr('Condominio', 'Condominium')}: {name(offer.targetId)}
+              </strong>
               <span>
                 {participant(offer.proposerId)} → {participant(offer.partnerId)}
               </span>
@@ -860,7 +937,7 @@ export function ReconquistaPacts({
           kinds.length > 0 && (
             <div className="pact-proposal-form">
               <label>
-                Tipo de pacto
+                {tr('Tipo de pacto', 'Pact type')}
                 <select
                   value={kind ?? ''}
                   disabled={disabled}
@@ -870,7 +947,7 @@ export function ReconquistaPacts({
                     setSecondContinent('');
                   }}
                 >
-                  <option value="">Elegí tipo</option>
+                  <option value="">{tr('Elegí tipo', 'Choose type')}</option>
                   {kinds.map((k) => (
                     <option key={k} value={k}>
                       {pactKindNames[k]}
@@ -880,7 +957,7 @@ export function ReconquistaPacts({
               </label>
               {kind && (
                 <label>
-                  Jugador
+                  {tr('Jugador', 'Player')}
                   <select
                     value={partner}
                     disabled={disabled}
@@ -892,7 +969,9 @@ export function ReconquistaPacts({
                       setPartnerOrigin('');
                     }}
                   >
-                    <option value="">Elegí jugador</option>
+                    <option value="">
+                      {tr('Elegí jugador', 'Choose player')}
+                    </option>
                     {kindPartners.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.nickname} ({playerColorNames[p.color] ?? p.color})
@@ -904,7 +983,7 @@ export function ReconquistaPacts({
               {choice &&
                 kind === 'continent' &&
                 continentSelect(
-                  'Continente',
+                  tr('Continente', 'Continent'),
                   sharedContinents.includes(firstContinent)
                     ? firstContinent
                     : '',
@@ -914,7 +993,7 @@ export function ReconquistaPacts({
               {choice &&
                 kind === 'intercontinental' &&
                 continentSelect(
-                  'Tu continente',
+                  tr('Tu continente', 'Your continent'),
                   firstOptions.includes(firstContinent) ? firstContinent : '',
                   (value) => {
                     setFirstContinent(value);
@@ -925,7 +1004,10 @@ export function ReconquistaPacts({
               {choice &&
                 kind === 'intercontinental' &&
                 continentSelect(
-                  `Continente de ${choice.partner.nickname}`,
+                  tr(
+                    `Continente de ${choice.partner.nickname}`,
+                    `${choice.partner.nickname}'s continent`,
+                  ),
                   secondOptions.includes(secondContinent)
                     ? secondContinent
                     : '',
@@ -937,7 +1019,9 @@ export function ReconquistaPacts({
                   kind === 'zone' ||
                   kind === 'condominium') &&
                 countrySelect(
-                  kind === 'zone' ? 'Tu país débil' : 'Tu país',
+                  kind === 'zone'
+                    ? tr('Tu país débil', 'Your weak country')
+                    : tr('Tu país', 'Your country'),
                   originId,
                   (value) => {
                     setOrigin(value);
@@ -949,7 +1033,10 @@ export function ReconquistaPacts({
               {choice &&
                 kind === 'countries' &&
                 countrySelect(
-                  `País de ${choice.partner.nickname}`,
+                  tr(
+                    `País de ${choice.partner.nickname}`,
+                    `${choice.partner.nickname}'s country`,
+                  ),
                   targetId,
                   setDestination,
                   only(targetIds),
@@ -957,7 +1044,10 @@ export function ReconquistaPacts({
               {choice &&
                 kind === 'condominium' &&
                 countrySelect(
-                  `País de ${choice.partner.nickname}`,
+                  tr(
+                    `País de ${choice.partner.nickname}`,
+                    `${choice.partner.nickname}'s country`,
+                  ),
                   allyOriginId,
                   (value) => {
                     setPartnerOrigin(value);
@@ -968,19 +1058,27 @@ export function ReconquistaPacts({
               {choice &&
                 kind === 'condominium' &&
                 countrySelect(
-                  'País a conquistar',
+                  tr('País a conquistar', 'Country to conquer'),
                   targetId,
                   setDestination,
                   only(targetIds),
                 )}
               {choice && (
                 <p className="pact-summary">
-                  <small>Vista previa · todavía no enviada</small>
+                  <small>
+                    {tr(
+                      'Vista previa · todavía no enviada',
+                      'Preview · not sent yet',
+                    )}
+                  </small>
                   <strong>
                     {!proposal
                       ? pactKindNames[choice.kind]
                       : proposal.kind === 'propose-alliance'
-                        ? `Condominio: ${name(proposal.originId)} y ${name(proposal.allyOriginId)} → ${name(proposal.targetId)}`
+                        ? tr(
+                            `Condominio: ${name(proposal.originId)} y ${name(proposal.allyOriginId)} → ${name(proposal.targetId)}`,
+                            `Condominium: ${name(proposal.originId)} and ${name(proposal.allyOriginId)} → ${name(proposal.targetId)}`,
+                          )
                         : proposal.kind === 'propose-pact'
                           ? [
                               pactKindNames[proposal.pactKind],
@@ -997,7 +1095,9 @@ export function ReconquistaPacts({
                             ].join(': ')
                           : ''}
                   </strong>
-                  <span>con {participant(choice.partner.id)}</span>
+                  <span>
+                    {tr('con', 'with')} {participant(choice.partner.id)}
+                  </span>
                 </p>
               )}
               <button
@@ -1018,7 +1118,7 @@ export function ReconquistaPacts({
                   });
                 }}
               >
-                Proponer pacto
+                {tr('Proponer pacto', 'Propose pact')}
               </button>
             </div>
           )}
@@ -1044,12 +1144,17 @@ export function SituationIndicator({
       className="situation-indicator"
       aria-expanded={open}
       aria-controls="situation-card"
-      title={`Situación: ${card.name}. Ver efecto.`}
+      title={tr(
+        `Situación: ${card.name}. Ver efecto.`,
+        `Situation: ${card.name}. See effect.`,
+      )}
       onClick={() => onOpen(!open)}
     >
       <UiIcon name="situation" />
       <span>
-        <span className="visually-hidden">Situación: </span>
+        <span className="visually-hidden">
+          {tr('Situación: ', 'Situation: ')}
+        </span>
         <strong>{card.name}</strong>
       </span>
     </button>
@@ -1072,7 +1177,10 @@ export function SituationCardPopover({
     <section
       id="situation-card"
       className="player-popover situation-card"
-      aria-label={`Carta de situación: ${card.name}`}
+      aria-label={tr(
+        `Carta de situación: ${card.name}`,
+        `Situation card: ${card.name}`,
+      )}
     >
       <header>
         <strong>
@@ -1080,7 +1188,7 @@ export function SituationCardPopover({
         </strong>
         <button
           type="button"
-          aria-label="Cerrar carta de situación"
+          aria-label={tr('Cerrar carta de situación', 'Close situation card')}
           onClick={onClose}
         >
           <UiIcon name="close" />
@@ -1090,8 +1198,8 @@ export function SituationCardPopover({
       {view.crisis && (
         <p className="affected-line">
           {view.crisis.affectedPlayerIds.length > 1
-            ? 'Jugadores afectados:'
-            : 'Jugador afectado:'}{' '}
+            ? tr('Jugadores afectados:', 'Affected players:')
+            : tr('Jugador afectado:', 'Affected player:')}{' '}
           {view.crisis.affectedPlayerIds.length === 0
             ? 'nadie.'
             : view.crisis.affectedPlayerIds.map((id) => {
@@ -1113,11 +1221,16 @@ export function SituationCardPopover({
         </p>
       )}
       {!!view.crisis?.tiebreaks?.length && (
-        <p>Hubo empate: los empatados volvieron a tirar.</p>
+        <p>
+          {tr(
+            'Hubo empate: los empatados volvieron a tirar.',
+            'There was a tie: the tied players rolled again.',
+          )}
+        </p>
       )}
       {view.restingPlayerId && (
         <p className="affected-line">
-          Jugador afectado:{' '}
+          {tr('Jugador afectado:', 'Affected player:')}{' '}
           <span className="affected-player">
             <span
               className={`color-dot color-${view.players.find((x) => x.id === view.restingPlayerId)?.color ?? ''}`}

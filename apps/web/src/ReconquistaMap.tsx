@@ -5,6 +5,8 @@ import type {
 } from '@game/protocol/reconquista';
 import { MapViewport } from './MapViewport.js';
 import { playerColorNames, playerColors } from './reconquista-labels.js';
+import { tr } from './language.js';
+import { translateMapArt } from './place-names.js';
 
 const artBase = '/api/reconquista/art/';
 // The frame sits outside the map, so the map keeps its 2400 × 1400 coordinates.
@@ -148,7 +150,11 @@ export function ReconquistaMap({
       }),
     )
       .then(([light, dark]) => {
-        if (!stopped) setArt({ light: light!, dark: dark! });
+        if (!stopped)
+          setArt({
+            light: translateMapArt(light!),
+            dark: translateMapArt(dark!),
+          });
       })
       .catch(() => {});
     return () => {
@@ -176,11 +182,11 @@ export function ReconquistaMap({
               territory.forces
                 .map(
                   (f) =>
-                    `${player(f.playerId)?.nickname ?? f.playerId} ${f.armies} ejércitos, ${f.missiles} misiles`,
+                    `${player(f.playerId)?.nickname ?? f.playerId} ${f.armies} ${tr('ejércitos', 'armies')}, ${f.missiles} ${tr('misiles', 'missiles')}`,
                 )
                 .join('; ')
             : ''
-        }${missiles.has(id) ? ', destino de misil' : legal.has(id) ? ', disponible' : ''}`,
+        }${missiles.has(id) ? tr(', destino de misil', ', missile target') : legal.has(id) ? tr(', disponible', ', available') : ''}`,
       );
       element.classList.toggle('reconquista-missile-target', missiles.has(id));
     }
@@ -265,7 +271,7 @@ export function ReconquistaMap({
   return (
     <section
       className="map-frame reconquista-map"
-      aria-label="Mapa de Reconquista"
+      aria-label={tr('Mapa de Reconquista', 'Retake map')}
     >
       <MapViewport
         resetKey={resetKey}
@@ -342,7 +348,7 @@ export function ReconquistaMap({
                       className={`force-marker color-${owner?.color ?? ''}${delta ? ' force-preview' : ''}`}
                     >
                       <title>
-                        {`${owner?.nickname ?? ''} (${playerColorNames[owner?.color ?? ''] ?? ''}): ${f.armies} ejércitos, ${f.missiles} misiles`}
+                        {`${owner?.nickname ?? ''} (${playerColorNames[owner?.color ?? ''] ?? ''}): ${f.armies} ${tr('ejércitos', 'armies')}, ${f.missiles} ${tr('misiles', 'missiles')}`}
                       </title>
                       <ArmyCounter
                         color={owner?.color ?? ''}

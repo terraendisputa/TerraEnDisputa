@@ -4,6 +4,7 @@ import type {
   ExactPoints,
   PlayerGameView,
 } from '@game/protocol';
+import { tr } from './language.js';
 export function exactPointsText(points: ExactPoints): string {
   return points.denominator === 1
     ? String(points.numerator)
@@ -15,19 +16,34 @@ export function competitiveRoundLabel(
   if (view.mode !== 'competitive') return undefined;
   if (!view.turn)
     return view.setup?.kind === 'card_deal_4_to_6'
-      ? `Ronda ${view.setup.reinforcementRound}`
+      ? `${tr('Ronda', 'Round')} ${view.setup.reinforcementRound}`
       : undefined;
-  return `Ronda ${view.turn.round.kind === 'initial_hostility' ? 3 : view.turn.round.roundNumber + 3}`;
+  return `${tr('Ronda', 'Round')} ${view.turn.round.kind === 'initial_hostility' ? 3 : view.turn.round.roundNumber + 3}`;
 }
 export const RESULT_EXCLUSIONS: Record<
   CompetitiveResults['exclusions'][number],
   string
 > = {
-  incomplete_history: 'Historial de eliminaciones incompleto.',
-  unknown_rounds: 'No se conoce la cantidad de rondas completas.',
-  minimum_rounds: 'No se completaron seis rondas normales.',
-  no_competitors: 'Todos los jugadores están descalificados.',
-  pending_inheritance: 'Falta resolver la selección de cartas heredadas.',
+  incomplete_history: tr(
+    'Historial de eliminaciones incompleto.',
+    'Incomplete elimination history.',
+  ),
+  unknown_rounds: tr(
+    'No se conoce la cantidad de rondas completas.',
+    'The number of completed rounds is unknown.',
+  ),
+  minimum_rounds: tr(
+    'No se completaron seis rondas normales.',
+    'Six normal rounds were not completed.',
+  ),
+  no_competitors: tr(
+    'Todos los jugadores están descalificados.',
+    'All players are disqualified.',
+  ),
+  pending_inheritance: tr(
+    'Falta resolver la selección de cartas heredadas.',
+    'The inherited card choice is still pending.',
+  ),
 };
 export function resultExport(
   view: AdminGameView,

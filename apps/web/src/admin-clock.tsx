@@ -1,4 +1,5 @@
 import { clockText } from './TurnSummary.js';
+import { tr } from './language.js';
 
 /** The game clock's state, naming why it is paused; Reconquista shares it. */
 export function clockState(
@@ -13,25 +14,30 @@ export function clockState(
     readonly nickname: string;
   }[],
 ) {
-  if (clock.pauseReason === 'admin') return 'Pausada por el administrador';
+  if (clock.pauseReason === 'admin')
+    return tr('Pausada por el administrador', 'Paused by the administrator');
   if (clock.pauseReason === 'restart')
-    return 'Pausada por reinicio del servidor';
+    return tr(
+      'Pausada por reinicio del servidor',
+      'Paused by a server restart',
+    );
   if (clock.pauseReason === 'disconnection') {
     const player = players.find(({ id }) => id === clock.disconnectedPlayerId);
     return (
       <>
-        Pausada: esperando a{' '}
+        {tr('Pausada: esperando a', 'Paused: waiting for')}{' '}
         {player && (
           <>
             <span className={`color-dot color-${player.color}`} />{' '}
             <strong>{player.nickname}</strong>
           </>
         )}{' '}
-        · Reconexión {clockText(clock.technicalRemainingMs ?? 0)}
+        · {tr('Reconexión', 'Reconnection')}{' '}
+        {clockText(clock.technicalRemainingMs ?? 0)}
       </>
     );
   }
-  return 'En curso';
+  return tr('En curso', 'In progress');
 }
 
 /** 60 minutes read as 1:00 h, as in the Competitive duration choice. */

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useZoomShortcut } from './shortcuts.js';
 import { UiIcon } from './UiIcon.js';
 import { createPortal } from 'react-dom';
+import { tr } from './language.js';
 
 type Point = { x: number; y: number };
 export function MapViewport({
@@ -177,12 +178,15 @@ export function MapViewport({
     };
   }, []);
   const controls = (
-    <div className="map-zoom-controls" aria-label="Vista del mapa">
+    <div
+      className="map-zoom-controls"
+      aria-label={tr('Vista del mapa', 'Map view')}
+    >
       <button
         type="button"
         disabled={scale <= 1}
-        aria-label="Alejar mapa"
-        title="Alejar mapa"
+        aria-label={tr('Alejar mapa', 'Zoom out')}
+        title={tr('Alejar mapa', 'Zoom out')}
         onClick={() => zoom(camera.current.scale / 1.4)}
       >
         <UiIcon name="minus" />
@@ -190,8 +194,8 @@ export function MapViewport({
       <button
         type="button"
         disabled={scale >= 6}
-        aria-label="Acercar mapa"
-        title="Acercar mapa"
+        aria-label={tr('Acercar mapa', 'Zoom in')}
+        title={tr('Acercar mapa', 'Zoom in')}
         onClick={() => zoom(camera.current.scale * 1.4)}
       >
         <UiIcon name="plus" />
@@ -199,8 +203,8 @@ export function MapViewport({
       <button
         type="button"
         onClick={reset}
-        aria-label="Ver mapa completo"
-        title="Ver mapa completo"
+        aria-label={tr('Ver mapa completo', 'Show the whole map')}
+        title={tr('Ver mapa completo', 'Show the whole map')}
       >
         <UiIcon name="fit" />
       </button>
@@ -213,7 +217,10 @@ export function MapViewport({
         className="map-viewport"
         ref={viewport}
         tabIndex={0}
-        aria-label="Mapa ampliable. Usá más y menos para ampliar, flechas para desplazar; en pantalla táctil arrastrá o usá dos dedos."
+        aria-label={tr(
+          'Mapa ampliable. Usá más y menos para ampliar, flechas para desplazar; en pantalla táctil arrastrá o usá dos dedos.',
+          'Zoomable map. Use plus and minus to zoom and the arrows to move; on a touch screen drag or use two fingers.',
+        )}
         onKeyDown={(e) => {
           if (e.target !== e.currentTarget) return;
           if (e.key === '+' || e.key === '=') {

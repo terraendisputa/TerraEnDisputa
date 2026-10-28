@@ -6,6 +6,7 @@ import { SPECIAL_ROUTE_SEGMENTS } from './map-routes.js';
 import { MapViewport } from './MapViewport.js';
 import { MapArtwork } from './MapArtwork.js';
 import { hasNewCombat } from './combat-events.js';
+import { tr } from './language.js';
 
 interface GameMapProps {
   readonly snapshot: PlayerGameView;
@@ -186,32 +187,56 @@ export function GameMap({
   const canSelectTerritory = hasActiveMapAction || hasSetupMapAction;
   const selectionStep =
     snapshot.status === 'FINISHED'
-      ? 'Partida finalizada · Podés inspeccionar el mapa final'
+      ? tr(
+          'Partida finalizada · Podés inspeccionar el mapa final',
+          'Game over · You can inspect the final map',
+        )
       : snapshot.legalActions.readOnly || self?.eliminated
-        ? 'Mapa de solo lectura · Podés inspeccionar los territorios'
+        ? tr(
+            'Mapa de solo lectura · Podés inspeccionar los territorios',
+            'Read-only map · You can inspect the territories',
+          )
         : snapshot.status === 'ACTIVE' && !isActiveActor
-          ? 'Esperando al jugador en turno · Podés inspeccionar el mapa'
+          ? tr(
+              'Esperando al jugador en turno · Podés inspeccionar el mapa',
+              'Waiting for the player on turn · You can inspect the map',
+            )
           : isActiveActor &&
               snapshot.turn?.phase === 'attack' &&
               actions.includes('attack')
             ? selectedSourceId
-              ? 'Elegí el territorio defensor'
-              : 'Elegí el territorio atacante'
+              ? tr(
+                  'Elegí el territorio defensor',
+                  'Choose the defending territory',
+                )
+              : tr(
+                  'Elegí el territorio atacante',
+                  'Choose the attacking territory',
+                )
             : isActiveActor &&
                 snapshot.turn?.phase === 'regroup' &&
                 actions.includes('regroup')
               ? selectedSourceId
-                ? 'Elegí el destino del reagrupamiento'
-                : 'Elegí el origen del reagrupamiento'
+                ? tr(
+                    'Elegí el destino del reagrupamiento',
+                    'Choose where to regroup to',
+                  )
+                : tr(
+                    'Elegí el origen del reagrupamiento',
+                    'Choose where to regroup from',
+                  )
               : isActiveActor &&
                   (snapshot.turn?.phase === 'ordinary_exchange' ||
                     snapshot.turn?.phase === 'territory_reinforcement' ||
                     snapshot.turn?.phase === 'continent_reinforcement') &&
                   actions.includes('place_reinforcements')
-                ? 'Distribuí tus refuerzos'
+                ? tr('Distribuí tus refuerzos', 'Place your reinforcements')
                 : hasSetupMapAction
-                  ? 'Elegí un territorio señalado'
-                  : 'Inspeccioná el tablero';
+                  ? tr(
+                      'Elegí un territorio señalado',
+                      'Choose a highlighted territory',
+                    )
+                  : tr('Inspeccioná el tablero', 'Inspect the board');
   const isActionable = (id: string) =>
     canSelectTerritory && legal.has(id) && Boolean(onSelect);
   const legalKind =
@@ -244,7 +269,10 @@ export function GameMap({
     ].join(' ');
   };
   return (
-    <section className="map-frame" aria-label="Mapa de territorios">
+    <section
+      className="map-frame"
+      aria-label={tr('Mapa de territorios', 'Territory map')}
+    >
       {observedCombat && (
         <div className="observed-combat" role="status">
           <span>
@@ -260,8 +288,14 @@ export function GameMap({
         <h1>{selectionStep}</h1>
         <p>
           {canSelectTerritory && onSelect
-            ? 'Seleccioná un territorio señalado en el mapa.'
-            : 'Podés consultar los países y sus ejércitos.'}
+            ? tr(
+                'Seleccioná un territorio señalado en el mapa.',
+                'Select a highlighted territory on the map.',
+              )
+            : tr(
+                'Podés consultar los países y sus ejércitos.',
+                'You can look at the countries and their armies.',
+              )}
         </p>
       </div>
       <MapViewport
@@ -280,7 +314,7 @@ export function GameMap({
           className="game-map"
           viewBox="40 0 1720 960"
           role="group"
-          aria-label="Mapa de territorios"
+          aria-label={tr('Mapa de territorios', 'Territory map')}
         >
           <MapArtwork definition={snapshot.definition} part="definitions" />
           <MapArtwork definition={snapshot.definition} part="background" />
@@ -324,7 +358,10 @@ export function GameMap({
                 role="button"
                 tabIndex={0}
                 aria-pressed={selectedTerritoryId === id || inspectedId === id}
-                aria-label={`${label}. ${owner ? `Controla ${owner.nickname}` : 'Sin ocupar'}. ${displayedArmies} ejércitos${actionable ? '. Opción legal' : '. Disponible para inspeccionar'}${selectedSourceId === id ? '. Origen seleccionado' : ''}${selectedTargetId === id ? '. Destino seleccionado' : ''}`}
+                aria-label={tr(
+                  `${label}. ${owner ? `Controla ${owner.nickname}` : 'Sin ocupar'}. ${displayedArmies} ejércitos${actionable ? '. Opción legal' : '. Disponible para inspeccionar'}${selectedSourceId === id ? '. Origen seleccionado' : ''}${selectedTargetId === id ? '. Destino seleccionado' : ''}`,
+                  `${label}. ${owner ? `Held by ${owner.nickname}` : 'Unoccupied'}. ${displayedArmies} armies${actionable ? '. Legal choice' : '. Available to inspect'}${selectedSourceId === id ? '. Selected origin' : ''}${selectedTargetId === id ? '. Selected destination' : ''}`,
+                )}
                 onClick={() => {
                   selectTerritory(id, actionable);
                 }}
@@ -358,7 +395,9 @@ export function GameMap({
                   }
                 >
                   <text className="territory-label" x={x} y={y}>
-                    {id === 'great_britain' ? 'G. Bretaña' : label}
+                    {id === 'great_britain'
+                      ? tr('G. Bretaña', 'G. Britain')
+                      : label}
                   </text>
                   {/* A drawn shadow instead of a filter, so zooming never waits for it. */}
                   <circle
@@ -429,20 +468,23 @@ export function GameMap({
           <strong
             title={
               detailId
-                ? `${detailOwner ? detailOwner.nickname : 'Sin ocupar'} · ${(detail?.armies ?? 0) + (pendingPlacements[detailId] ?? 0)} ejércitos`
+                ? `${detailOwner ? detailOwner.nickname : tr('Sin ocupar', 'Unoccupied')} · ${(detail?.armies ?? 0) + (pendingPlacements[detailId] ?? 0)} ${tr('ejércitos', 'armies')}`
                 : undefined
             }
           >
             {detailId
               ? (TERRITORIES.find(({ id }) => id === detailId)?.label ??
                 detailId)
-              : 'Sin territorio seleccionado'}
+              : tr('Sin territorio seleccionado', 'No territory selected')}
           </strong>
           {' · '}
           {Math.round(mapScale * 100)}%
         </span>
         <span className="gesture-hint">
-          Arrastrá para mover · pinza o rueda para ampliar
+          {tr(
+            'Arrastrá para mover · pinza o rueda para ampliar',
+            'Drag to move · pinch or wheel to zoom',
+          )}
         </span>
         {selectedSourceId && onClearSelection && (
           <button
@@ -450,7 +492,7 @@ export function GameMap({
             type="button"
             onClick={onClearSelection}
           >
-            Cambiar origen
+            {tr('Cambiar origen', 'Change origin')}
           </button>
         )}
         <button
@@ -458,7 +500,7 @@ export function GameMap({
           className="secondary"
           onClick={() => picker.current?.showModal()}
         >
-          Lista de destinos
+          {tr('Lista de destinos', 'Destination list')}
         </button>
       </div>
       <dialog
@@ -478,20 +520,22 @@ export function GameMap({
         }}
       >
         <div className="picker-heading">
-          <strong id="territory-picker-title">Selección de territorio</strong>
+          <strong id="territory-picker-title">
+            {tr('Selección de territorio', 'Territory selection')}
+          </strong>
           <button
             type="button"
             className="secondary"
             onClick={() => picker.current?.close()}
           >
-            Cerrar ×
+            {tr('Cerrar ×', 'Close ×')}
           </button>
         </div>
         <div className="picker-content">
           <h2>
             {canSelectTerritory && onSelect
-              ? 'Territorios disponibles'
-              : 'Inspeccionar país'}
+              ? tr('Territorios disponibles', 'Available territories')
+              : tr('Inspeccionar país', 'Inspect country')}
           </h2>
           <p>{selectionStep}</p>
           <div className="country-list">

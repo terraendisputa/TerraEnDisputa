@@ -94,6 +94,23 @@ const colorNames: Record<string, string> = {
   green: 'verde',
   yellow: 'amarillo',
 };
+const colorNamesEn: Record<string, string> = {
+  red: 'red',
+  white: 'white',
+  blue: 'blue',
+  black: 'black',
+  green: 'green',
+  yellow: 'yellow',
+};
+const continentNamesEn: Record<string, string> = {
+  north_america: 'North America',
+  central_america: 'Central America',
+  south_america: 'South America',
+  europe: 'Europe',
+  asia: 'Asia',
+  africa: 'Africa',
+  oceania: 'Oceania',
+};
 const continentNames: Record<string, string> = {
   north_america: 'América del Norte',
   central_america: 'América Central',
@@ -175,43 +192,63 @@ export async function loadReconquistaAssets(
     connections: raw.connections.map((c) => c.endpoints),
   });
   // Wording follows the printed objective list: "Ocupar Asia y América Central."
-  const listed = (parts: readonly string[]) =>
-    parts.length > 1
-      ? `${parts.slice(0, -1).join(', ')} y ${parts.at(-1)}`
-      : (parts[0] ?? '');
-  const spelled: Record<number, string> = { 2: 'dos', 3: 'tres', 4: 'cuatro' };
+  const describe = (o: (typeof raw.objectives)[number], en: boolean) => {
+    const names = en ? continentNamesEn : continentNames;
+    const listed = (parts: readonly string[]) =>
+      parts.length > 1
+        ? `${parts.slice(0, -1).join(', ')} ${en ? 'and' : 'y'} ${parts.at(-1)}`
+        : (parts[0] ?? '');
+    const spelled: Record<number, string> = en
+      ? { 2: 'two', 3: 'three', 4: 'four' }
+      : { 2: 'dos', 3: 'tres', 4: 'cuatro' };
+    if (o.kind === 'destruction') {
+      if (o.target === 'left_neighbor')
+        return en
+          ? 'Destroy the player on your left.'
+          : 'Destruir al jugador de la izquierda.';
+      const color = (
+        (en ? colorNamesEn : colorNames)[o.target!] ?? o.target!
+      ).replace(/^./, (c) => c.toUpperCase());
+      return en
+        ? `Destroy the ${color} army.`
+        : `Destruir al ejército ${color}.`;
+    }
+    if (o.minTerritories)
+      return en
+        ? `Occupy ${o.minTerritories} countries anywhere on the map.`
+        : `Ocupar ${o.minTerritories} países en cualquier lugar del mapa.`;
+    const entries = Object.entries(o.requirements ?? {});
+    const whole = entries
+      .filter(([, n]) => n === 'all')
+      .map(([id]) => names[id]!);
+    const counted = entries
+      .filter(([, n]) => n !== 'all')
+      .map(([id, n], i) =>
+        en
+          ? i === 0
+            ? `${n} countries in ${names[id]}`
+            : `${n} in ${names[id]}`
+          : i === 0
+            ? `${n} países de ${names[id]}`
+            : `${n} de ${names[id]}`,
+      );
+    const continents =
+      o.islands &&
+      (spelled[o.islands.minContinents] ?? o.islands.minContinents);
+    const islands = o.islands
+      ? [
+          en
+            ? `${o.islands.count} islands, spread over at least ${continents} continents`
+            : `${o.islands.count} islas, repartidas en por lo menos ${continents} continentes`,
+        ]
+      : [];
+    return `${en ? 'Occupy' : 'Ocupar'} ${listed([...whole, ...counted, ...islands])}.`;
+  };
   const descriptions = new Map(
-    raw.objectives.map((o) => {
-      if (o.kind === 'destruction')
-        return [
-          o.id,
-          o.target === 'left_neighbor'
-            ? 'Destruir al jugador de la izquierda.'
-            : `Destruir al ejército ${(colorNames[o.target!] ?? o.target!).replace(/^./, (c) => c.toUpperCase())}.`,
-        ];
-      if (o.minTerritories)
-        return [
-          o.id,
-          `Ocupar ${o.minTerritories} países en cualquier lugar del mapa.`,
-        ];
-      const entries = Object.entries(o.requirements ?? {});
-      const whole = entries
-        .filter(([, n]) => n === 'all')
-        .map(([id]) => continentNames[id]!);
-      const counted = entries
-        .filter(([, n]) => n !== 'all')
-        .map(([id, n], i) =>
-          i === 0
-            ? `${n} países de ${continentNames[id]}`
-            : `${n} de ${continentNames[id]}`,
-        );
-      const islands = o.islands
-        ? [
-            `${o.islands.count} islas, repartidas en por lo menos ${spelled[o.islands.minContinents] ?? o.islands.minContinents} continentes`,
-          ]
-        : [];
-      return [o.id, `Ocupar ${listed([...whole, ...counted, ...islands])}.`];
-    }),
+    raw.objectives.map((o) => [
+      o.id,
+      { es: describe(o, false), en: describe(o, true) },
+    ]),
   );
   return { catalog, board, light, dark, descriptions };
 }
@@ -286,10 +323,15 @@ export async function registerReconquista(
   const countryIds = new Set(board.countries.map((c) => c.id));
   const described = <T extends { objectiveId: string }>(o: T) => ({
     ...o,
-    description:
-      o.objectiveId === 'common_45'
-        ? 'Ocupar 45 países.'
-        : assets.descriptions.get(o.objectiveId)!,
+    ...(o.objectiveId === 'common_45'
+      ? {
+          description: 'Ocupar 45 países.',
+          descriptionEn: 'Occupy 45 countries.',
+        }
+      : {
+          description: assets.descriptions.get(o.objectiveId)!.es,
+          descriptionEn: assets.descriptions.get(o.objectiveId)!.en,
+        }),
   });
   /** Public seats: never the session digests. */
   const seats = (current: ReconquistaEnvelope) =>

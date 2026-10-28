@@ -6,6 +6,7 @@ import type { PlayerGameView } from '@game/protocol';
 import { MusicToggle } from './MusicToggle.js';
 import { UiIcon } from './UiIcon.js';
 import { gamePresentation } from './game-presentation.js';
+import { tr } from './language.js';
 
 export function PlayerRoster({
   snapshot,
@@ -68,7 +69,10 @@ export function PlayerRoster({
               : 'calm'
         }
       />
-      <nav className="player-roster" aria-label="Jugadores y turno">
+      <nav
+        className="player-roster"
+        aria-label={tr('Jugadores y turno', 'Players and turn')}
+      >
         <a
           className="roster-brand"
           href="/"
@@ -82,7 +86,10 @@ export function PlayerRoster({
         <div
           className="roster-seats"
           ref={roster}
-          aria-label="Jugadores; desplazá para ver más"
+          aria-label={tr(
+            'Jugadores; desplazá para ver más',
+            'Players; scroll to see more',
+          )}
         >
           {players.map((p) => (
             <button
@@ -91,7 +98,10 @@ export function PlayerRoster({
               className={`roster-player color-${p.color}${p.eliminated ? ' is-eliminated' : ''}${p.id === snapshot.selfPlayerId ? ' is-self' : ''}`}
               aria-current={p.id === actor ? 'true' : undefined}
               aria-expanded={inspected === p.id}
-              aria-label={`Ver información de ${p.nickname}${p.id === actor ? ', turno actual' : ''}`}
+              aria-label={tr(
+                `Ver información de ${p.nickname}${p.id === actor ? ', turno actual' : ''}`,
+                `Show ${p.nickname}'s information${p.id === actor ? ', current turn' : ''}`,
+              )}
               title={`${p.nickname}${p.bot && p.bot !== 'table' ? ' (bot)' : ''}`}
               onClick={() => setInspected(inspected === p.id ? null : p.id)}
             >
@@ -109,7 +119,10 @@ export function PlayerRoster({
       {player && (
         <section
           className="player-popover"
-          aria-label={`Información de ${player.nickname}`}
+          aria-label={tr(
+            `Información de ${player.nickname}`,
+            `${player.nickname}'s information`,
+          )}
         >
           <header>
             <strong>
@@ -119,7 +132,10 @@ export function PlayerRoster({
             </strong>
             <button
               type="button"
-              aria-label="Cerrar información del jugador"
+              aria-label={tr(
+                'Cerrar información del jugador',
+                "Close the player's information",
+              )}
               onClick={closePlayer}
             >
               <UiIcon name="close" />
@@ -133,29 +149,35 @@ export function PlayerRoster({
                 ).length
               }
             </strong>{' '}
-            territorios
+            {tr('territorios', 'territories')}
           </p>
           <p>
-            <UiIcon name="cards" /> {player.cardCount} cartas
+            <UiIcon name="cards" /> {player.cardCount} {tr('cartas', 'cards')}
           </p>
           <small>
             {player.disqualified
-              ? 'Descalificado'
+              ? tr('Descalificado', 'Disqualified')
               : player.eliminated
-                ? 'Eliminado'
+                ? tr('Eliminado', 'Eliminated')
                 : player.bot === 'table'
-                  ? 'Bot de la mesa'
+                  ? tr('Bot de la mesa', 'Table bot')
                   : player.bot
-                    ? 'Juega un bot'
+                    ? tr('Juega un bot', 'A bot is playing')
                     : player.inactive
-                      ? 'Inactivo · turnos de 1 minuto'
+                      ? tr(
+                          'Inactivo · turnos de 1 minuto',
+                          'Inactive · 1-minute turns',
+                        )
                       : player.absent
-                        ? 'Ausente · turnos automáticos'
+                        ? tr(
+                            'Ausente · turnos automáticos',
+                            'Absent · automatic turns',
+                          )
                         : player.controller === 'controllerless_reassignment'
-                          ? 'Sin jugador'
+                          ? tr('Sin jugador', 'No player')
                           : player.id === actor
-                            ? 'Jugando ahora'
-                            : 'En partida'}
+                            ? tr('Jugando ahora', 'Playing now')
+                            : tr('En partida', 'In the game')}
           </small>
         </section>
       )}
@@ -234,9 +256,15 @@ export function TurnSound({
     <button
       className="turn-sound"
       type="button"
-      title={sound ? 'Silenciar sonido de turno' : 'Activar sonido de turno'}
+      title={
+        sound
+          ? tr('Silenciar sonido de turno', 'Mute the turn chime')
+          : tr('Activar sonido de turno', 'Turn on the turn chime')
+      }
       aria-label={
-        sound ? 'Silenciar sonido de turno' : 'Activar sonido de turno'
+        sound
+          ? tr('Silenciar sonido de turno', 'Mute the turn chime')
+          : tr('Activar sonido de turno', 'Turn on the turn chime')
       }
       aria-pressed={sound}
       onClick={() => {

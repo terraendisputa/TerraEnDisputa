@@ -22,6 +22,7 @@ import { useLiveGame } from './use-live-game.js';
 import { playerColorLabel } from './colors.js';
 import { api, ApiError } from './api.js';
 import { ThemeToggle } from './ThemeToggle.js';
+import { LanguageSelect } from './LanguageSelect.js';
 import { GamePanels, DicePanel } from './GamePanels.js';
 import type { GamePanel } from './GamePanels.js';
 import { gamePresentation } from './game-presentation.js';
@@ -31,6 +32,7 @@ import { usePanelNotifications } from './use-panel-notifications.js';
 import { PlayerRoster } from './PlayerRoster.js';
 import { UiIcon } from './UiIcon.js';
 import { ActionRoute } from './ActionRoute.js';
+import { tr } from './language.js';
 
 function PrivateInformation({
   snapshot,
@@ -44,26 +46,41 @@ function PrivateInformation({
     : undefined;
   return (
     <section className="panel private-panel">
-      <span className="privacy-badge">INFORMACIÓN PRIVADA</span>
+      <span className="privacy-badge">
+        {tr('INFORMACIÓN PRIVADA', 'PRIVATE INFORMATION')}
+      </span>
       <details open>
         <summary className="objective-heading">
-          <h2>Tu objetivo</h2>
+          <h2>{tr('Tu objetivo', 'Your objective')}</h2>
         </summary>
         <div className="objective-box">
           {snapshot.configuredPlayerCount <= 3 ? (
-            <p>Conquistá los 50 territorios.</p>
+            <p>
+              {tr(
+                'Conquistá los 50 territorios.',
+                'Conquer all 50 territories.',
+              )}
+            </p>
           ) : snapshot.private.secretObjectiveId ? (
             <p>
               {snapshot.private.secretObjectiveId.startsWith('destroy_') &&
               !snapshot.private.effectiveDestructionTargetPlayerId
-                ? 'Conquistá 30 territorios. Otro jugador eliminó tu objetivo.'
+                ? tr(
+                    'Conquistá 30 territorios. Otro jugador eliminó tu objetivo.',
+                    'Conquer 30 territories. Another player eliminated your target.',
+                  )
                 : objectiveText(
                     snapshot.private.secretObjectiveId,
                     targetColor,
                   )}
             </p>
           ) : (
-            <p>El servidor todavía está asignando objetivos.</p>
+            <p>
+              {tr(
+                'El servidor todavía está asignando objetivos.',
+                'The server is still assigning objectives.',
+              )}
+            </p>
           )}
         </div>
       </details>
@@ -83,7 +100,10 @@ function PrivateCards({
   readonly newCardIds?: readonly string[];
 }) {
   return (
-    <section className="panel cards-panel" aria-label="Tus cartas">
+    <section
+      className="panel cards-panel"
+      aria-label={tr('Tus cartas', 'Your cards')}
+    >
       <PrivateHand
         snapshot={snapshot}
         submit={submit}
@@ -95,14 +115,14 @@ function PrivateCards({
 }
 
 const statusLabels = {
-  connecting: 'Conectando',
-  connected: 'Conectado',
-  reconnecting: 'Reconectando',
-  disconnected: 'Desconectado',
-  unauthorized: 'Sesión revocada',
-  unavailable: 'Partida no disponible',
-  incompatible: 'Versión incompatible',
-} as const;
+  connecting: tr('Conectando', 'Connecting'),
+  connected: tr('Conectado', 'Connected'),
+  reconnecting: tr('Reconectando', 'Reconnecting'),
+  disconnected: tr('Desconectado', 'Disconnected'),
+  unauthorized: tr('Sesión revocada', 'Session revoked'),
+  unavailable: tr('Partida no disponible', 'Game unavailable'),
+  incompatible: tr('Versión incompatible', 'Incompatible version'),
+};
 
 interface SetupControlsProps {
   readonly snapshot: PlayerGameView;
@@ -158,10 +178,10 @@ function SetupControls({
     return (
       <div className="turn-notice">
         <span>
-          Esperando a{' '}
+          {tr('Esperando a', 'Waiting for')}{' '}
           <strong>
             {snapshot.players.find(({ id }) => id === setup.currentPlayerId)
-              ?.nickname ?? 'otro jugador'}
+              ?.nickname ?? tr('otro jugador', 'another player')}
           </strong>
           .
         </span>
@@ -170,7 +190,7 @@ function SetupControls({
   if (canPlace)
     return (
       <div className="action-card action-layout setup-card">
-        <ActionTitle title="Distribución" />
+        <ActionTitle title={tr('Distribución', 'Deployment')} />
         <ActionRoute
           reserve={due - allocated}
           target={selected}
@@ -199,15 +219,20 @@ function SetupControls({
         )}
         {capReached && (
           <p className="muted-copy cap-notice" role="status">
-            Alcanzaste el máximo de tropas para este continente. Elegí otro
-            país.
+            {tr(
+              'Alcanzaste el máximo de tropas para este continente. Elegí otro país.',
+              'You reached the troop maximum for this continent. Choose another country.',
+            )}
           </p>
         )}
         <button
           type="button"
           className="confirm-distribution completion-action"
-          aria-label="Confirmar distribución"
-          title="Confirmar distribución (Enter)"
+          aria-label={tr('Confirmar distribución', 'Confirm deployment')}
+          title={tr(
+            'Confirmar distribución (Enter)',
+            'Confirm deployment (Enter)',
+          )}
           data-shortcut="confirm"
           disabled={allocated !== due || busy}
           onClick={() => onSubmit({ type: 'place_setup_armies', placements })}
@@ -216,7 +241,14 @@ function SetupControls({
         </button>
       </div>
     );
-  return <p>El servidor está resolviendo la preparación.</p>;
+  return (
+    <p>
+      {tr(
+        'El servidor está resolviendo la preparación.',
+        'The server is resolving the setup.',
+      )}
+    </p>
+  );
 }
 
 export function GameScreen({ gameId }: { readonly gameId: string }) {
@@ -310,7 +342,10 @@ function GameView({
       (actions.includes('claim_card') ||
         snapshot.legalActions.territoryBonusCardIds.length > 0) &&
       !window.confirm(
-        'Todavía podés pedir cartas o cobrar los +2. ¿Terminar el turno igual?',
+        tr(
+          'Todavía podés pedir cartas o cobrar los +2. ¿Terminar el turno igual?',
+          'You can still draw cards or collect the +2. End the turn anyway?',
+        ),
       )
     ) {
       setInformationPanel('cards');
@@ -323,7 +358,7 @@ function GameView({
       snapshot?.mode === 'competitive'
         ? COMPETITIVE_NAME
         : snapshot?.mode === 'classic'
-          ? `${GAME_NAME} — Clásico`
+          ? `${GAME_NAME} — ${tr('Clásico', 'Classic')}`
           : GAME_NAME;
     return () => {
       document.title = GAME_NAME;
@@ -536,11 +571,14 @@ function GameView({
           <p className={`connection ${state.connection}`}>
             {statusLabels[state.connection]}
           </p>
-          <h1>Abriendo la partida</h1>
+          <h1>{tr('Abriendo la partida', 'Opening the game')}</h1>
           <p>
             {state.error
               ? errorMessage(state.error)
-              : 'Buscando tu sesión guardada en este navegador…'}
+              : tr(
+                  'Buscando tu sesión guardada en este navegador…',
+                  'Looking for your saved session in this browser…',
+                )}
           </p>
         </section>
       </main>
@@ -575,10 +613,13 @@ function GameView({
       className="end-turn-tab"
       title={
         canEndTurn
-          ? 'Terminar turno'
-          : 'Colocá todos tus ejércitos para terminar el turno'
+          ? tr('Terminar turno', 'End turn')
+          : tr(
+              'Colocá todos tus ejércitos para terminar el turno',
+              'Place all your armies to end the turn',
+            )
       }
-      aria-label="Terminar turno"
+      aria-label={tr('Terminar turno', 'End turn')}
       disabled={Boolean(state.inFlight) || endingTurn || !canEndTurn}
       onClick={endTurn}
     >
@@ -588,7 +629,10 @@ function GameView({
       {endTurnReminder && canEndTurn && (
         <span
           className="panel-notification"
-          title="No te olvides de terminar el turno"
+          title={tr(
+            'No te olvides de terminar el turno',
+            "Don't forget to end your turn",
+          )}
           aria-hidden="true"
         >
           !
@@ -611,13 +655,13 @@ function GameView({
             aria-expanded={!toolbarCollapsed}
             aria-label={
               toolbarCollapsed
-                ? 'Desplegar herramientas'
-                : 'Colapsar herramientas'
+                ? tr('Desplegar herramientas', 'Show tools')
+                : tr('Colapsar herramientas', 'Hide tools')
             }
             title={
               toolbarCollapsed
-                ? 'Desplegar herramientas'
-                : 'Colapsar herramientas'
+                ? tr('Desplegar herramientas', 'Show tools')
+                : tr('Colapsar herramientas', 'Hide tools')
             }
             onClick={() => {
               if (
@@ -643,10 +687,10 @@ function GameView({
           <span>{GAME_SHORT_NAME}</span>
           <small className="mode-label">
             {snapshot.mode === 'competitive'
-              ? 'Competitivo'
+              ? tr('Competitivo', 'Competitive')
               : snapshot.classicExpress
-                ? 'Clásico Express'
-                : 'Clásico'}
+                ? tr('Clásico Express', 'Classic Express')
+                : tr('Clásico', 'Classic')}
           </small>
         </a>
         {snapshot.status === 'LOBBY' ? (
@@ -662,13 +706,16 @@ function GameView({
           <button
             type="button"
             className="secondary seat-exit-button"
-            aria-label="Salir de la partida"
-            title="Salir de la partida"
+            aria-label={tr('Salir de la partida', 'Leave the game')}
+            title={tr('Salir de la partida', 'Leave the game')}
             disabled={leaving || Boolean(state.inFlight)}
             onClick={() => {
               if (
                 !window.confirm(
-                  '¿Salir de la partida? Tu sesión se cerrará y cualquier persona con el enlace podrá ocupar tu asiento. Cerrar el navegador no lo libera.',
+                  tr(
+                    '¿Salir de la partida? Tu sesión se cerrará y cualquier persona con el enlace podrá ocupar tu asiento. Cerrar el navegador no lo libera.',
+                    'Leave the game? Your session will close and anyone with the link can take your seat. Closing the browser does not free it.',
+                  ),
                 )
               )
                 return;
@@ -703,12 +750,12 @@ function GameView({
       {snapshot.status === 'LOBBY' ? (
         <div className="lobby-layout">
           <section className="panel lobby-main">
-            <p className="eyebrow">Sala de espera</p>
+            <p className="eyebrow">{tr('Sala de espera', 'Waiting room')}</p>
             <h1>
-              {snapshot.players.length} de{' '}
+              {snapshot.players.length} {tr('de', 'of')}{' '}
               {snapshot.configuredPlayerCount -
                 (snapshot.competitiveBotSeats ?? 0)}{' '}
-              jugadores
+              {tr('jugadores', 'players')}
               {snapshot.competitiveBotSeats
                 ? ` + ${snapshot.competitiveBotSeats} ${snapshot.competitiveBotSeats === 1 ? 'bot' : 'bots'}`
                 : ''}
@@ -728,9 +775,13 @@ function GameView({
                   <span>
                     <strong>
                       {player.nickname}
-                      {player.id === snapshot.selfPlayerId ? ' (vos)' : ''}
+                      {player.id === snapshot.selfPlayerId
+                        ? tr(' (vos)', ' (you)')
+                        : ''}
                     </strong>
-                    <small>Asiento {player.seatIndex + 1}</small>
+                    <small>
+                      {tr('Asiento', 'Seat')} {player.seatIndex + 1}
+                    </small>
                     <small>{playerColorLabel(player.color)}</small>
                   </span>
                   <span
@@ -741,18 +792,20 @@ function GameView({
                     }
                   >
                     {snapshot.readyPlayerIds?.includes(player.id)
-                      ? 'Listo'
-                      : 'Esperando'}
+                      ? tr('Listo', 'Ready')
+                      : tr('Esperando', 'Waiting')}
                   </span>
                 </li>
               ))}
             </ul>
           </section>
           <aside className="panel lobby-actions">
-            <h2>Tu estado</h2>
+            <h2>{tr('Tu estado', 'Your status')}</h2>
             <p>
-              El servidor iniciará la preparación cuando estén todos los
-              asientos ocupados y listos.
+              {tr(
+                'El servidor iniciará la preparación cuando estén todos los asientos ocupados y listos.',
+                'The server starts the setup when every seat is taken and ready.',
+              )}
             </p>
             <button
               type="button"
@@ -761,14 +814,17 @@ function GameView({
                 client.submit({ type: 'set_ready', ready: !ready })
               }
             >
-              {ready ? 'Dejar de estar listo' : 'Estoy listo'}
+              {ready
+                ? tr('Dejar de estar listo', 'Not ready anymore')
+                : tr('Estoy listo', "I'm ready")}
             </button>
             <dl>
-              <dt>ID del jugador</dt>
+              <dt>{tr('ID del jugador', 'Player ID')}</dt>
               <dd>
                 <code>{snapshot.selfPlayerId}</code>
               </dd>
             </dl>
+            <LanguageSelect />
           </aside>
         </div>
       ) : (
@@ -872,17 +928,23 @@ function GameView({
                       type="button"
                       className="secondary"
                       disabled={!!state.inFlight}
-                      title="Con un solo país en las rondas finales, un bot puede jugar por vos el resto de la partida."
+                      title={tr(
+                        'Con un solo país en las rondas finales, un bot puede jugar por vos el resto de la partida.',
+                        'With a single country in the final rounds, a bot can play for you for the rest of the game.',
+                      )}
                       onClick={() => {
                         if (
                           window.confirm(
-                            'Un bot va a jugar por vos hasta el final de la partida y los puntos siguen siendo tuyos. Solo el administrador puede devolverte el lugar. ¿Seguir?',
+                            tr(
+                              'Un bot va a jugar por vos hasta el final de la partida y los puntos siguen siendo tuyos. Solo el administrador puede devolverte el lugar. ¿Seguir?',
+                              'A bot will play for you until the end of the game and the points stay yours. Only the administrator can give your place back. Continue?',
+                            ),
                           )
                         )
                           submit({ type: 'request_bot' });
                       }}
                     >
-                      Pedir bot
+                      {tr('Pedir bot', 'Ask for a bot')}
                     </button>
                   )}
                 </div>
@@ -891,7 +953,10 @@ function GameView({
                     <section
                       className="panel phase-panel action-dock"
                       id="contextual-actions"
-                      aria-label="Acciones contextuales"
+                      aria-label={tr(
+                        'Acciones contextuales',
+                        'Contextual actions',
+                      )}
                       data-layout-region="action-area"
                     >
                       <InheritanceControls
@@ -931,8 +996,11 @@ function GameView({
                                   title={
                                     snapshot.mode === 'classic' &&
                                     snapshot.private.cards.length > 5
-                                      ? 'Canje obligatorio'
-                                      : 'Canje'
+                                      ? tr(
+                                          'Canje obligatorio',
+                                          'Required exchange',
+                                        )
+                                      : tr('Canje', 'Exchange')
                                   }
                                   required={
                                     snapshot.mode === 'classic' &&
@@ -941,16 +1009,29 @@ function GameView({
                                 />
                                 <div className="action-selection">
                                   <small>
-                                    {snapshot.private.cards.length} cartas en tu
-                                    mano
+                                    {tr(
+                                      `${snapshot.private.cards.length} cartas en tu mano`,
+                                      `${snapshot.private.cards.length} cards in your hand`,
+                                    )}
                                   </small>
-                                  <strong>Seleccioná tres cartas</strong>
+                                  <strong>
+                                    {tr(
+                                      'Seleccioná tres cartas',
+                                      'Select three cards',
+                                    )}
+                                  </strong>
                                 </div>
                                 <button
                                   type="button"
                                   className="icon-button open-exchange"
-                                  title="Abrir cartas para canjear"
-                                  aria-label="Abrir cartas para canjear"
+                                  title={tr(
+                                    'Abrir cartas para canjear',
+                                    'Open cards to exchange',
+                                  )}
+                                  aria-label={tr(
+                                    'Abrir cartas para canjear',
+                                    'Open cards to exchange',
+                                  )}
                                   onClick={() =>
                                     selectInformationPanel('cards')
                                   }
@@ -961,8 +1042,10 @@ function GameView({
                             )}
                           {self?.eliminated && (
                             <p className="warning">
-                              Fuiste eliminado. Podés seguir observando la
-                              partida.
+                              {tr(
+                                'Fuiste eliminado. Podés seguir observando la partida.',
+                                'You were eliminated. You can keep watching the game.',
+                              )}
                             </p>
                           )}
                           <GameplayControls
@@ -1013,13 +1096,21 @@ function GameView({
                         ? 'transfer'
                         : snapshot.turn?.phase === 'attack'
                           ? 'attack'
-                          : 'reinforcement']: { message: 'Tu turno', count: 1 },
+                          : 'reinforcement']: {
+                        message: tr('Tu turno', 'Your turn'),
+                        count: 1,
+                      },
                     }
                   : {}),
                 ...(closingMine &&
                 (snapshot.legalActions.actions.includes('claim_card') ||
                   snapshot.legalActions.territoryBonusCardIds.length > 0)
-                  ? { cards: { message: 'Podés pedir cartas', count: 1 } }
+                  ? {
+                      cards: {
+                        message: tr('Podés pedir cartas', 'You can draw cards'),
+                        count: 1,
+                      },
+                    }
                   : {}),
               }}
               onRead={markRead}
@@ -1027,12 +1118,12 @@ function GameView({
               panels={[
                 {
                   id: 'objective',
-                  label: 'Objetivo',
+                  label: tr('Objetivo', 'Objective'),
                   content: <PrivateInformation snapshot={snapshot} />,
                 },
                 {
                   id: 'cards',
-                  label: `Cartas · ${snapshot.private.cards.length}`,
+                  label: `${tr('Cartas', 'Cards')} · ${snapshot.private.cards.length}`,
                   content: (
                     <PrivateCards
                       snapshot={snapshot}
@@ -1047,7 +1138,7 @@ function GameView({
                 },
                 {
                   id: 'pacts',
-                  label: 'Pactos',
+                  label: tr('Pactos', 'Pacts'),
                   content: snapshot.pacts ? (
                     <PactsPanel
                       snapshot={snapshot}
@@ -1059,7 +1150,10 @@ function GameView({
                     />
                   ) : (
                     <p>
-                      No hay acciones de pactos disponibles en este momento.
+                      {tr(
+                        'No hay acciones de pactos disponibles en este momento.',
+                        'There are no pact actions available right now.',
+                      )}
                     </p>
                   ),
                 },
@@ -1109,14 +1203,17 @@ function GameView({
                     id: kind,
                     targetId: 'actions',
                     label: isResult
-                      ? 'Resultado'
+                      ? tr('Resultado', 'Result')
                       : kind === 'transfer'
-                        ? 'Traslado / Reagrupamiento'
+                        ? tr('Traslado / Reagrupamiento', 'Move / Regroup')
                         : kind === 'attack'
-                          ? 'Ataque'
+                          ? tr('Ataque', 'Attack')
                           : current
                             ? presentation.title
-                            : 'Refuerzos / Distribución',
+                            : tr(
+                                'Refuerzos / Distribución',
+                                'Reinforcements / Deployment',
+                              ),
                     icon: isResult
                       ? 'objective'
                       : kind === 'transfer'
@@ -1125,8 +1222,10 @@ function GameView({
                           ? 'sword'
                           : 'reinforcement',
                     disabled: !enabled,
-                    disabledReason:
+                    disabledReason: tr(
                       'Disponible en la fase correspondiente de tu turno',
+                      'Available in the matching phase of your turn',
+                    ),
                     content: null,
                   };
                 }),
@@ -1143,10 +1242,15 @@ function DeletedGameNotice() {
   return (
     <main className="entry-layout">
       <section className="panel entry-panel">
-        <h1>La partida fue eliminada</h1>
-        <p>Esta partida ya no existe o dejó de estar disponible.</p>
+        <h1>{tr('La partida fue eliminada', 'The game was deleted')}</h1>
+        <p>
+          {tr(
+            'Esta partida ya no existe o dejó de estar disponible.',
+            'This game no longer exists or is no longer available.',
+          )}
+        </p>
         <a className="button-link" href="/">
-          Volver al inicio
+          {tr('Volver al inicio', 'Back to home')}
         </a>
       </section>
     </main>
@@ -1163,10 +1267,22 @@ function RevokedSessionNotice({
   return (
     <main className="entry-layout">
       <section className="panel entry-panel">
-        <h1>El asiento necesita identificación</h1>
-        <p>{error ? errorMessage(error) : 'La sesión dejó de ser válida.'}</p>
+        <h1>
+          {tr(
+            'El asiento necesita identificación',
+            'The seat needs identification',
+          )}
+        </h1>
+        <p>
+          {error
+            ? errorMessage(error)
+            : tr(
+                'La sesión dejó de ser válida.',
+                'The session is no longer valid.',
+              )}
+        </p>
         <a className="button-link" href={`/game/${gameId}?entry=1`}>
-          Ver asientos disponibles
+          {tr('Ver asientos disponibles', 'See available seats')}
         </a>
       </section>
     </main>
