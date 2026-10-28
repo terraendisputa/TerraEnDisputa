@@ -245,14 +245,16 @@ function pactToPropose(x: DiplomacyContext): CampaignAction | null {
 
 /**
  * An alliance on a country that neither can take alone but both together
- * can, offered to the strongest player on that border.
+ * can, offered to the strongest player on that border. Only Hard offers
+ * them (2026-10-28): Normal bots allying against it outplayed it.
  */
 function allianceToPropose(x: DiplomacyContext): CampaignAction | null {
   const { c, bot, map } = x;
+  if (x.level !== 'hard') return null;
   for (const target of c.territories) {
     if (map.owns(target.id, bot) || target.forces.length !== 1) continue;
     const holder = target.forces[0]!.playerId;
-    if (x.level === 'hard' && (x.values[target.id] ?? 0) < 4) continue;
+    if ((x.values[target.id] ?? 0) < 4) continue;
     const defense = target.forces[0]!.armies;
     const origin = c.territories
       .filter(
