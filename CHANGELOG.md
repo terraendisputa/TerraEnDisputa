@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2 — 2026-10-29
+
+- Retake games with bots load again after the server restarts.
+
 ## 1.0.1 — 2026-10-28
 
 - Competitive follows the Superliga rules: border pacts only, a wait after a rejected pact, disconnection grace, tiebreak and a suicide block; deciding games.
