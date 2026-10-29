@@ -101,9 +101,12 @@ await build({
       target: ['nsis', 'zip'],
       icon: 'build/icon.png',
     },
+    // Installing for all users asks for administrator rights once, which the
+    // firewall rule in build/installer.nsh needs.
     nsis: {
       oneClick: false,
-      perMachine: false,
+      perMachine: true,
+      include: 'build/installer.nsh',
       allowToChangeInstallationDirectory: true,
       shortcutName: 'Terra en disputa',
       deleteAppDataOnUninstall: false,
