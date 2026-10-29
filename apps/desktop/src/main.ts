@@ -47,6 +47,13 @@ const webPreferences = {
   sandbox: true,
 } as const;
 
+const windowSize = {
+  width: 1280,
+  height: 860,
+  minWidth: 360,
+  minHeight: 480,
+} as const;
+
 const sameOrigin = (url: string): boolean => {
   try {
     return ready !== undefined && new URL(url).origin === ready.origin;
@@ -66,6 +73,7 @@ function guard(window: BrowserWindow): void {
       return {
         action: 'allow',
         overrideBrowserWindowOptions: {
+          ...windowSize,
           icon,
           autoHideMenuBar: true,
           webPreferences,
@@ -91,10 +99,7 @@ function showMainWindow(): void {
     return;
   }
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 860,
-    minWidth: 360,
-    minHeight: 480,
+    ...windowSize,
     show: false,
     icon,
     title: 'Terra en disputa',
