@@ -169,7 +169,8 @@ function decodeSnapshot(
   }
   if (
     value.baseRevision === null ||
-    value.baseRevision < value.playerCount * 2 + 1 ||
+    // Table bots join at the start, so only people add join and ready revisions.
+    value.baseRevision < (value.playerCount - (value.botSeats ?? 0)) * 2 + 1 ||
     value.players.length !== value.playerCount ||
     value.players.some((p) => !p.ready)
   )
