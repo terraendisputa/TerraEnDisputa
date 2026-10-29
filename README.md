@@ -30,7 +30,7 @@ Para jugar alcanza con un navegador moderno, en computadora, tablet o teléfono.
 
 ## 1. Jugar desde tu computadora
 
-Los paquetes compilados incluyen Node.js, así que no hace falta instalar nada más. Descargalos de [Releases](https://github.com/unlisted3954/TerraEnDisputa/releases) o [compilalos vos](#compilar-desde-el-código).
+Los paquetes compilados incluyen Node.js, así que no hace falta instalar nada más. Descargalos de [Releases](https://github.com/terraendisputa/TerraEnDisputa/releases) o [compilalos vos](#compilar-desde-el-código).
 
 1. Descargá el paquete de tu sistema, comprobalo con `SHA256SUMS` y extraé **toda la carpeta**.
 2. En Windows abrí `ted.cmd`. En Linux ejecutá `./ted` dentro de la carpeta.
@@ -80,7 +80,7 @@ Para un VPS o un equipo Linux x64 con systemd. El instalador compila el código,
 Bajá el código y, desde su carpeta, instalá **sin sudo delante**:
 
 ```bash
-git clone https://github.com/unlisted3954/TerraEnDisputa.git
+git clone https://github.com/terraendisputa/TerraEnDisputa.git
 cd TerraEnDisputa
 bash scripts/install-game.sh
 ```
