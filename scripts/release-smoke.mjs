@@ -151,9 +151,10 @@ const waitForStart = async (child, recoveryExpected) => {
         return false;
       });
     if (ready) {
-      const recovery = /Administrator access code: ([A-Z0-9-]+)/.exec(
-        output,
-      )?.[1];
+      const recovery =
+        /(?:Administrator access code|Código de acceso del administrador): ([A-Z0-9-]+)/.exec(
+          output,
+        )?.[1];
       if (recoveryExpected && !recovery)
         throw new Error(`Missing first-run recovery code: ${output}`);
       return recovery;

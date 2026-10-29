@@ -50,10 +50,10 @@ sudo systemctl status ted.service
 sudo systemctl stop ted.service
 sudo systemctl start ted.service
 sudo systemctl restart ted.service
-sudo journalctl -u ted.service -n 100 --no-pager
+sudo journalctl -u ted.service --no-pager | grep -Ei "access code|código de acceso" | tail -n 1
 ```
 
-El journal muestra el código de administración. Cada reinicio genera uno nuevo e invalida el anterior; las partidas y sesiones de jugadores se conservan.
+El último comando muestra el código de administración, tanto si la consola está en inglés (`Administrator access code`) como en español (`Código de acceso del administrador`). Cada reinicio genera uno nuevo e invalida el anterior; las partidas y sesiones de jugadores se conservan.
 
 ## Reinstalación y actualización
 
@@ -99,7 +99,7 @@ Requiere un gestor systemd de usuario disponible. Crea `~/.config/systemd/user/t
 ```bash
 systemctl --user status ted.service
 systemctl --user restart ted.service
-journalctl --user -u ted.service -n 100 --no-pager
+journalctl --user -u ted.service --no-pager | grep -Ei "access code|código de acceso" | tail -n 1
 ```
 
 Para que el gestor personal funcione al arrancar el equipo y después de cerrar sesión, un administrador puede habilitar lingering:

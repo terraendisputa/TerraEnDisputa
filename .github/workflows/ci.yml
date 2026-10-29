@@ -35,8 +35,8 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: corepack enable
@@ -60,15 +60,15 @@ jobs:
             target: windows-x64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm release:build
       - run: pnpm release:smoke
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: ted-${{ matrix.target }}
           retention-days: 14
@@ -86,7 +86,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           path: dist
       - name: Merge checksums
@@ -94,7 +94,7 @@ jobs:
           mkdir out
           cat dist/*/SHA256SUMS | sort -k2 > out/SHA256SUMS
           cp dist/*/*.zip dist/*/*.tar.gz dist/*/manifest-*.json out/
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: out/*

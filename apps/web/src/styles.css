@@ -130,6 +130,8 @@ code {
 .warning {
   border-left: 4px solid var(--gold);
   background: #fff4cd;
+  /* The cream box keeps dark text in both themes. */
+  color: #3a2f1a;
   padding: 0.65rem 0.8rem;
 }
 .error-banner {
@@ -147,6 +149,9 @@ code {
   color: #315747;
   display: inline-block;
   margin-bottom: 1.5rem;
+}
+:root[data-theme='dark'] .text-link {
+  color: #9fc7a8;
 }
 .button-row,
 .row-actions,
@@ -206,6 +211,11 @@ code {
   border: 0;
   border-top: 1px solid #c2b79d;
   margin: 1.5rem 0;
+}
+.landing-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 .topbar {
   min-height: 4rem;
