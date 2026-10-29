@@ -98,11 +98,11 @@ Usá `--bind 0.0.0.0` para que entren equipos de tu red o VPN, y dejá `127.0.0.
 ```bash
 systemctl status ted.service
 sudo systemctl restart ted.service
-sudo journalctl -u ted.service -n 100 --no-pager   # muestra el código de administración
+sudo journalctl -u ted.service --no-pager | grep -Ei "access code|código de acceso" | tail -n 1   # código de administración
 curl http://127.0.0.1:3000/health
 ```
 
-El panel está en `http://<servidor>:3000/admin`. Cada arranque imprime un código de administración nuevo en el journal; las partidas y los jugadores se conservan.
+El panel está en `http://<servidor>:3000/admin`. Cada arranque imprime un código de administración nuevo en el journal; las partidas y los jugadores se conservan. Los mensajes de la consola salen en español si el sistema está en español y en inglés si no; un servicio de systemd normalmente arranca sin idioma, así que muestra `Administrator access code`. El comando de arriba encuentra el código en los dos idiomas.
 
 ### Actualizar
 
@@ -195,7 +195,7 @@ Agregá `--data-dir` si usás otra carpeta de datos. La copia incluye las tres m
 | `Packaged server did not answer /health`                  | La prueba del paquete no pudo hablar con su servidor local. Si el equipo usa un proxy, repetí con `env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy bash scripts/install-game.sh`. |
 | `Unit ted.service could not be found` después de instalar | El instalador se detuvo antes de crear el servicio. Revisá el primer `ERROR` de su salida.                                                                                                      |
 | El dominio responde `421` o el juego no conecta           | Falta o no coincide `GAME_PUBLIC_ORIGIN`, o el túnel no reenvía WebSocket. Revisá [Jugar a distancia](#3-jugar-a-distancia).                                                                    |
-| Me pide un código de administración                       | Buscalo en `sudo journalctl -u ted.service -n 100 --no-pager` o en la terminal donde corre `ted`. Cambia en cada reinicio.                                                                      |
+| Me pide un código de administración                       | Buscalo con `sudo journalctl -u ted.service --no-pager                                                                                                                                          | grep -Ei "access code | código de acceso" | tail -n 1`o en la terminal donde corre`ted`. Cambia en cada reinicio. |
 | La compilación se queda sin memoria                       | Agregá swap o subí el límite: `TED_BUILD_MEMORY_MB=1024 bash scripts/install-game.sh`.                                                                                                          |
 
 ## Compilar desde el código

@@ -6,6 +6,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { networkInterfaces } from 'node:os';
 import { parseCli, helpText } from './cli.js';
+import { tr } from './console-language.js';
 import { APPLICATION_NAME, APPLICATION_VERSION } from './version.js';
 import { AdminLaunch, browserOrigin, isLoopback } from './admin-launch.js';
 import {
@@ -27,7 +28,10 @@ async function main(): Promise<void> {
   const packagedWebRoot = process.env['GAME_WEB_ROOT'];
   if (packagedWebRoot && !existsSync(packagedWebRoot))
     throw new Error(
-      `Browser application assets are missing: ${packagedWebRoot}`,
+      tr(
+        `Faltan los archivos de la aplicación web: ${packagedWebRoot}`,
+        `Browser application assets are missing: ${packagedWebRoot}`,
+      ),
     );
   if (command.kind === 'restore') {
     const { catalog } = await loadReconquistaAssets();
@@ -40,7 +44,10 @@ async function main(): Promise<void> {
       },
     );
     process.stdout.write(
-      `Backup restored into: ${command.dataDirectory}\nPrevious data preserved at: ${preserved}\n`,
+      tr(
+        `Copia restaurada en: ${command.dataDirectory}\nDatos anteriores conservados en: ${preserved}\n`,
+        `Backup restored into: ${command.dataDirectory}\nPrevious data preserved at: ${preserved}\n`,
+      ),
     );
     return;
   }
@@ -63,7 +70,10 @@ async function main(): Promise<void> {
       await gameStore.close();
     }
     process.stdout.write(
-      `Backup created: ${command.output}\nGames: ${manifest.gameCount}\nReconquista games: ${manifest.reconquistaGameCount}\n`,
+      tr(
+        `Copia creada: ${command.output}\nPartidas: ${manifest.gameCount}\nPartidas de Reconquista: ${manifest.reconquistaGameCount}\n`,
+        `Backup created: ${command.output}\nGames: ${manifest.gameCount}\nRetake games: ${manifest.reconquistaGameCount}\n`,
+      ),
     );
     process.exit(0);
   }
@@ -73,7 +83,10 @@ async function main(): Promise<void> {
     ? await authentication.resetAdmin()
     : await authentication.initializeAdmin();
   process.stdout.write(
-    `Administrator access code: ${adminAccessCode}\nA fresh code is printed on every server start. Previous admin codes and sessions are revoked.\n`,
+    tr(
+      `Código de acceso del administrador: ${adminAccessCode}\nSe muestra un código nuevo cada vez que arranca el servidor. Los códigos y sesiones anteriores quedan revocados.\n`,
+      `Administrator access code: ${adminAccessCode}\nA fresh code is printed on every server start. Previous admin codes and sessions are revoked.\n`,
+    ),
   );
   const origin = browserOrigin(command.bind, command.port);
   const supportsLocal =
@@ -153,7 +166,7 @@ async function main(): Promise<void> {
     });
     const localUrl = `${origin}/admin`;
     process.stdout.write(
-      `\n${APPLICATION_NAME} ${APPLICATION_VERSION}\nData: ${command.dataDirectory}\nLocal: ${localUrl}\n`,
+      `\n${APPLICATION_NAME} ${APPLICATION_VERSION}\n${tr('Datos', 'Data')}: ${command.dataDirectory}\nLocal: ${localUrl}\n`,
     );
     if (command.bind === '0.0.0.0') {
       const addresses = Object.values(networkInterfaces())
@@ -166,15 +179,21 @@ async function main(): Promise<void> {
         )
         .map((address) => `http://${address.address}:${command.port}`);
       for (const address of [...new Set(addresses)])
-        process.stdout.write(`Network: ${address}\n`);
+        process.stdout.write(`${tr('Red', 'Network')}: ${address}\n`);
     }
     if (process.env['GAME_PUBLIC_ORIGIN']?.startsWith('https://'))
       process.stdout.write(
-        `Public: ${process.env['GAME_PUBLIC_ORIGIN']} (user-managed HTTPS proxy)\n`,
+        tr(
+          `Pública: ${process.env['GAME_PUBLIC_ORIGIN']} (proxy HTTPS administrado por vos)\n`,
+          `Public: ${process.env['GAME_PUBLIC_ORIGIN']} (user-managed HTTPS proxy)\n`,
+        ),
       );
     else
       process.stdout.write(
-        'Security: HTTP is unencrypted; use only a trusted LAN or private VPN.\n',
+        tr(
+          'Seguridad: HTTP no está cifrado; usalo solo en una red local de confianza o una VPN privada.\n',
+          'Security: HTTP is unencrypted; use only a trusted LAN or private VPN.\n',
+        ),
       );
     if (command.openBrowser) {
       const launchUrl = adminLaunch
@@ -190,7 +209,10 @@ async function main(): Promise<void> {
       });
       const fallback = () =>
         process.stderr.write(
-          `No se pudo abrir el navegador. Abrí ${localUrl} e ingresá el código de administrador mostrado arriba.\n`,
+          tr(
+            `No se pudo abrir el navegador. Abrí ${localUrl} e ingresá el código de acceso del administrador mostrado arriba.\n`,
+            `Could not open the browser. Open ${localUrl} and enter the administrator access code shown above.\n`,
+          ),
         );
       browser.on('error', fallback);
       browser.on('exit', (code) => {
@@ -207,6 +229,11 @@ async function main(): Promise<void> {
 
 void main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`${APPLICATION_NAME} failed to start: ${message}\n`);
+  process.stderr.write(
+    tr(
+      `${APPLICATION_NAME} no pudo arrancar: ${message}\n`,
+      `${APPLICATION_NAME} failed to start: ${message}\n`,
+    ),
+  );
   process.exitCode = 1;
 });
