@@ -2,7 +2,14 @@
 // scripts/release-build.mjs: AppImage, deb and tar.gz on Linux, an NSIS
 // installer and a zip on Windows. Output goes to release/desktop.
 import { createHash } from 'node:crypto';
-import { readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  readdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 import { build as bundle } from 'esbuild';
@@ -40,12 +47,35 @@ await bundle({
   external: ['electron'],
 });
 
+// Linux launcher entry and AppStream data for the AUR and Flathub packages,
+// with the release being built listed first.
+const appId = 'io.github.terraendisputa.TerraEnDisputa';
+const linux = join(desktop, 'dist/linux');
+await mkdir(linux, { recursive: true });
+await writeFile(
+  join(linux, `${appId}.desktop`),
+  await readFile(join(root, `packaging/linux/${appId}.desktop`)),
+);
+const metainfo = await readFile(
+  join(root, `packaging/linux/${appId}.metainfo.xml`),
+  'utf8',
+);
+await writeFile(
+  join(linux, `${appId}.metainfo.xml`),
+  metainfo.includes(`<release version="${version}"`)
+    ? metainfo
+    : metainfo.replace(
+        '<releases>\n',
+        `<releases>\n    <release version="${version}" date="${new Date().toISOString().slice(0, 10)}"/>\n`,
+      ),
+);
+
 const summary = 'Turn-based strategy game for 2 to 6 players';
 await build({
   projectDir: desktop,
   publish: 'never',
   config: {
-    appId: 'io.github.terraendisputa.TerraEnDisputa',
+    appId,
     productName: 'Terra en disputa',
     executableName: 'terra-en-disputa',
     copyright: 'AGPL-3.0-only',
@@ -65,7 +95,7 @@ await build({
       homepage: 'https://terraendisputa.github.io/TerraEnDisputa/',
       repository: 'https://github.com/terraendisputa/TerraEnDisputa',
       // Lets desktops match the running window to its launcher entry.
-      desktopName: 'io.github.terraendisputa.TerraEnDisputa.desktop',
+      desktopName: `${appId}.desktop`,
       author: {
         name: 'Terra en disputa',
         email: 'terraendisputa@users.noreply.github.com',
@@ -77,6 +107,7 @@ await build({
       { from: join(stage, 'app'), to: 'server' },
       { from: join(stage, 'web'), to: 'web' },
       { from: 'build/icon.png', to: 'icon.png' },
+      { from: linux, to: 'linux' },
       { from: join(stage, 'THIRD_PARTY_LICENSES'), to: 'THIRD_PARTY_LICENSES' },
       { from: join(root, 'LICENSE'), to: 'LICENSE.ted' },
     ],

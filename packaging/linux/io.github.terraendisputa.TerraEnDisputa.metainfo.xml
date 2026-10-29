@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.terraendisputa.TerraEnDisputa</id>
+  <name>Terra en disputa</name>
+  <summary>Turn-based strategy game for 2 to 6 players</summary>
+  <summary xml:lang="es">Juego de estrategia por turnos para 2 a 6 jugadores</summary>
+  <developer id="io.github.terraendisputa">
+    <name>Terra en disputa</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-only</project_license>
+  <description>
+    <p>
+      Conquer countries, reinforce your armies, roll the dice, trade cards and make pacts.
+      One person hosts the game on their computer and everyone else joins from a web
+      browser with an invitation link, on the same network or through a private VPN.
+      Games are saved on the host computer.
+    </p>
+    <p>Three modes, chosen when creating a game:</p>
+    <ul>
+      <li>Retake: 72 countries, situations that change every round, missiles, alliances and shared countries.</li>
+      <li>Classic: 50 countries, with secret objectives for 4 to 6 players.</li>
+      <li>Competitive: clocks, automatic final rounds and scoring for 4 to 6 players.</li>
+    </ul>
+    <p>
+      Closing the window keeps the server running in the system tray so the game can go on.
+      Bots can fill empty seats. Available in Spanish and English.
+    </p>
+    <p xml:lang="es">
+      Conquistá países, reforzá tus ejércitos, tirá los dados, canjeá cartas y hacé pactos.
+      Una persona aloja la partida en su computadora y el resto entra desde el navegador
+      con un enlace de invitación, en la misma red o por una VPN privada. Las partidas se
+      guardan en el equipo que aloja.
+    </p>
+    <p xml:lang="es">Tres modalidades, que se eligen al crear la partida:</p>
+    <ul xml:lang="es">
+      <li>Reconquista: 72 países, situaciones que cambian cada ronda, misiles, alianzas y países compartidos.</li>
+      <li>Clásico: 50 países, con objetivos secretos para 4 a 6 jugadores.</li>
+      <li>Competitivo: relojes, rondas finales automáticas y puntaje para 4 a 6 jugadores.</li>
+    </ul>
+    <p xml:lang="es">
+      Cerrar la ventana deja el servidor funcionando en la bandeja del sistema para que la
+      partida siga. Los bots pueden ocupar los lugares vacíos. En español e inglés.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.terraendisputa.TerraEnDisputa.desktop</launchable>
+  <url type="homepage">https://terraendisputa.github.io/TerraEnDisputa/</url>
+  <url type="bugtracker">https://github.com/terraendisputa/TerraEnDisputa/issues</url>
+  <url type="vcs-browser">https://github.com/terraendisputa/TerraEnDisputa</url>
+  <url type="help">https://terraendisputa.github.io/TerraEnDisputa/en/wiki/</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>A Retake game</caption>
+      <image>https://raw.githubusercontent.com/terraendisputa/TerraEnDisputa/main/packaging/linux/screenshots/retake.jpg</image>
+    </screenshot>
+    <screenshot>
+      <caption>A Classic game</caption>
+      <image>https://raw.githubusercontent.com/terraendisputa/TerraEnDisputa/main/packaging/linux/screenshots/classic.jpg</image>
+    </screenshot>
+    <screenshot>
+      <caption>A Competitive game with clocks</caption>
+      <image>https://raw.githubusercontent.com/terraendisputa/TerraEnDisputa/main/packaging/linux/screenshots/competitive.jpg</image>
+    </screenshot>
+  </screenshots>
+  <categories>
+    <category>Game</category>
+    <category>StrategyGame</category>
+  </categories>
+  <keywords>
+    <keyword>strategy</keyword>
+    <keyword>board game</keyword>
+    <keyword>multiplayer</keyword>
+    <keyword xml:lang="es">estrategia</keyword>
+    <keyword xml:lang="es">juego de mesa</keyword>
+  </keywords>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <branding>
+    <color type="primary" scheme_preference="light">#c8dcd6</color>
+    <color type="primary" scheme_preference="dark">#4b5320</color>
+  </branding>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-fantasy">mild</content_attribute>
+  </content_rating>
+  <!-- scripts/desktop-build.mjs adds the release being built. -->
+  <releases>
+  </releases>
+</component>

@@ -1,0 +1,41 @@
+# Flathub manifest for the desktop app built by the project's CI.
+# scripts/packaging-update.mjs sets the release URL and checksum.
+id: io.github.terraendisputa.TerraEnDisputa
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '25.08'
+command: terra-en-disputa
+separate-locales: false
+finish-args:
+  # Players join over the network; the window uses Wayland or X11.
+  - --share=ipc
+  - --share=network
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # Tray icon and the "still running" notice.
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=org.freedesktop.Notifications
+modules:
+  - name: terra-en-disputa
+    buildsystem: simple
+    sources:
+      - type: archive
+        url: https://github.com/terraendisputa/TerraEnDisputa/releases/download/v1.1.0/terra-en-disputa-1.1.0-linux-x64.tar.gz
+        sha256: '0000000000000000000000000000000000000000000000000000000000000000'
+        only-arches: [x86_64]
+        dest: app
+      - type: script
+        dest-filename: terra-en-disputa.sh
+        commands:
+          - exec zypak-wrapper /app/terra-en-disputa/terra-en-disputa "$@"
+    build-commands:
+      # Flatpak sandboxes Chromium through zypak instead of the setuid helper.
+      - rm app/chrome-sandbox
+      - cp -a app "${FLATPAK_DEST}/terra-en-disputa"
+      - install -Dm755 terra-en-disputa.sh "${FLATPAK_DEST}/bin/terra-en-disputa"
+      - install -Dm644 "app/resources/linux/${FLATPAK_ID}.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop"
+      - install -Dm644 "app/resources/linux/${FLATPAK_ID}.metainfo.xml" "${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml"
+      - install -Dm644 app/resources/icon.png "${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png"
