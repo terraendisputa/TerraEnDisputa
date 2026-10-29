@@ -150,6 +150,9 @@ code {
   display: inline-block;
   margin-bottom: 1.5rem;
 }
+:root[data-theme='dark'] .text-link {
+  color: #9fc7a8;
+}
 .button-row,
 .row-actions,
 .copy-line {
