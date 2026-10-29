@@ -21,7 +21,8 @@ Terra en disputa no está afiliado, respaldado ni patrocinado por los titulares 
 
 | Situación                                      | Qué usar                                                                       |
 | ---------------------------------------------- | ------------------------------------------------------------------------------ |
-| Jugar en tu casa desde tu computadora          | [Paquete portable](#1-jugar-desde-tu-computadora) (Windows o Linux x64)        |
+| Jugar en tu casa desde tu computadora          | [Aplicación de escritorio](#aplicación-de-escritorio) (Windows o Linux x64)    |
+| Lo mismo, sin instalar nada                    | [Paquete portable](#1-jugar-desde-tu-computadora) (Windows o Linux x64)        |
 | Dejarlo siempre encendido en un servidor Linux | [Servicio systemd](#2-servidor-linux-como-servicio)                            |
 | Jugar a distancia con amigos                   | [Tailscale](#3-jugar-a-distancia) (red privada, recomendado)                   |
 | Abrirlo a cualquiera con un enlace HTTPS       | [Tailscale Funnel o dominio propio](#3-jugar-a-distancia) delante del servicio |
@@ -49,6 +50,15 @@ Opciones útiles (`./ted --help` muestra todas):
 ```
 
 Las partidas se guardan aparte de la aplicación: `~/.local/share/ted` en Linux y `%LOCALAPPDATA%\TED\data` en Windows.
+
+### Aplicación de escritorio
+
+La aplicación trae el mismo servidor y lo abre en su propia ventana, con el panel del anfitrión ya iniciado. Descargá de [Releases](https://github.com/terraendisputa/TerraEnDisputa/releases) el instalador de Windows (`.exe`), o en Linux el `.AppImage`, el `.deb` o el `.tar.gz`.
+
+- Cerrar la ventana **no** apaga el servidor: sigue en la bandeja del sistema para que la partida continúe. Para apagarlo, elegí **Apagar servidor y salir** en el ícono de la bandeja o en el menú **Terra en disputa** de la ventana.
+- Desde ese mismo menú podés abrir el panel en el navegador, copiar el código de administración y abrir la carpeta de partidas.
+- Usa el puerto `3000` y la misma carpeta de partidas que el paquete portable, así que no los abras a la vez. Para otro puerto, iniciala con la variable `GAME_PORT`.
+- En GNOME la bandeja necesita la extensión AppIndicator. Sin ella, volvé a abrir la aplicación desde el menú de aplicaciones para recuperar la ventana.
 
 ### En Windows
 
@@ -206,6 +216,7 @@ Con Node.js `>=24.11 <25` y pnpm `10.15.0`:
 pnpm install --frozen-lockfile
 pnpm typecheck && pnpm lint && pnpm build
 pnpm release        # genera el paquete en release/ y lo prueba
+pnpm desktop:build  # arma la aplicación de escritorio en release/desktop/
 ```
 
 `bash scripts/update-game.sh --build` hace lo mismo con límites pensados para equipos chicos. Ver [actualizar y compilar](docs/UPDATING.md).

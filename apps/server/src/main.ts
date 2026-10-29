@@ -15,6 +15,13 @@ import {
 } from './reconquista/routes.js';
 import { ReconquistaStore } from './reconquista/store.js';
 
+/** Present when the desktop app runs the server as an Electron utility process. */
+interface DesktopPort {
+  postMessage(message: unknown): void;
+  on(event: 'message', listener: (event: { data: unknown }) => void): void;
+}
+const desktop = (process as { parentPort?: DesktopPort }).parentPort;
+
 async function main(): Promise<void> {
   const command = parseCli(process.argv.slice(2));
   if (command.kind === 'help') {
@@ -93,7 +100,7 @@ async function main(): Promise<void> {
     ['0.0.0.0', 'localhost', '::'].includes(command.bind) ||
     isLoopback(command.bind);
   const adminLaunch =
-    command.openBrowser &&
+    (command.openBrowser || desktop) &&
     supportsLocal &&
     !process.env['GAME_PUBLIC_ORIGIN'] &&
     !process.env['GAME_TRUSTED_PROXY']
@@ -158,6 +165,10 @@ async function main(): Promise<void> {
   };
   process.once('SIGINT', () => void shutdown());
   process.once('SIGTERM', () => void shutdown());
+  desktop?.on('message', ({ data }) => {
+    if ((data as { type?: unknown } | null)?.type === 'shutdown')
+      void shutdown().finally(() => process.exit());
+  });
 
   try {
     await server.listen({
@@ -195,10 +206,18 @@ async function main(): Promise<void> {
           'Security: HTTP is unencrypted; use only a trusted LAN or private VPN.\n',
         ),
       );
-    if (command.openBrowser) {
-      const launchUrl = adminLaunch
-        ? `${localUrl}#admin-launch=${adminLaunch.token}`
-        : localUrl;
+    const launchUrl = adminLaunch
+      ? `${localUrl}#admin-launch=${adminLaunch.token}`
+      : localUrl;
+    if (desktop)
+      desktop.postMessage({
+        type: 'ready',
+        origin,
+        launchUrl,
+        adminAccessCode,
+        dataDirectory: command.dataDirectory,
+      });
+    else if (command.openBrowser) {
       const [program, arguments_] =
         process.platform === 'win32'
           ? ['cmd', ['/c', 'start', '', launchUrl]]
@@ -222,6 +241,10 @@ async function main(): Promise<void> {
     }
   } catch (error) {
     server.log.error(error);
+    desktop?.postMessage({
+      type: 'error',
+      message: error instanceof Error ? error.message : String(error),
+    });
     await server.close();
     process.exitCode = 1;
   }
@@ -235,5 +258,6 @@ void main().catch((error: unknown) => {
       `${APPLICATION_NAME} failed to start: ${message}\n`,
     ),
   );
+  desktop?.postMessage({ type: 'error', message });
   process.exitCode = 1;
 });
