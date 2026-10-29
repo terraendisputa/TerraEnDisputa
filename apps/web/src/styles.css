@@ -130,6 +130,8 @@ code {
 .warning {
   border-left: 4px solid var(--gold);
   background: #fff4cd;
+  /* The cream box keeps dark text in both themes. */
+  color: #3a2f1a;
   padding: 0.65rem 0.8rem;
 }
 .error-banner {
