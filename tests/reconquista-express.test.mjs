@@ -417,3 +417,66 @@ void test('bots take table seats, play seats the host gives them and free their 
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+void test('a game with table bots loads again after a restart', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'reconquista-bots-restart-'));
+  const s = await server(directory);
+  const prefix = '/api/reconquista';
+  let id;
+  try {
+    id = (
+      await s.request('POST', prefix + '/games', s.admin, { playerCount: 4 })
+    ).json().gameId;
+    assert.equal(
+      (await s.request('PATCH', `${prefix}/games/${id}`, s.admin, { bots: 3 }))
+        .statusCode,
+      200,
+    );
+    const joined = await s.request('POST', `${prefix}/games/${id}/join`, '', {
+      nickname: 'Ana',
+      color: 'black',
+    });
+    await s.request(
+      'POST',
+      `${prefix}/games/${id}/ready`,
+      s.cookie(joined),
+      {},
+    );
+    const started = await s.request(
+      'POST',
+      `${prefix}/games/${id}/start`,
+      s.admin,
+      {},
+    );
+    assert.equal(started.statusCode, 200, started.body);
+  } finally {
+    await s.app.close();
+  }
+  // Only the person joined and got ready before the start, as the save records.
+  const classicStore = await FileGameStore.open(directory);
+  const app = buildServer({
+    logger: false,
+    store: classicStore,
+    webRoot: join(root, 'apps/web/dist'),
+    onClose: () => classicStore.close(),
+  });
+  await registerReconquista(app, {
+    dataDirectory: directory,
+    classicStore,
+    clockTicks: false,
+  });
+  await app.ready();
+  try {
+    const entry = await app.inject({
+      method: 'GET',
+      url: `${prefix}/games/${id}/entry`,
+      headers: { host: '127.0.0.1:3001' },
+    });
+    assert.equal(entry.statusCode, 200, entry.body);
+    assert.equal(entry.json().stage, 'started');
+    assert.equal(entry.json().players.length, 4);
+  } finally {
+    await app.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
