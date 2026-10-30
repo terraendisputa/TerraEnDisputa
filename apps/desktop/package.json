@@ -6,7 +6,7 @@
   "main": "dist/main.cjs",
   "devDependencies": {
     "@types/node": "24.3.0",
-    "electron": "44.7.2",
+    "electron": "44.10.0",
     "electron-builder": "26.17.0"
   }
 }
