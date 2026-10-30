@@ -105,9 +105,17 @@ function Landing({ encrypted }: { readonly encrypted: boolean }) {
             <button type="submit">{tr('Continuar', 'Continue')}</button>
           </form>
           <hr />
-          <a className="button-link secondary" href="/admin">
-            {tr('Administrar servidor', 'Manage the server')}
-          </a>
+          <div className="landing-links">
+            <a
+              className="button-link secondary"
+              href={tr('/como-jugar/wiki/', '/como-jugar/en/wiki/')}
+            >
+              {tr('Cómo jugar', 'How to play')}
+            </a>
+            <a className="button-link secondary" href="/admin">
+              {tr('Administrar servidor', 'Manage the server')}
+            </a>
+          </div>
         </section>
         <LanguageSelect />
       </main>

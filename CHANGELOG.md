@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 — 2026-10-30
+
+- Desktop app for Windows and Linux: the server runs in its own window with the host panel already signed in and keeps running in the system tray. Windows installer (with a firewall rule for private networks), AppImage, deb and tar.gz.
+- AUR and Flathub packaging for the desktop app.
+- «How to play» pages served by the game and linked from its start screen.
+- Console and script messages in English, or in Spanish when the system language is Spanish.
+- Sharper map when zoomed in.
+
 ## 1.0.2 — 2026-10-29
 
 - Retake games with bots load again after the server restarts.

@@ -21,7 +21,8 @@ Terra en disputa no está afiliado, respaldado ni patrocinado por los titulares 
 
 | Situación                                      | Qué usar                                                                       |
 | ---------------------------------------------- | ------------------------------------------------------------------------------ |
-| Jugar en tu casa desde tu computadora          | [Paquete portable](#1-jugar-desde-tu-computadora) (Windows o Linux x64)        |
+| Jugar en tu casa desde tu computadora          | [Aplicación de escritorio](#aplicación-de-escritorio) (Windows o Linux x64)    |
+| Lo mismo, sin instalar nada                    | [Paquete portable](#1-jugar-desde-tu-computadora) (Windows o Linux x64)        |
 | Dejarlo siempre encendido en un servidor Linux | [Servicio systemd](#2-servidor-linux-como-servicio)                            |
 | Jugar a distancia con amigos                   | [Tailscale](#3-jugar-a-distancia) (red privada, recomendado)                   |
 | Abrirlo a cualquiera con un enlace HTTPS       | [Tailscale Funnel o dominio propio](#3-jugar-a-distancia) delante del servicio |
@@ -30,7 +31,7 @@ Para jugar alcanza con un navegador moderno, en computadora, tablet o teléfono.
 
 ## 1. Jugar desde tu computadora
 
-Los paquetes compilados incluyen Node.js, así que no hace falta instalar nada más. Descargalos de [Releases](https://github.com/unlisted3954/TerraEnDisputa/releases) o [compilalos vos](#compilar-desde-el-código).
+Los paquetes compilados incluyen Node.js, así que no hace falta instalar nada más. Descargalos de [Releases](https://github.com/terraendisputa/TerraEnDisputa/releases) o [compilalos vos](#compilar-desde-el-código).
 
 1. Descargá el paquete de tu sistema, comprobalo con `SHA256SUMS` y extraé **toda la carpeta**.
 2. En Windows abrí `ted.cmd`. En Linux ejecutá `./ted` dentro de la carpeta.
@@ -49,6 +50,15 @@ Opciones útiles (`./ted --help` muestra todas):
 ```
 
 Las partidas se guardan aparte de la aplicación: `~/.local/share/ted` en Linux y `%LOCALAPPDATA%\TED\data` en Windows.
+
+### Aplicación de escritorio
+
+La aplicación trae el mismo servidor y lo abre en su propia ventana, con el panel del anfitrión ya iniciado. Descargá de [Releases](https://github.com/terraendisputa/TerraEnDisputa/releases) el instalador de Windows (`.exe`), o en Linux el `.AppImage`, el `.deb` o el `.tar.gz`.
+
+- Cerrar la ventana **no** apaga el servidor: sigue en la bandeja del sistema para que la partida continúe. Para apagarlo, elegí **Apagar servidor y salir** en el ícono de la bandeja o en el menú **Terra en disputa** de la ventana.
+- Desde ese mismo menú podés abrir el panel en el navegador, copiar el código de administración y abrir la carpeta de partidas.
+- Usa el puerto `3000` y la misma carpeta de partidas que el paquete portable, así que no los abras a la vez. Para otro puerto, iniciala con la variable `GAME_PORT`.
+- En GNOME la bandeja necesita la extensión AppIndicator. Sin ella, volvé a abrir la aplicación desde el menú de aplicaciones para recuperar la ventana.
 
 ### En Windows
 
@@ -80,7 +90,7 @@ Para un VPS o un equipo Linux x64 con systemd. El instalador compila el código,
 Bajá el código y, desde su carpeta, instalá **sin sudo delante**:
 
 ```bash
-git clone https://github.com/unlisted3954/TerraEnDisputa.git
+git clone https://github.com/terraendisputa/TerraEnDisputa.git
 cd TerraEnDisputa
 bash scripts/install-game.sh
 ```
@@ -98,11 +108,11 @@ Usá `--bind 0.0.0.0` para que entren equipos de tu red o VPN, y dejá `127.0.0.
 ```bash
 systemctl status ted.service
 sudo systemctl restart ted.service
-sudo journalctl -u ted.service -n 100 --no-pager   # muestra el código de administración
+sudo journalctl -u ted.service --no-pager | grep -Ei "access code|código de acceso" | tail -n 1   # código de administración
 curl http://127.0.0.1:3000/health
 ```
 
-El panel está en `http://<servidor>:3000/admin`. Cada arranque imprime un código de administración nuevo en el journal; las partidas y los jugadores se conservan.
+El panel está en `http://<servidor>:3000/admin`. Cada arranque imprime un código de administración nuevo en el journal; las partidas y los jugadores se conservan. Los mensajes de la consola salen en español si el sistema está en español y en inglés si no; un servicio de systemd normalmente arranca sin idioma, así que muestra `Administrator access code`. El comando de arriba encuentra el código en los dos idiomas.
 
 ### Actualizar
 
@@ -189,14 +199,15 @@ Agregá `--data-dir` si usás otra carpeta de datos. La copia incluye las tres m
 
 ## Problemas comunes
 
-| Mensaje o síntoma                                         | Qué hacer                                                                                                                                                                                       |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ted.service existe, pero falta la aplicación`            | El instalador ofrece borrar la unidad rota y hacer una instalación nueva. Respondé `s`; las partidas no se tocan.                                                                               |
-| `Packaged server did not answer /health`                  | La prueba del paquete no pudo hablar con su servidor local. Si el equipo usa un proxy, repetí con `env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy bash scripts/install-game.sh`. |
-| `Unit ted.service could not be found` después de instalar | El instalador se detuvo antes de crear el servicio. Revisá el primer `ERROR` de su salida.                                                                                                      |
-| El dominio responde `421` o el juego no conecta           | Falta o no coincide `GAME_PUBLIC_ORIGIN`, o el túnel no reenvía WebSocket. Revisá [Jugar a distancia](#3-jugar-a-distancia).                                                                    |
-| Me pide un código de administración                       | Buscalo en `sudo journalctl -u ted.service -n 100 --no-pager` o en la terminal donde corre `ted`. Cambia en cada reinicio.                                                                      |
-| La compilación se queda sin memoria                       | Agregá swap o subí el límite: `TED_BUILD_MEMORY_MB=1024 bash scripts/install-game.sh`.                                                                                                          |
+| Mensaje o síntoma                                         | Qué hacer                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ted.service existe, pero falta la aplicación`            | El instalador ofrece borrar la unidad rota y hacer una instalación nueva. Respondé `s`; las partidas no se tocan.                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `Packaged server did not answer /health`                  | La prueba del paquete no pudo hablar con su servidor local. Si el equipo usa un proxy, repetí con `env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy bash scripts/install-game.sh`.                                                                                                                                                                                                                                                                                                                      |
+| `Unit ted.service could not be found` después de instalar | El instalador se detuvo antes de crear el servicio. Revisá el primer `ERROR` de su salida.                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| El dominio responde `421` o el juego no conecta           | Falta o no coincide `GAME_PUBLIC_ORIGIN`, o el túnel no reenvía WebSocket. Revisá [Jugar a distancia](#3-jugar-a-distancia).                                                                                                                                                                                                                                                                                                                                                                                         |
+| Me pide un código de administración                       | Buscalo con `sudo journalctl -u ted.service --no-pager \| grep -Ei "access code \| código de acceso" \| tail -n 1` o en la terminal donde corre `ted`. Cambia en cada reinicio.                                                                                                                                                                                                                                                                                                                                      |
+| Otros equipos no abren la invitación (se queda cargando)  | El firewall del anfitrión bloquea el puerto `3000`. Fedora: `sudo firewall-cmd --permanent --add-port=3000/tcp && sudo firewall-cmd --reload`. Ubuntu con ufw: `sudo ufw allow 3000/tcp`. Windows: en Configuración → Red e Internet, marcá tu wifi como **Red privada**. El instalador de la aplicación ya permite el programa en el firewall para redes privadas; con el paquete portable, aceptá el aviso de Windows. Si sigue igual, revisá que el router no tenga activado el aislamiento de clientes del wifi. |
+| La compilación se queda sin memoria                       | Agregá swap o subí el límite: `TED_BUILD_MEMORY_MB=1024 bash scripts/install-game.sh`.                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## Compilar desde el código
 
@@ -206,6 +217,7 @@ Con Node.js `>=24.11 <25` y pnpm `10.15.0`:
 pnpm install --frozen-lockfile
 pnpm typecheck && pnpm lint && pnpm build
 pnpm release        # genera el paquete en release/ y lo prueba
+pnpm desktop:build  # arma la aplicación de escritorio en release/desktop/
 ```
 
 `bash scripts/update-game.sh --build` hace lo mismo con límites pensados para equipos chicos. Ver [actualizar y compilar](docs/UPDATING.md).

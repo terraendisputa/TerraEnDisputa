@@ -1,12 +1,12 @@
 {
   "name": "ted",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "private": true,
   "description": "Self-hosted browser strategy game for 2\u20136 human players",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/unlisted3954/TerraEnDisputa.git"
+    "url": "https://github.com/terraendisputa/TerraEnDisputa.git"
   },
   "type": "module",
   "engines": {
@@ -21,6 +21,7 @@
     "release:build": "pnpm build && node scripts/release-build.mjs",
     "release:smoke": "node scripts/release-smoke.mjs",
     "release": "pnpm release:build && pnpm release:smoke",
+    "desktop:build": "node scripts/desktop-build.mjs",
     "typecheck": "tsc -b",
     "test": "pnpm typecheck && pnpm build && pnpm test:integration",
     "test:classic": "node --test --test-isolation=none tests/classic-reference.test.mjs tests/edition-compatibility.test.mjs tests/classic-express.test.mjs tests/classic-bots.test.mjs",

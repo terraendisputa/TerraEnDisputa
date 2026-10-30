@@ -143,7 +143,18 @@ await writeFile(
 if (platform === 'win32') {
   await writeFile(
     join(stage, 'ted.cmd'),
-    '@echo off\r\nsetlocal\r\nset "GAME_WEB_ROOT=%~dp0web"\r\n"%~dp0runtime\\node.exe" "%~dp0app\\server.mjs" %*\r\n',
+    // Opened with a double click (no arguments), the window stays open on
+    // failure so the error can be read before it closes.
+    [
+      '@echo off',
+      'setlocal',
+      'set "GAME_WEB_ROOT=%~dp0web"',
+      '"%~dp0runtime\\node.exe" "%~dp0app\\server.mjs" %*',
+      'set "code=%errorlevel%"',
+      'if not "%code%"=="0" if "%~1"=="" pause',
+      'exit /b %code%',
+      '',
+    ].join('\r\n'),
   );
 } else {
   await writeFile(

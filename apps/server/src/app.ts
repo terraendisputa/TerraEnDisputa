@@ -1170,6 +1170,17 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         return reply.code(404).send({ code: 'GAME_NOT_FOUND' });
       return reply.sendFile('index.html');
     });
+    // The how-to-play pages are a copy of the project site without its home
+    // pages; their "home" links lead back to this server's start page.
+    for (const path of [
+      '/como-jugar',
+      '/como-jugar/',
+      '/como-jugar/index.html',
+      '/como-jugar/en',
+      '/como-jugar/en/',
+      '/como-jugar/en/index.html',
+    ])
+      server.get(path, (_request, reply) => reply.redirect('/'));
   }
   return server;
 }

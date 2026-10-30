@@ -35,8 +35,8 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: corepack enable
@@ -60,15 +60,17 @@ jobs:
             target: windows-x64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm release:build
       - run: pnpm release:smoke
-      - uses: actions/upload-artifact@v4
+      # Desktop app installers, built from the same server package.
+      - run: pnpm desktop:build
+      - uses: actions/upload-artifact@v6
         with:
           name: ted-${{ matrix.target }}
           retention-days: 14
@@ -78,6 +80,12 @@ jobs:
             release/*.tar.gz
             release/SHA256SUMS
             release/manifest-*.json
+            release/desktop/*.AppImage
+            release/desktop/*.deb
+            release/desktop/*.tar.gz
+            release/desktop/*.exe
+            release/desktop/*.zip
+            release/desktop/SHA256SUMS
 
   release:
     needs: package
@@ -86,15 +94,16 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           path: dist
       - name: Merge checksums
         run: |
           mkdir out
-          cat dist/*/SHA256SUMS | sort -k2 > out/SHA256SUMS
+          cat dist/*/SHA256SUMS dist/*/desktop/SHA256SUMS | sort -k2 > out/SHA256SUMS
           cp dist/*/*.zip dist/*/*.tar.gz dist/*/manifest-*.json out/
-      - uses: softprops/action-gh-release@v2
+          find dist/*/desktop -type f ! -name SHA256SUMS -exec cp {} out/ \;
+      - uses: softprops/action-gh-release@v3
         with:
           draft: true
           files: out/*

@@ -3,10 +3,14 @@
 set -Eeuo pipefail
 umask 077
 
-die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
-say() { printf '%s\n' "$*"; }
+# Messages come in Spanish and English; the system language picks one.
+case ${LC_ALL:-${LC_MESSAGES:-${LANG:-}}} in es|es[_.@-]*) spanish=true ;; *) spanish=false ;; esac
+pick() { if $spanish || (($# == 1)); then printf '%s' "$1"; else printf '%s' "$2"; fi; }
+die() { printf 'ERROR: %s\n' "$(pick "$@")" >&2; exit 1; }
+say() { printf '%s\n' "$(pick "$@")"; }
 usage() {
-  cat <<'USAGE'
+  if $spanish; then
+    cat <<'USAGE'
 Uso: bash scripts/install-game.sh [opciones]
 
 Compila, verifica, instala y habilita ted.service en Linux x64.
@@ -26,6 +30,28 @@ Una unidad existente compatible se conserva, incluyendo su configuración.
 --bind/--port/--data-dir son para unidades nuevas; editar las existentes aparte.
 TED_BUILD_MEMORY_MB configura el heap de compilación (512 MB por defecto).
 USAGE
+  else
+    cat <<'USAGE'
+Usage: bash scripts/install-game.sh [options]
+
+Builds, verifies, installs and enables ted.service on Linux x64.
+Run it as the user who will host the server, without sudo in front.
+
+--pull                Update the public main branch before building.
+--dir FOLDER          Source folder; defaults to the script's project.
+--install-dir FOLDER  Installation; default: ~/ted.
+--data-dir FOLDER     Data; default: XDG_DATA_HOME/ted
+                      or ~/.local/share/ted.
+--bind ADDRESS        Initial listen address; default: 127.0.0.1.
+--port NUMBER         Initial port; default: 3000.
+--user-service        Personal systemd service, without sudo.
+-h, --help            Help.
+
+A compatible existing unit is kept, including its settings.
+--bind/--port/--data-dir apply to new units; edit existing ones separately.
+TED_BUILD_MEMORY_MB sets the build heap (512 MB by default).
+USAGE
+  fi
 }
 
 project_dir=
@@ -41,7 +67,7 @@ while (($#)); do
     --pull) mode=--pull; shift ;;
     --user-service) personal=true; shift ;;
     --dir|--install-dir|--data-dir|--bind|--port)
-      if (($# < 2)) || [[ -z $2 || $2 == --* ]]; then die "Falta el valor de $1."; fi
+      if (($# < 2)) || [[ -z $2 || $2 == --* ]]; then die "Falta el valor de $1." "Missing value for $1."; fi
       case "$1" in
         --dir) project_dir=$2 ;;
         --install-dir) install_dir=$2 ;;
@@ -52,27 +78,27 @@ while (($#)); do
       shift 2
       ;;
     --help|-h) usage; exit 0 ;;
-    *) die "Opción desconocida: $1. Consultá --help." ;;
+    *) die "Opción desconocida: $1. Consultá --help." "Unknown option: $1. See --help." ;;
   esac
 done
-[[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || die 'La instalación como servicio requiere Linux x64 con systemd.'
-((EUID != 0)) || die 'Ejecutalo con tu usuario habitual, sin sudo delante del script.'
+[[ $(uname -s) == Linux && $(uname -m) == x86_64 ]] || die 'La instalación como servicio requiere Linux x64 con systemd.' 'Installing as a service requires Linux x64 with systemd.'
+((EUID != 0)) || die 'Ejecutalo con tu usuario habitual, sin sudo delante del script.' 'Run it as your regular user, without sudo in front of the script.'
 for tool in systemctl systemd-analyze journalctl node pnpm tar sha256sum realpath flock curl; do
-  command -v "$tool" >/dev/null || die "Falta $tool. Consultá docs/INSTALLING.md."
+  command -v "$tool" >/dev/null || die "Falta $tool. Consultá docs/INSTALLING.md." "$tool is missing. See docs/INSTALLING.md."
 done
-if [[ ! $port =~ ^[1-9][0-9]{0,4}$ ]] || ((port < 1024 || port > 65535)); then die 'El puerto debe estar entre 1024 y 65535.'; fi
-[[ $bind =~ ^[a-zA-Z0-9.:_-]+$ ]] || die 'Dirección de escucha inválida.'
+if [[ ! $port =~ ^[1-9][0-9]{0,4}$ ]] || ((port < 1024 || port > 65535)); then die 'El puerto debe estar entre 1024 y 65535.' 'The port must be between 1024 and 65535.'; fi
+[[ $bind =~ ^[a-zA-Z0-9.:_-]+$ ]] || die 'Dirección de escucha inválida.' 'Invalid listen address.'
 if [[ -z $project_dir ]]; then
   project_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 fi
 project_dir=$(realpath -e -- "$project_dir")
-[[ -f $project_dir/scripts/update-game.sh ]] || die 'No se encontró scripts/update-game.sh en el proyecto.'
-[[ ! -L $install_dir && ! -L $data_dir ]] || die 'Instalación y datos deben ser carpetas, no enlaces simbólicos.'
+[[ -f $project_dir/scripts/update-game.sh ]] || die 'No se encontró scripts/update-game.sh en el proyecto.' 'scripts/update-game.sh was not found in the project.'
+[[ ! -L $install_dir && ! -L $data_dir ]] || die 'Instalación y datos deben ser carpetas, no enlaces simbólicos.' 'Installation and data must be folders, not symbolic links.'
 install_dir=$(realpath -m -- "$install_dir")
 data_dir=$(realpath -m -- "$data_dir")
 backup_root=${install_dir}-backups
-[[ ! -L $backup_root ]] || die 'La carpeta de respaldos no puede ser un enlace simbólico.'
-[[ $install_dir != / && $install_dir != "$HOME" && $install_dir != "$project_dir" && $install_dir != "$project_dir"/* && $project_dir != "$install_dir"/* ]] || die 'La instalación debe estar separada del código fuente y no puede ser una carpeta amplia.'
+[[ ! -L $backup_root ]] || die 'La carpeta de respaldos no puede ser un enlace simbólico.' 'The backup folder cannot be a symbolic link.'
+[[ $install_dir != / && $install_dir != "$HOME" && $install_dir != "$project_dir" && $install_dir != "$project_dir"/* && $project_dir != "$install_dir"/* ]] || die 'La instalación debe estar separada del código fuente y no puede ser una carpeta amplia.' 'The installation must be separate from the source code and cannot be a broad folder.'
 
 service=ted.service
 run_user=$(id -un)
@@ -81,14 +107,14 @@ if $personal; then
   admin=()
   unit_dir=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user
   journal=(journalctl --user)
-  systemctl --user show-environment >/dev/null || die 'No hay un gestor systemd de usuario disponible.'
+  systemctl --user show-environment >/dev/null || die 'No hay un gestor systemd de usuario disponible.' 'No systemd user manager is available.'
 else
-  command -v sudo >/dev/null || die 'Falta sudo. Alternativa: --user-service.'
+  command -v sudo >/dev/null || die 'Falta sudo. Alternativa: --user-service.' 'sudo is missing. Alternative: --user-service.'
   ctl=(sudo systemctl)
   admin=(sudo)
   journal=(sudo journalctl)
   unit_dir=/etc/systemd/system
-  systemctl show-environment >/dev/null || die 'El sistema no tiene systemd activo.'
+  systemctl show-environment >/dev/null || die 'El sistema no tiene systemd activo.' 'systemd is not active on this system.'
 fi
 unit_file=$unit_dir/$service
 # Do not invoke sudo for read-only system-unit inspection.
@@ -98,7 +124,7 @@ other_scope=(systemctl --user)
 $personal && other_scope=(systemctl)
 other_state=$("${other_scope[@]}" show "$service" -p LoadState --value 2>/dev/null) || other_state=not-found
 if [[ $other_state != not-found && $other_state != masked ]] || "${other_scope[@]}" is-active --quiet "$service" 2>/dev/null; then
-  die 'Ya existe ted.service en el otro ámbito de systemd. No se creará una segunda unidad; revisá sus datos primero.'
+  die 'Ya existe ted.service en el otro ámbito de systemd. No se creará una segunda unidad; revisá sus datos primero.' 'ted.service already exists in the other systemd scope. A second unit will not be created; check its data first.'
 fi
 load_state=$("${inspect[@]}" show "$service" -p LoadState --value)
 unit_exists=false
@@ -107,11 +133,11 @@ if [[ $load_state == loaded && ! -x $install_dir/ted ]] && ! "${inspect[@]}" is-
   # A unit whose application is gone cannot be updated; offer to replace it.
   # Drop-ins (systemctl edit) live in ted.service.d and are kept.
   fragment=$("${inspect[@]}" show "$service" -p FragmentPath --value)
-  say "ted.service existe, pero falta la aplicación en $install_dir."
-  [[ -t 0 ]] || die "Borrá la unidad rota ($fragment) o ejecutá el instalador en una terminal para repararla."
-  read -r -p 'Borrar esa unidad y hacer una instalación nueva? Las partidas no se tocan. [s/N] ' answer
-  [[ $answer == [sS] ]] || die 'Instalación cancelada.'
-  [[ -n $fragment && -f $fragment ]] || die 'No se encontró el archivo de la unidad.'
+  say "ted.service existe, pero falta la aplicación en $install_dir." "ted.service exists, but the application is missing in $install_dir."
+  [[ -t 0 ]] || die "Borrá la unidad rota ($fragment) o ejecutá el instalador en una terminal para repararla." "Remove the broken unit ($fragment) or run the installer in a terminal to repair it."
+  read -r -p "$(pick '¿Borrar esa unidad y hacer una instalación nueva? Las partidas no se tocan. [s/N] ' 'Remove that unit and do a fresh installation? Games are not touched. [y/N] ')" answer
+  [[ $answer == [sSyY] ]] || die 'Instalación cancelada.' 'Installation cancelled.'
+  [[ -n $fragment && -f $fragment ]] || die 'No se encontró el archivo de la unidad.' 'The unit file was not found.'
   "${ctl[@]}" disable "$service" >/dev/null 2>&1 || true
   "${admin[@]}" rm -f -- "$fragment"
   "${ctl[@]}" daemon-reload
@@ -119,20 +145,20 @@ if [[ $load_state == loaded && ! -x $install_dir/ted ]] && ! "${inspect[@]}" is-
   load_state=$("${inspect[@]}" show "$service" -p LoadState --value)
 fi
 if [[ $load_state != not-found ]]; then
-  [[ $load_state == loaded ]] || die 'La unidad existente está enmascarada o no se puede cargar.'
+  [[ $load_state == loaded ]] || die 'La unidad existente está enmascarada o no se puede cargar.' 'The existing unit is masked or cannot be loaded.'
   unit_exists=true
-  $settings_supplied && die 'El servicio ya existe. Editá su configuración aparte; se conservará durante la instalación.'
-  [[ $("${inspect[@]}" show "$service" -p WorkingDirectory --value) == "$install_dir" ]] || die 'WorkingDirectory del servicio no coincide. Indicá su carpeta con --install-dir.'
+  $settings_supplied && die 'El servicio ya existe. Editá su configuración aparte; se conservará durante la instalación.' 'The service already exists. Edit its settings separately; they are kept during the installation.'
+  [[ $("${inspect[@]}" show "$service" -p WorkingDirectory --value) == "$install_dir" ]] || die 'WorkingDirectory del servicio no coincide. Indicá su carpeta con --install-dir.' 'The service WorkingDirectory does not match. Give its folder with --install-dir.'
   if ! $personal; then
-    [[ $("${inspect[@]}" show "$service" -p User --value) == "$run_user" ]] || die 'El servicio existente debe usar tu usuario.'
+    [[ $("${inspect[@]}" show "$service" -p User --value) == "$run_user" ]] || die 'El servicio existente debe usar tu usuario.' 'The existing service must run as your user.'
   fi
   exec_start=$("${inspect[@]}" show "$service" -p ExecStart --value)
-  [[ $exec_start == *"path=$install_dir/ted ;"* ]] || die 'ExecStart existente no corresponde al launcher de esta instalación.'
-  [[ -x $install_dir/ted ]] || die 'La unidad existente no tiene su aplicación instalada.'
+  [[ $exec_start == *"path=$install_dir/ted ;"* ]] || die 'ExecStart existente no corresponde al launcher de esta instalación.' 'The existing ExecStart does not match the launcher of this installation.'
+  [[ -x $install_dir/ted ]] || die 'La unidad existente no tiene su aplicación instalada.' 'The existing unit has no installed application.'
   if ! "${inspect[@]}" is-active --quiet "$service"; then
     # Its real data folder and address are read from the running process.
-    say 'El servicio está detenido; se inicia un momento para leer su configuración.'
-    "${ctl[@]}" start "$service" || die "No se pudo iniciar el servicio existente. Revisá: ${journal[*]} -u $service -n 50 --no-pager"
+    say 'El servicio está detenido; se inicia un momento para leer su configuración.' 'The service is stopped; it is started briefly to read its settings.'
+    "${ctl[@]}" start "$service" || die "No se pudo iniciar el servicio existente. Revisá: ${journal[*]} -u $service -n 50 --no-pager" "Could not start the existing service. Check: ${journal[*]} -u $service -n 50 --no-pager"
     for _ in 1 2 3 4 5 6 7 8 9 10; do
       [[ $("${inspect[@]}" show "$service" -p MainPID --value) =~ ^[1-9] ]] && break
       sleep 1
@@ -141,7 +167,7 @@ if [[ $load_state != not-found ]]; then
   if "${inspect[@]}" is-active --quiet "$service"; then
     was_active=true
     pid=$("${inspect[@]}" show "$service" -p MainPID --value)
-    [[ $pid =~ ^[1-9][0-9]*$ && -r /proc/$pid/cmdline ]] || die 'No se pudo inspeccionar el proceso activo.'
+    [[ $pid =~ ^[1-9][0-9]*$ && -r /proc/$pid/cmdline ]] || die 'No se pudo inspeccionar el proceso activo.' 'Could not inspect the running process.'
     mapfile -d '' -t arguments <"/proc/$pid/cmdline"
     service_home=$HOME
     service_xdg=
@@ -166,30 +192,30 @@ if [[ $load_state != not-found ]]; then
     [[ $data_dir == /* ]] || data_dir=$install_dir/$data_dir
     data_dir=$(realpath -e -- "$data_dir")
   else
-    die "El servicio existente no queda activo. Revisá: ${journal[*]} -u $service -n 50 --no-pager"
+    die "El servicio existente no queda activo. Revisá: ${journal[*]} -u $service -n 50 --no-pager" "The existing service does not stay active. Check: ${journal[*]} -u $service -n 50 --no-pager"
   fi
 fi
-if [[ ! $port =~ ^[1-9][0-9]{0,4}$ ]] || ((port > 65535)); then die 'Puerto del servicio inválido.'; fi
+if [[ ! $port =~ ^[1-9][0-9]{0,4}$ ]] || ((port > 65535)); then die 'Puerto del servicio inválido.' 'Invalid service port.'; fi
 for path in "$install_dir" "$data_dir" "$backup_root" "$project_dir"; do
-  [[ $path != *$'\n'* && $path != *$'\r'* ]] || die 'Las rutas no pueden contener saltos de línea.'
+  [[ $path != *$'\n'* && $path != *$'\r'* ]] || die 'Las rutas no pueden contener saltos de línea.' 'Paths cannot contain line breaks.'
 done
-[[ $data_dir != / && $data_dir != "$HOME" && $data_dir != "$install_dir" && $data_dir != "$install_dir"/* && $install_dir != "$data_dir"/* && $data_dir != "$backup_root" && $data_dir != "$backup_root"/* && $backup_root != "$data_dir"/* && $data_dir != "$project_dir" && $data_dir != "$project_dir"/* && $project_dir != "$data_dir"/* ]] || die 'Datos, instalación, respaldos y código deben estar separados.'
-[[ $backup_root != "$project_dir" && $backup_root != "$project_dir"/* && $project_dir != "$backup_root"/* ]] || die 'Los respaldos deben estar separados del código fuente.'
-[[ ! -e $install_dir || -d $install_dir ]] || die 'La ruta de instalación no es una carpeta.'
-[[ ! -e $data_dir || -d $data_dir ]] || die 'La ruta de datos no es una carpeta.'
-if ! $unit_exists && [[ -e $unit_file ]]; then die 'Ya hay un archivo de unidad sin cargar. Revisalo antes de instalar.'; fi
+[[ $data_dir != / && $data_dir != "$HOME" && $data_dir != "$install_dir" && $data_dir != "$install_dir"/* && $install_dir != "$data_dir"/* && $data_dir != "$backup_root" && $data_dir != "$backup_root"/* && $backup_root != "$data_dir"/* && $data_dir != "$project_dir" && $data_dir != "$project_dir"/* && $project_dir != "$data_dir"/* ]] || die 'Datos, instalación, respaldos y código deben estar separados.' 'Data, installation, backups and source code must be separate.'
+[[ $backup_root != "$project_dir" && $backup_root != "$project_dir"/* && $project_dir != "$backup_root"/* ]] || die 'Los respaldos deben estar separados del código fuente.' 'Backups must be separate from the source code.'
+[[ ! -e $install_dir || -d $install_dir ]] || die 'La ruta de instalación no es una carpeta.' 'The installation path is not a folder.'
+[[ ! -e $data_dir || -d $data_dir ]] || die 'La ruta de datos no es una carpeta.' 'The data path is not a folder.'
+if ! $unit_exists && [[ -e $unit_file ]]; then die 'Ya hay un archivo de unidad sin cargar. Revisalo antes de instalar.' 'There is already an unloaded unit file. Check it before installing.'; fi
 mkdir -p -- "$(dirname "$install_dir")" "$(dirname "$data_dir")" "$backup_root"
-[[ -w $(dirname "$install_dir") && -w $backup_root ]] || die 'No hay permisos de escritura sobre la instalación o sus respaldos.'
-[[ -w $(dirname "$data_dir") && ( ! -d $data_dir || -w $data_dir ) ]] || die 'Tu usuario necesita escritura sobre los datos y su carpeta padre para permitir recuperación.'
+[[ -w $(dirname "$install_dir") && -w $backup_root ]] || die 'No hay permisos de escritura sobre la instalación o sus respaldos.' 'No write permission on the installation or its backups.'
+[[ -w $(dirname "$data_dir") && ( ! -d $data_dir || -w $data_dir ) ]] || die 'Tu usuario necesita escritura sobre los datos y su carpeta padre para permitir recuperación.' 'Your user needs write access to the data and its parent folder to allow recovery.'
 exec 9>"$backup_root/.install.lock"
-flock -n 9 || die 'Ya hay una instalación en curso.'
-[[ ! -e $install_dir || $(stat -c %d "$install_dir") == "$(stat -c %d "$backup_root")" ]] || die 'Instalación y respaldos deben compartir filesystem.'
+flock -n 9 || die 'Ya hay una instalación en curso.' 'An installation is already running.'
+[[ ! -e $install_dir || $(stat -c %d "$install_dir") == "$(stat -c %d "$backup_root")" ]] || die 'Instalación y respaldos deben compartir filesystem.' 'Installation and backups must be on the same filesystem.'
 if ! $unit_exists; then
   node -e '
     const s=require("node:net").createServer();
-    s.on("error",e=>{console.error("No se puede escuchar en la dirección/puerto elegidos: "+e.message);process.exit(1)});
+    s.on("error",e=>{console.error(process.argv[3]+e.message);process.exit(1)});
     s.listen(Number(process.argv[1]),process.argv[2],()=>s.close());
-  ' "$port" "$bind" || die 'Elegí un puerto libre y una dirección de red válida antes de instalar.'
+  ' "$port" "$bind" "$(pick 'No se puede escuchar en la dirección/puerto elegidos: ' 'Cannot listen on the chosen address/port: ')" || die 'Elegí un puerto libre y una dirección de red válida antes de instalar.' 'Choose a free port and a valid network address before installing.'
 fi
 
 stage=$(mktemp -d "$(dirname "$install_dir")/.ted-install.XXXXXXXX")
@@ -232,10 +258,10 @@ finish() {
   local result=$?
   trap - EXIT INT TERM
   if $changing; then
-    say 'Instalación fallida. Recuperando el estado anterior…' >&2
+    say 'Instalación fallida. Recuperando el estado anterior…' 'Installation failed. Restoring the previous state…' >&2
     if { $unit_exists || $new_unit; } && ! "${ctl[@]}" stop "$service"; then
       if [[ $("${inspect[@]}" show "$service" -p LoadState --value) != not-found ]]; then
-        say "No se pudo detener el servicio. Revisá el respaldo: $backup" >&2
+        say "No se pudo detener el servicio. Revisá el respaldo: $backup" "Could not stop the service. Check the backup: $backup" >&2
         exit 1
       fi
     fi
@@ -249,7 +275,7 @@ finish() {
       local recovered=
       if $data_existed && $snapshot_ready; then
         recovered=$(mktemp -d "$(dirname "$data_dir")/.ted-recover.XXXXXXXX")
-        cp -a -- "$backup/data/." "$recovered/" || { say "No se pudo recuperar la copia de datos: $backup/data" >&2; exit 1; }
+        cp -a -- "$backup/data/." "$recovered/" || { say "No se pudo recuperar la copia de datos: $backup/data" "Could not recover the data copy: $backup/data" >&2; exit 1; }
       fi
       mv -T -- "$data_dir" "$data_dir.failed-${backup##*/}"
       [[ -z $recovered ]] || mv -T -- "$recovered" "$data_dir"
@@ -260,9 +286,9 @@ finish() {
       "${ctl[@]}" daemon-reload
     elif $was_active; then
       if "${ctl[@]}" start "$service" && healthy; then
-        say 'La versión anterior vuelve a responder.' >&2
+        say 'La versión anterior vuelve a responder.' 'The previous version responds again.' >&2
       else
-        say "No se pudo recuperar el servicio automáticamente. Respaldo: $backup" >&2
+        say "No se pudo recuperar el servicio automáticamente. Respaldo: $backup" "Could not recover the service automatically. Backup: $backup" >&2
       fi
     fi
     result=1
@@ -279,19 +305,19 @@ metadata=$(node -e '
   const m=require(process.argv[1]);
   if(m.platform!=="linux" || m.architecture!=="x64" || !/^ted-[0-9A-Za-z.+_-]+-linux-x64\.tar\.gz$/.test(m.artifact) || !/^[a-f0-9]{64}$/.test(m.sha256))process.exit(1);
   console.log(m.artifact+" "+m.sha256);
-' "$project_dir/release/manifest-linux-x64.json") || die 'Manifest Linux inválido.'
+' "$project_dir/release/manifest-linux-x64.json") || die 'Manifest Linux inválido.' 'Invalid Linux manifest.'
 read -r artifact expected <<<"$metadata"
 actual=$(sha256sum "$project_dir/release/$artifact")
-[[ ${actual%% *} == "$expected" ]] || die 'Checksum del paquete inválido.'
+[[ ${actual%% *} == "$expected" ]] || die 'Checksum del paquete inválido.' 'Invalid package checksum.'
 directory=${artifact%.tar.gz}
 tar -tzf "$project_dir/release/$artifact" >"$stage/members"
 while IFS= read -r member; do
-  [[ $member == "$directory/"* && $member != *'/../'* && $member != */.. && $member != *'/./'* && $member != *'//'* ]] || die 'Ruta insegura en el paquete.'
+  [[ $member == "$directory/"* && $member != *'/../'* && $member != */.. && $member != *'/./'* && $member != *'//'* ]] || die 'Ruta insegura en el paquete.' 'Unsafe path in the package.'
 done <"$stage/members"
-tar -tvzf "$project_dir/release/$artifact" | awk 'substr($0,1,1)!="-" && substr($0,1,1)!="d" {bad=1} END {exit bad}' || die 'El paquete contiene enlaces o archivos especiales.'
+tar -tvzf "$project_dir/release/$artifact" | awk 'substr($0,1,1)!="-" && substr($0,1,1)!="d" {bad=1} END {exit bad}' || die 'El paquete contiene enlaces o archivos especiales.' 'The package contains links or special files.'
 tar -xzf "$project_dir/release/$artifact" -C "$stage" --no-same-owner --no-same-permissions
 candidate=$stage/$directory
-[[ -x $candidate/ted && -x $candidate/runtime/node && -f $candidate/web/index.html ]] || die 'El paquete está incompleto.'
+[[ -x $candidate/ted && -x $candidate/runtime/node && -f $candidate/web/index.html ]] || die 'El paquete está incompleto.' 'The package is incomplete.'
 "$candidate/ted" --version
 
 unit_quote() {
@@ -336,22 +362,22 @@ fi
 mkdir -p -- "$(dirname "$data_dir")"
 data_touched=true
 "${ctl[@]}" start "$service"
-healthy || die 'El servicio no respondió correctamente.'
+healthy || die 'El servicio no respondió correctamente.' 'The service did not respond correctly.'
 invocation=$("${inspect[@]}" show "$service" -p InvocationID --value)
-[[ $invocation =~ ^[a-f0-9]{32}$ ]] || die 'No se pudo identificar el arranque del servicio.'
+[[ $invocation =~ ^[a-f0-9]{32}$ ]] || die 'No se pudo identificar el arranque del servicio.' 'Could not identify the service start.'
 "${journal[@]}" "_SYSTEMD_INVOCATION_ID=$invocation" --no-pager -o cat >"$stage/startup.log"
-if grep -Fq 'Persisted game is unavailable' "$stage/startup.log"; then die 'No se pudieron cargar todas las partidas.'; fi
+if grep -Fq 'Persisted game is unavailable' "$stage/startup.log"; then die 'No se pudieron cargar todas las partidas.' 'Not all games could be loaded.'; fi
 "${ctl[@]}" enable "$service"
 changing=false
-say "Instalación completada: $install_dir"
-say "Datos persistentes: $data_dir"
-say "Respaldo: $backup"
-say "Administración: http://$url_host:$port/admin"
+say "Instalación completada: $install_dir" "Installation complete: $install_dir"
+say "Datos persistentes: $data_dir" "Persistent data: $data_dir"
+say "Respaldo: $backup" "Backup: $backup"
+say "Administración: http://$url_host:$port/admin" "Administration: http://$url_host:$port/admin"
 if $personal; then
-  say 'Estado: systemctl --user status ted.service'
-  say 'Código administrativo: journalctl --user -u ted.service -n 100 --no-pager'
-  say 'Para funcionar sin una sesión abierta: sudo loginctl enable-linger '"$run_user"
+  say 'Estado: systemctl --user status ted.service' 'Status: systemctl --user status ted.service'
+  say 'Código de administración: journalctl --user -u ted.service --no-pager | grep -Ei "access code|código de acceso" | tail -n 1' 'Admin code: journalctl --user -u ted.service --no-pager | grep -Ei "access code|código de acceso" | tail -n 1'
+  say "Para funcionar sin una sesión abierta: sudo loginctl enable-linger $run_user" "To keep running without an open session: sudo loginctl enable-linger $run_user"
 else
-  say 'Estado: sudo systemctl status ted.service'
-  say 'Código administrativo: sudo journalctl -u ted.service -n 100 --no-pager'
+  say 'Estado: sudo systemctl status ted.service' 'Status: sudo systemctl status ted.service'
+  say 'Código de administración: sudo journalctl -u ted.service --no-pager | grep -Ei "access code|código de acceso" | tail -n 1' 'Admin code: sudo journalctl -u ted.service --no-pager | grep -Ei "access code|código de acceso" | tail -n 1'
 fi

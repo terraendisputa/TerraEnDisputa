@@ -157,3 +157,48 @@ void test('Nicknames are unique per game and carry no hidden characters, in Clas
     await app.close();
   }
 });
+
+void test('how-to-play pages are served and their home pages lead back to the game', async () => {
+  const app = await start({
+    webRoot: join(import.meta.dirname, '../apps/web/dist'),
+  });
+  try {
+    for (const url of [
+      '/como-jugar',
+      '/como-jugar/',
+      '/como-jugar/index.html',
+      '/como-jugar/en',
+      '/como-jugar/en/',
+      '/como-jugar/en/index.html',
+    ]) {
+      const response = await app.request('GET', url);
+      assert.equal(response.statusCode, 302, url);
+      assert.equal(response.headers.location, '/', url);
+    }
+    for (const url of [
+      '/como-jugar/wiki/',
+      '/como-jugar/wiki/tutorial.html',
+      '/como-jugar/en/wiki/',
+      '/como-jugar/estilo.css',
+    ])
+      assert.equal((await app.request('GET', url)).statusCode, 200, url);
+    for (const url of [
+      '/como-jugar//example.com',
+      '/como-jugar/../package.json',
+    ])
+      assert.equal((await app.request('GET', url)).statusCode, 404, url);
+  } finally {
+    await app.close();
+  }
+});
+
+void test('console language follows the system locale', async () => {
+  const { consoleLanguage } =
+    await import('../apps/server/dist/console-language.js');
+  assert.equal(consoleLanguage({ LANG: 'es_AR.UTF-8' }), 'es');
+  assert.equal(consoleLanguage({ LC_ALL: 'es' }), 'es');
+  assert.equal(consoleLanguage({ LANG: 'en_US.UTF-8' }), 'en');
+  assert.equal(consoleLanguage({ LANG: 'C' }), 'en');
+  assert.equal(consoleLanguage({ LANG: 'est_EE.UTF-8' }), 'en');
+  assert.equal(consoleLanguage({ LC_ALL: 'en_GB', LANG: 'es_ES' }), 'en');
+});
