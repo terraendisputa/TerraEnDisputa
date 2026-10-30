@@ -24,7 +24,7 @@ modules:
     sources:
       - type: archive
         url: https://github.com/terraendisputa/TerraEnDisputa/releases/download/v1.1.0/terra-en-disputa-1.1.0-linux-x64.tar.gz
-        sha256: '0000000000000000000000000000000000000000000000000000000000000000'
+        sha256: '8d6da6baa2079620a2c48aa5f7a79c33b0d8227c3fb018be56af9fc2cac17c74'
         only-arches: [x86_64]
         dest: app
       - type: script
