@@ -302,11 +302,13 @@
   .map-viewport:active {
     cursor: grabbing;
   }
+  /* No permanent will-change: Chromium would keep the map as a picture
+     drawn at its first size and blur it when zoomed. immersive.css sets it
+     only while the map moves. */
   .map-transform {
     height: 100%;
     width: 100%;
     transform-origin: center;
-    will-change: transform;
   }
   .game-shell .game-map {
     display: block;

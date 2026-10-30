@@ -103,7 +103,8 @@ printf "$(pick 'Compilando Terra en disputa (heap de Node: %s MB, paquetes secue
 export NODE_OPTIONS="--max-old-space-size=$memory"
 # The package check talks to its own local server; never route that through a proxy.
 export NO_PROXY="127.0.0.1,localhost${NO_PROXY:+,$NO_PROXY}" no_proxy="127.0.0.1,localhost${no_proxy:+,$no_proxy}"
-CI=true pnpm install --frozen-lockfile
+# The desktop app is built only for its own packages, never on a server.
+CI=true pnpm install --frozen-lockfile --filter '!@game/desktop'
 pnpm --workspace-concurrency=1 -r --if-present build
 node scripts/release-build.mjs
 node scripts/release-smoke.mjs
