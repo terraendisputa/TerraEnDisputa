@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Terra en disputa
+GenericName=Strategy game
+GenericName[es]=Juego de estrategia
+Comment=Turn-based strategy game for 2 to 6 players
+Comment[es]=Juego de estrategia por turnos para 2 a 6 jugadores
+Exec=terra-en-disputa %U
+Icon=io.github.terraendisputa.TerraEnDisputa
+Terminal=false
+Categories=Game;StrategyGame;
+Keywords=strategy;board;war;turn-based;multiplayer;
+Keywords[es]=estrategia;tablero;guerra;turnos;multijugador;
+StartupWMClass=io.github.terraendisputa.TerraEnDisputa
