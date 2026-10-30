@@ -401,7 +401,11 @@ void test('JSON/CSV exports preserve exact points and exclusions, escape names, 
   s = {
     ...s,
     players: s.players.map((p, i) =>
-      i === 0 ? { ...p, nickname: '=SUM(1,2) "test"\nname' } : p,
+      i === 0
+        ? { ...p, nickname: '=SUM(1,2) "test"\nname' }
+        : i === 1
+          ? { ...p, nickname: '\tcmd' }
+          : p,
     ),
   };
   const view = projectGameForAdmin(s, 8),
@@ -409,6 +413,7 @@ void test('JSON/CSV exports preserve exact points and exclusions, escape names, 
     csv = resultExport(view, 'csv');
   assert.equal(JSON.parse(json).results.rulesVersion, 1);
   assert.ok(csv.includes(`"'=SUM(1,2) ""test""\nname"`));
+  assert.ok(csv.includes(`"'\tcmd"`));
   assert.ok(csv.includes('total_denominador'));
   for (const secret of [
     'secretObjectiveId',

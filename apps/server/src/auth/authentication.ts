@@ -251,6 +251,24 @@ export class AuthenticationService {
     });
   }
 
+  /** Ends the administrator session; the access code keeps working for a new login. */
+  logoutAdmin(token: string, transportClass: TransportClass): Promise<void> {
+    return this.serializeAdmin(async () => {
+      const state = await this.store.loadAdminAuth();
+      if (
+        !state ||
+        !validSession(state.session, token, transportClass, this.clock.now())
+      )
+        return;
+      const { session: _session, ...rest } = state;
+      void _session;
+      await this.store.commitAdminAuth(
+        { ...rest, generation: nextAdminGeneration(state.generation) },
+        state.generation,
+      );
+    });
+  }
+
   async authenticateAdmin(
     token: string,
     transportClass: TransportClass,

@@ -105,8 +105,9 @@ export function resultExport(
   ];
   const csvCell = (value: string | number | boolean | undefined) => {
     let text = String(value ?? '');
-    // Neutralize spreadsheet formulas in arbitrary player names.
-    if (typeof value === 'string' && /^[\s]*[=+@-]/.test(text))
+    // Neutralize spreadsheet formulas in arbitrary player names; some
+    // spreadsheets also read a leading tab or carriage return as one.
+    if (typeof value === 'string' && /^(?:[\t\r]|\s*[=+@-])/.test(text))
       text = `'${text}`;
     return `"${text.replaceAll('"', '""')}"`;
   };

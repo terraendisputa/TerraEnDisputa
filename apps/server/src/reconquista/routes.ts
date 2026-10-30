@@ -457,6 +457,12 @@ export async function registerReconquista(
       if (socket.readyState === socket.OPEN)
         socket.send(JSON.stringify({ type: 'CHANGED' }));
   };
+  // A seat taken away (or the whole game) also takes away its live connections.
+  // A seat a bot plays keeps them: its person still watches and may get it back.
+  const disconnect = (gameId: string, reason: string, viewer?: string) => {
+    for (const [socket, owner] of live.get(gameId) ?? [])
+      if (viewer === undefined || owner === viewer) socket.close(1008, reason);
+  };
   // A burst of selections (arrow keys) reaches the other screens as one announcement.
   const focusTimers = new Map<string, NodeJS.Timeout>();
   const announceFocus = (gameId: string) => {
@@ -515,17 +521,19 @@ export async function registerReconquista(
         return reply.code(403).send({ code: 'UNAUTHORIZED' });
       void reply.header('Cache-Control', 'no-store');
     });
-    app.setErrorHandler((error, _request, reply) => {
+    app.setErrorHandler((error, request, reply) => {
       if (
         error instanceof PersistenceIndeterminateError ||
         error instanceof PersistenceFailedError
-      )
+      ) {
+        request.log.error(error, 'Reconquista request failed');
         return reply.code(503).send({
           code:
             error instanceof PersistenceIndeterminateError
               ? 'UNAVAILABLE_UNTIL_RESTART'
               : 'PERSISTENCE_FAILURE',
         });
+      }
       if (error instanceof ReconquistaOperationError)
         return reply
           .code(
@@ -547,6 +555,24 @@ export async function registerReconquista(
         return reply
           .code(400)
           .send({ code: 'INCOMPATIBLE_RECONQUISTA_CONTRACT' });
+      // Fastify's own rejections (broken JSON, oversized or unsupported bodies).
+      const status = (error as { statusCode?: unknown }).statusCode;
+      if (typeof status === 'number' && status >= 400 && status < 500)
+        return reply
+          .code(status)
+          .send({ code: 'INCOMPATIBLE_RECONQUISTA_CONTRACT' });
+      // The rules reject moves with plain errors; a runtime or system error is
+      // a server bug and must reach the log instead of passing as a bad move.
+      if (
+        error instanceof TypeError ||
+        error instanceof RangeError ||
+        error instanceof ReferenceError ||
+        error instanceof SyntaxError ||
+        (error instanceof Error && 'errno' in error)
+      ) {
+        request.log.error(error, 'Reconquista request failed');
+        return reply.code(500).send({ code: 'SERVER_ERROR' });
+      }
       return reply.code(409).send({ code: 'INVALID_RECONQUISTA_ACTION' });
     });
     app.get(prefix + '/board', (request, reply) =>
@@ -642,7 +668,7 @@ export async function registerReconquista(
       await requireAdmin(request);
       await store.remove(params(request));
       focuses.delete(params(request));
-      notify(params(request));
+      disconnect(params(request), 'GAME_DELETED');
       return { deleted: true };
     });
     app.delete(prefix + '/games/:gameId/players/:playerId', async (request) => {
@@ -654,6 +680,7 @@ export async function registerReconquista(
         })
         .parse(request.params);
       await store.removePlayer(gameId, playerId);
+      disconnect(gameId, 'SESSION_REVOKED', playerId);
       notify(gameId);
       return { removed: true };
     });
