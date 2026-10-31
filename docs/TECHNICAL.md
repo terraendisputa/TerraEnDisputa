@@ -94,6 +94,13 @@ Las sesiones aleatorias se verifican mediante hashes; los códigos administrativ
 
 HTTP/WebSocket validan Origin, esquemas, tamaños y permisos; hay límites de solicitudes y gestión de conexiones revocadas. Los pedidos con sesión válida cuentan por asiento (o anfitrión); los demás, incluidas cookies que no corresponden a nadie, por dirección, y una red IPv6 /64 cuenta como una sola. Cada tipo de pedido tiene contadores propios, separados para pedidos con y sin sesión, así que una inundación sin sesión no frena a quienes ya juegan ni a otras partidas. El ingreso del anfitrión no tiene tope global: tras seis intentos fallidos, cada fallo de una dirección duplica su espera (1, 2, 4… segundos, hasta un minuto), y las demás direcciones no esperan. El acceso a archivos y procesos del servidor pertenece al operador confiable, no ofrece aislamiento frente al administrador del sistema operativo.
 
+Riesgos aceptados, revisados y sin cambio:
+
+- En Linux, `ted` sin servicio abre el navegador con el token de lanzamiento en los argumentos de `xdg-open`, que otro usuario de la misma PC puede leer en `/proc`. El token es de un solo uso y el navegador lo canjea en milisegundos; pasarlo por un archivo temporal falla con navegadores Snap y Flatpak. La app de escritorio y el servicio systemd no lo usan.
+- El servicio deja el código de administrador en el journal, donde el operador lo busca. Solo lo leen root y los grupos `adm` y `systemd-journal`, que ya controlan el equipo.
+- El servidor no consulta versiones nuevas por su cuenta. El panel del anfitrión muestra la versión instalada con un enlace a la página de versiones.
+- Por HTTP en la red local, quien comparta la red puede ver el tráfico. Cada página servida por HTTP lo avisa en una franja arriba.
+
 HTTP es para redes de confianza o VPN privadas. En Internet se utiliza HTTPS con un proxy que soporte WebSocket, `GAME_PUBLIC_ORIGIN` exacto y `GAME_TRUSTED_PROXY` limitado al proxy real. Las cabeceras reenviadas de fuentes no confiables se ignoran. Firewall, DNS, certificados y VPN se configuran fuera de Terra en disputa.
 
 ## Compilación y distribución

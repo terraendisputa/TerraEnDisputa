@@ -85,6 +85,13 @@ body:has(.landing) {
   background: var(--soft);
   border-color: var(--accent);
 }
+.admin-version {
+  margin: 1.5rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
 .admin-sidebar > h2 {
   margin-top: 1.5rem;
   padding-top: 1.5rem;

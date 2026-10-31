@@ -508,3 +508,21 @@ void test('A trusted proxy without the public origin stops the server with a cle
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+void test('Only the host sees the installed version', async () => {
+  const app = await start();
+  try {
+    const listed = await app.request('GET', '/api/admin/games', undefined, {
+      cookie: app.admin,
+    });
+    assert.equal(typeof listed.json().version, 'string');
+    const bootstrap = await app.request('GET', '/api/bootstrap');
+    assert.equal(JSON.stringify(bootstrap.json()).includes('version"'), false);
+    assert.equal(
+      (await app.request('GET', '/api/admin/games')).statusCode,
+      401,
+    );
+  } finally {
+    await app.close();
+  }
+});

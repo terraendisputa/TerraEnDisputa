@@ -66,7 +66,8 @@ export const api = {
     }),
   adminLogout: () =>
     request<undefined>('/api/admin/logout', { method: 'POST' }),
-  adminGames: () => request<{ games: AdminGameView[] }>('/api/admin/games'),
+  adminGames: () =>
+    request<{ games: AdminGameView[]; version?: string }>('/api/admin/games'),
   createGame: (
     configuredPlayerCount: number,
     mode: 'classic' | 'competitive' = 'classic',
