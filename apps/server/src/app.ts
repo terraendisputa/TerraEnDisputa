@@ -63,7 +63,9 @@ import {
   PersistenceIndeterminateError,
 } from './persistence/atomic-file.js';
 import {
+  addressKey,
   LayeredRateLimiter,
+  LoginBackoff,
   type RateLimitPolicy,
   type RateLimitSurface,
 } from './security/rate-limiter.js';
@@ -140,6 +142,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
     options.rateLimitPolicies,
     options.rateLimitNow,
   );
+  const loginBackoff = new LoginBackoff(options.rateLimitNow);
   if (!store) server.addHook('preClose', () => connections.closeAll());
   // Behind a trusted proxy, the proxy already decides which names reach us.
   if (options.trustedProxy === undefined)
@@ -271,16 +274,32 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
     const consumeHttpLimit = (
       request: FastifyRequest,
       reply: FastifyReply,
-      surface: Exclude<RateLimitSurface, 'protocol-abuse'>,
+      surface: 'join' | 'seat-claim',
       target: string,
     ) => {
-      if (rateLimiter.consume(surface, request.ip, target)) return true;
+      if (rateLimiter.consume(surface, addressKey(request.ip), target))
+        return true;
       void reply.code(429).send({
         code: 'RATE_LIMITED',
         message: 'Too many attempts; try again later',
       });
       return false;
     };
+    // Every login attempt waits out its address's earlier failures first.
+    const loginAllowed = (request: FastifyRequest, reply: FastifyReply) => {
+      const waitMs = loginBackoff.begin(addressKey(request.ip));
+      if (waitMs === 0) return true;
+      void reply
+        .code(429)
+        .header('Retry-After', String(Math.ceil(waitMs / 1000)))
+        .send({
+          code: 'RATE_LIMITED',
+          message: 'Too many attempts; try again later',
+        });
+      return false;
+    };
+    const loggedIn = (request: FastifyRequest) =>
+      loginBackoff.succeed(addressKey(request.ip));
     const broadcastCurrentGame = async (gameId: string) => {
       try {
         await coordinator.run(gameId, async () => {
@@ -559,12 +578,12 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
           return reply.code(403).send({ code: 'UNAUTHORIZED' });
         if (!parsed.success)
           return reply.code(400).send({ code: 'MALFORMED_MESSAGE' });
-        if (!consumeHttpLimit(request, reply, 'admin-login', 'administrator'))
-          return;
+        if (!loginAllowed(request, reply)) return;
         const code = launch.consume(parsed.data.token);
         if (!code) return reply.code(401).send({ code: 'UNAUTHENTICATED' });
         const token = await auth.loginAdmin(code, transportClass(request));
         if (!token) return reply.code(401).send({ code: 'UNAUTHENTICATED' });
+        loggedIn(request);
         setSession(reply, { kind: 'admin' }, token, request);
         return { authenticated: true };
       },
@@ -577,13 +596,13 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         const parsed = adminLoginBodySchema.safeParse(request.body);
         if (!parsed.success)
           return reply.code(400).send({ code: 'MALFORMED_MESSAGE' });
-        if (!consumeHttpLimit(request, reply, 'admin-login', 'administrator'))
-          return;
+        if (!loginAllowed(request, reply)) return;
         const token = await auth.loginAdmin(
           parsed.data.recoveryCode,
           transportClass(request),
         );
         if (!token) return reply.code(401).send({ code: 'UNAUTHENTICATED' });
+        loggedIn(request);
         setSession(reply, { kind: 'admin' }, token, request);
         return { authenticated: true };
       },
@@ -1045,6 +1064,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
                 'game-command',
                 `${params.data.gameId}:${playerId}`,
                 params.data.gameId,
+                'session',
               )
             ) {
               connections.send(params.data.gameId, connection, {
@@ -1081,8 +1101,9 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
                 decoded.protocolVersion !== PROTOCOL_VERSION;
               const withinLimit = rateLimiter.consume(
                 'protocol-abuse',
-                request.ip,
+                `${params.data.gameId}:${playerId}`,
                 params.data.gameId,
+                'session',
               );
               connections.send(params.data.gameId, connection, {
                 type: 'ERROR',
