@@ -71,6 +71,10 @@ import {
 } from './security/rate-limiter.js';
 import { hasValidOrigin, isAllowedHost } from './security/origin.js';
 
+/** A host name or address with an optional port, and nothing a policy could misread. */
+const SOCKET_HOST =
+  /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*|\[[0-9a-f:.]+\])(?::\d{1,5})?$/i;
+
 interface ServerOptions {
   readonly connectionBind?: string;
   readonly connectionPort?: number;
@@ -150,14 +154,23 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
       if (!isAllowedHost(request.hostname, options.publicOrigin))
         return reply.code(421).send({ code: 'HOST_NOT_ALLOWED' });
     });
-  server.addHook('onSend', async (_request, reply) => {
+  const publicHost = options.publicOrigin
+    ? new URL(options.publicOrigin).host
+    : undefined;
+  server.addHook('onSend', async (request, reply) => {
+    // Live connections go only to this server. Current browsers already read
+    // 'self' that way; the names spelled out cover older Safari.
+    const sockets = [...new Set([request.headers.host, publicHost])]
+      .filter((host) => host !== undefined && SOCKET_HOST.test(host))
+      .flatMap((host) => [`ws://${host}`, `wss://${host}`])
+      .join(' ');
     void reply
       .header('X-Content-Type-Options', 'nosniff')
       .header('Referrer-Policy', 'same-origin')
       .header('X-Frame-Options', 'DENY')
       .header(
         'Content-Security-Policy',
-        "default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+        `default-src 'self'; connect-src 'self'${sockets ? ` ${sockets}` : ''}; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
       );
   });
   server.setErrorHandler((error, request, reply) => {

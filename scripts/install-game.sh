@@ -226,6 +226,12 @@ data_touched=false
 data_existed=false
 [[ ! -d $data_dir ]] || data_existed=true
 snapshot_ready=false
+# System services get their sandbox in a drop-in of its own. A drop-in that no
+# longer starts with the marker (an empty one, say) is the owner's and is kept.
+hardening_marker='# Managed by install-game.sh; empty this file to turn the sandbox off.'
+dropin=$unit_dir/$service.d/hardening.conf
+dropin_changed=false
+dropin_existed=false
 had_app=false
 app_changed=false
 [[ ! -d $install_dir ]] || had_app=true
@@ -280,6 +286,14 @@ finish() {
       mv -T -- "$data_dir" "$data_dir.failed-${backup##*/}"
       [[ -z $recovered ]] || mv -T -- "$recovered" "$data_dir"
     fi
+    if $dropin_changed; then
+      if $dropin_existed; then
+        "${admin[@]}" install -m 644 -- "$backup/hardening.conf" "$dropin"
+      else
+        "${admin[@]}" rm -f -- "$dropin"
+      fi
+      "${ctl[@]}" daemon-reload
+    fi
     if $new_unit; then
       "${ctl[@]}" disable "$service" || true
       "${admin[@]}" rm -f -- "$unit_file"
@@ -325,6 +339,20 @@ unit_quote() {
   value=${value//\\/\\\\}; value=${value//\"/\\\"}; value=${value//%/%%}; value=${value//\$/\$\$}
   printf '"%s"' "$value"
 }
+path_quote() {
+  local value=$1
+  value=${value//\\/\\\\}; value=${value//\"/\\\"}; value=${value//%/%%}
+  printf '"%s"' "$value"
+}
+if ! $personal; then
+  {
+    printf '%s\n[Service]\n' "$hardening_marker"
+    printf 'ProtectSystem=strict\nProtectHome=read-only\nReadWritePaths=%s\nPrivateTmp=true\nPrivateDevices=true\n' "$(path_quote "$data_dir")"
+    printf 'ProtectKernelTunables=true\nProtectKernelModules=true\nProtectKernelLogs=true\nProtectControlGroups=true\n'
+    printf 'ProtectClock=true\nProtectHostname=true\nRestrictNamespaces=true\nRestrictRealtime=true\nRestrictSUIDSGID=true\n'
+    printf 'LockPersonality=true\nSystemCallArchitectures=native\n'
+  } >"$stage/hardening.conf"
+fi
 if ! $unit_exists; then
   {
     printf '[Unit]\nDescription=Terra en disputa Game Server\nAfter=network.target\n\n[Service]\nType=simple\n'
@@ -359,7 +387,19 @@ if ! $unit_exists; then
   "${admin[@]}" install -m 644 -- "$stage/ted.service" "$unit_file"
   "${ctl[@]}" daemon-reload
 fi
+if [[ -e $stage/hardening.conf ]] && { [[ ! -e $dropin ]] || { [[ $(head -n 1 -- "$dropin") == "$hardening_marker" ]] && [[ $(<"$dropin") != "$(<"$stage/hardening.conf")" ]]; }; }; then
+  if [[ -e $dropin ]]; then
+    dropin_existed=true
+    cp -- "$dropin" "$backup/hardening.conf"
+  fi
+  dropin_changed=true
+  "${admin[@]}" install -d -m 755 -- "${dropin%/*}"
+  "${admin[@]}" install -m 644 -- "$stage/hardening.conf" "$dropin"
+  "${ctl[@]}" daemon-reload
+fi
 mkdir -p -- "$(dirname "$data_dir")"
+# The sandbox only lets the service write inside a folder that already exists.
+[[ -d $data_dir ]] || mkdir -m 700 -- "$data_dir"
 data_touched=true
 "${ctl[@]}" start "$service"
 healthy || die 'El servicio no respondió correctamente.' 'The service did not respond correctly.'

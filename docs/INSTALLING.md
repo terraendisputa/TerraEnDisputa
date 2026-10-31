@@ -43,6 +43,8 @@ Las carpetas deben ser accesibles para tu usuario, estar separadas y no ser enla
 
 El archivo de unidad se guarda en `/etc/systemd/system/ted.service`, con la carpeta de trabajo y el directorio de datos explícitos. Configura reinicio ante fallos, parada con SIGTERM y permisos privados para archivos nuevos.
 
+El servicio del sistema corre además aislado, desde `/etc/systemd/system/ted.service.d/hardening.conf`: ve el sistema y tu carpeta personal en solo lectura, escribe únicamente en la carpeta de datos y no accede a dispositivos, al kernel ni a los `/tmp` de otros programas. Cada instalación y cada `--pull` lo crean o actualizan; si el servicio no responde al arrancar, la instalación vuelve sola a la versión y al aislamiento anteriores. Para desactivarlo, dejá ese archivo vacío y reiniciá el servicio: un archivo sin su primera línea no se vuelve a tocar. El servicio personal (`--user-service`) no lo usa, porque systemd solo lo permite ahí con espacios de nombres de usuario.
+
 ## Uso y código de administración
 
 ```bash
@@ -120,7 +122,7 @@ Environment=GAME_PUBLIC_ORIGIN=https://juego.ejemplo.com
 Environment=GAME_TRUSTED_PROXY=127.0.0.1
 ```
 
-Usá `sudo systemctl edit ted.service`, luego `sudo systemctl daemon-reload` y `sudo systemctl restart ted.service`. La dirección de proxy debe coincidir con el proxy real; no uses un wildcard. Si tu unidad ya contiene estos ajustes, la reinstalación los conserva.
+Usá `sudo systemctl edit ted.service`, luego `sudo systemctl daemon-reload` y `sudo systemctl restart ted.service`. La dirección de proxy debe coincidir con el proxy real; no uses un wildcard; con `GAME_TRUSTED_PROXY` y sin `GAME_PUBLIC_ORIGIN` el servidor no arranca y dice qué falta. Si tu unidad ya contiene estos ajustes, la reinstalación los conserva.
 
 ## Evitar servicios duplicados
 

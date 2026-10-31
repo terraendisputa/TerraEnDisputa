@@ -4,6 +4,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
 import { buildServer } from '../apps/server/dist/app.js';
 import { FileGameStore } from '../apps/server/dist/persistence/file-game-store.js';
 import { AuthenticationService } from '../apps/server/dist/auth/authentication.js';
@@ -442,4 +443,68 @@ void test('One IPv6 network counts as one address', () => {
   assert.equal(addressKey('fe80::1%eth0'), 'fe80:0:0:0::/64');
   assert.equal(addressKey('::ffff:192.168.0.20'), '192.168.0.20');
   assert.equal(addressKey('192.168.0.20'), '192.168.0.20');
+});
+
+void test('Live connections may only go back to the server that served the page', async () => {
+  const app = await start({
+    publicOrigin: 'https://ted.example.org',
+    trustedProxy: '127.0.0.1',
+  });
+  try {
+    const policy = async (host) =>
+      (await app.request('GET', '/api/bootstrap', undefined, { host })).headers[
+        'content-security-policy'
+      ];
+    const own = await policy('ted.example.org');
+    assert.match(
+      own,
+      /connect-src 'self' ws:\/\/ted\.example\.org wss:\/\/ted\.example\.org;/,
+    );
+    assert.doesNotMatch(own, /wss?:(?!\/\/)/);
+    // Behind a proxy any name gets through; nothing odd reaches the policy.
+    const odd = await policy("x; script-src 'unsafe-inline' *");
+    assert.match(
+      odd,
+      /connect-src 'self' ws:\/\/ted\.example\.org wss:\/\/ted\.example\.org;/,
+    );
+    assert.doesNotMatch(odd, /unsafe-inline/);
+    assert.match(
+      await policy('[::1]:3001'),
+      /ws:\/\/\[::1\]:3001 wss:\/\/\[::1\]:3001/,
+    );
+  } finally {
+    await app.close();
+  }
+});
+
+void test('A trusted proxy without the public origin stops the server with a clear message', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'ted-security-proxy-'));
+  try {
+    const { status, stderr } = spawnSync(
+      process.execPath,
+      [
+        join(import.meta.dirname, '../apps/server/dist/main.js'),
+        '--no-open',
+        '--port',
+        '39117',
+        '--data-dir',
+        directory,
+      ],
+      {
+        encoding: 'utf8',
+        timeout: 20_000,
+        env: {
+          ...process.env,
+          LANG: 'C',
+          LC_ALL: 'C',
+          GAME_TRUSTED_PROXY: '127.0.0.1',
+          GAME_PUBLIC_ORIGIN: '',
+        },
+      },
+    );
+    assert.equal(status, 1, stderr);
+    assert.match(stderr, /GAME_TRUSTED_PROXY also needs GAME_PUBLIC_ORIGIN/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
