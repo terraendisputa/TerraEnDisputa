@@ -92,7 +92,7 @@ Cierre por tiempo: termina ronda actual y dos completas adicionales, sin ganador
 
 Las sesiones aleatorias se verifican mediante hashes; los códigos administrativos mediante scrypt con salt. Las credenciales no van en enlaces de partida ni proyecciones públicas. Los logs ordinarios no incluyen manos, objetivos o tokens; el código de arranque es la excepción deliberada en la terminal del operador.
 
-HTTP/WebSocket validan Origin, esquemas, tamaños y permisos; hay límites de solicitudes y gestión de conexiones revocadas. El acceso a archivos y procesos del servidor pertenece al operador confiable, no ofrece aislamiento frente al administrador del sistema operativo.
+HTTP/WebSocket validan Origin, esquemas, tamaños y permisos; hay límites de solicitudes y gestión de conexiones revocadas. Los pedidos con sesión válida cuentan por asiento (o anfitrión); los demás, incluidas cookies que no corresponden a nadie, por dirección, y una red IPv6 /64 cuenta como una sola. Cada tipo de pedido tiene contadores propios, separados para pedidos con y sin sesión, así que una inundación sin sesión no frena a quienes ya juegan ni a otras partidas. El ingreso del anfitrión no tiene tope global: tras seis intentos fallidos, cada fallo de una dirección duplica su espera (1, 2, 4… segundos, hasta un minuto), y las demás direcciones no esperan. El acceso a archivos y procesos del servidor pertenece al operador confiable, no ofrece aislamiento frente al administrador del sistema operativo.
 
 HTTP es para redes de confianza o VPN privadas. En Internet se utiliza HTTPS con un proxy que soporte WebSocket, `GAME_PUBLIC_ORIGIN` exacto y `GAME_TRUSTED_PROXY` limitado al proxy real. Las cabeceras reenviadas de fuentes no confiables se ignoran. Firewall, DNS, certificados y VPN se configuran fuera de Terra en disputa.
 
@@ -146,7 +146,7 @@ HTTP create acepta identidad Classic opcional con default Classic, junto con la 
 - El anfitrión usa la sesión de administrador de Classic. Cada jugador recibe una cookie por partida con verificador cifrado y vencimiento, guardado en la partida. El cliente nunca elige el actor.
 - Toda petición que no sea GET exige el origen de la página (o `GAME_PUBLIC_ORIGIN`). El ingreso tiene límite de intentos.
 - Sin `GAME_TRUSTED_PROXY`, el servidor solo atiende pedidos dirigidos a una dirección IP, `localhost`, un nombre `.local` o el nombre de `GAME_PUBLIC_ORIGIN` (protección contra DNS rebinding). Con proxy, el proxy decide qué nombres llegan.
-- Reconquista limita comandos, «listo», selecciones y lecturas por asiento, y su conexión en vivo exige asiento o sesión de administrador.
+- Reconquista limita comandos, «listo», selecciones y lecturas por asiento válido o anfitrión, y por dirección para el resto; su conexión en vivo exige asiento o sesión de administrador.
 - Conexión en vivo: `GET /api/reconquista/games/<id>/live` es un WebSocket de solo lectura que envía `{ "type": "CHANGED" }` tras cada cambio de la partida o de la selección compartida. Cada pantalla vuelve a pedir su propia vista, así que el aviso no lleva datos privados. Hay como máximo 24 conexiones por partida. Mientras la conexión está cortada, la pantalla consulta cada 2 segundos y reintenta conectarse.
 - La selección del jugador en turno (`focus`) vive solo en memoria y no entra al journal.
 

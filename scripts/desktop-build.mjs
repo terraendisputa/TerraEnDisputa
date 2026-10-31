@@ -82,6 +82,13 @@ await build({
     // Updates come from new releases, not from an auto-updater.
     publish: null,
     electronVersion,
+    // The server runs as a utility process, which needs none of these.
+    electronFuses: {
+      runAsNode: false,
+      enableNodeOptionsEnvironmentVariable: false,
+      enableNodeCliInspectArguments: false,
+      grantFileProtocolExtraPrivileges: false,
+    },
     npmRebuild: false,
     nodeGypRebuild: false,
     directories: {

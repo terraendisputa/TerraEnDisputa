@@ -433,6 +433,11 @@ export class ReconquistaStore {
       return { playerId: player.id, token, expiresAt: player.expiresAt };
     });
   }
+  /** The seat a token holds in a game already in memory, without copying it. */
+  seatOf(id: string, token: string | undefined): string | undefined {
+    const cached = this.committed.get(id);
+    return cached ? this.authenticate(cached, token) : undefined;
+  }
   authenticate(
     current: ReconquistaEnvelope,
     token: string | undefined,
