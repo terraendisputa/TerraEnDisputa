@@ -29,6 +29,7 @@ import Fastify, {
 import { randomUUID } from 'node:crypto';
 import { AdminLaunch, isLoopback } from './admin-launch.js';
 import { connectionOptions } from './connection-options.js';
+import { APPLICATION_VERSION } from './version.js';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { RawData } from 'ws';
@@ -679,6 +680,8 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         games: [...discovery.games.values()].map((game) =>
           projectGameForAdmin(game.state, game.revision),
         ),
+        // Only the host sees it; no page or header names the version.
+        version: APPLICATION_VERSION,
       });
     });
 
