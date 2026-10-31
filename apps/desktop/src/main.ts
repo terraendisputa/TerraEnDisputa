@@ -6,6 +6,7 @@ import {
   Menu,
   nativeImage,
   Notification,
+  session,
   shell,
   Tray,
   utilityProcess,
@@ -45,7 +46,13 @@ const webPreferences = {
   contextIsolation: true,
   nodeIntegration: false,
   sandbox: true,
+  devTools: false,
+  // On Linux spell checking downloads dictionaries from Google.
+  spellcheck: false,
 } as const;
+
+// Copying an invitation and full screen; nothing else, and only for the game.
+const allowedPermissions = new Set(['clipboard-sanitized-write', 'fullscreen']);
 
 const windowSize = {
   width: 1280,
@@ -83,6 +90,11 @@ function guard(window: BrowserWindow): void {
     return { action: 'deny' };
   });
   window.webContents.on('will-navigate', (event, url) => {
+    if (sameOrigin(url)) return;
+    event.preventDefault();
+    openExternal(url);
+  });
+  window.webContents.on('will-redirect', (event, url) => {
     if (sameOrigin(url)) return;
     event.preventDefault();
     openExternal(url);
@@ -171,7 +183,19 @@ function buildMenus(): void {
     Menu.buildFromTemplate([
       { label: 'Terra en disputa', submenu: actions() },
       { role: 'editMenu', label: tr('Edición', 'Edit') },
-      { role: 'viewMenu', label: tr('Ver', 'View') },
+      // The standard View menu without the developer tools.
+      {
+        label: tr('Ver', 'View'),
+        submenu: [
+          { role: 'reload' },
+          { type: 'separator' },
+          { role: 'resetZoom' },
+          { role: 'zoomIn' },
+          { role: 'zoomOut' },
+          { type: 'separator' },
+          { role: 'togglefullscreen' },
+        ],
+      },
     ]),
   );
   tray = new Tray(icon.resize({ width: 32, height: 32 }));
@@ -237,6 +261,21 @@ else {
     setTimeout(() => server?.kill(), 10_000).unref();
   });
   void app.whenReady().then(() => {
+    session.defaultSession.setPermissionRequestHandler(
+      (_contents, permission, callback, details) =>
+        callback(
+          allowedPermissions.has(permission) &&
+            sameOrigin(details.requestingUrl),
+        ),
+    );
+    session.defaultSession.setPermissionCheckHandler(
+      (_contents, permission, requestingOrigin) =>
+        allowedPermissions.has(permission) && sameOrigin(requestingOrigin),
+    );
+    session.defaultSession.setDevicePermissionHandler(() => false);
+    // No languages also means no dictionary to fetch at startup.
+    session.defaultSession.setSpellCheckerLanguages([]);
+    session.defaultSession.setSpellCheckerEnabled(false);
     spanish = /^es(?:$|-)/i.test(app.getLocale());
     startServer();
   });
