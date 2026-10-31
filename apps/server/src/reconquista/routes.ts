@@ -32,6 +32,7 @@ import { AuthenticationService } from '../auth/authentication.js';
 import type { FileGameStore } from '../persistence/file-game-store.js';
 import { readSessionCookie, createSessionCookie } from '../auth/cookies.js';
 import {
+  addressKey,
   LayeredRateLimiter,
   type RateLimitPolicy,
   type RateLimitSurface,
@@ -296,27 +297,33 @@ export async function registerReconquista(
     );
   const isAdmin = async (r: FastifyRequest) => {
     const token = readSessionCookie(r.cookies, { kind: 'admin' }, transport(r));
-    return (
-      token !== undefined && (await auth.authenticateAdmin(token, transport(r)))
-    );
+    if (token === undefined) return false;
+    const address = addressKey(r.ip);
+    if (!limiter.consume('host-check', address, address))
+      throw new ReconquistaOperationError('RATE_LIMITED');
+    const valid = await auth.authenticateAdmin(token, transport(r));
+    if (valid) limiter.refund('host-check', address, address);
+    return valid;
   };
   const requireAdmin = async (r: FastifyRequest) => {
     if (!(await isAdmin(r)))
       throw new ReconquistaOperationError('UNAUTHORIZED');
   };
   const params = (r: FastifyRequest) => gameParams.parse(r.params).gameId;
-  // A seated player's requests count against the seat; anyone else's against the address.
-  const requester = (r: FastifyRequest, id: string) => {
-    const token = playerToken(r, id);
-    return token ? `${id}:${digest(token)}` : r.ip;
-  };
-  const limit = (
+  // A seat or the host counts against itself; anyone else, made-up cookies
+  // included, against the address.
+  const limit = async (
     r: FastifyRequest,
     surface: 'game-command' | 'game-read',
     id: string,
   ) => {
-    if (!limiter.consume(surface, requester(r, id), id))
-      throw new ReconquistaOperationError('RATE_LIMITED');
+    const seat = store.seatOf(id, playerToken(r, id));
+    const allowed = seat
+      ? limiter.consume(surface, `${id}:${seat}`, id, 'session')
+      : (await isAdmin(r))
+        ? limiter.consume(surface, 'host', id, 'session')
+        : limiter.consume(surface, addressKey(r.ip), id);
+    if (!allowed) throw new ReconquistaOperationError('RATE_LIMITED');
   };
   // Selection shared by the player on turn: memory only, so it never reaches the journal.
   const focuses = new Map<string, NonNullable<ReconquistaView['focus']>>();
@@ -457,6 +464,12 @@ export async function registerReconquista(
       if (socket.readyState === socket.OPEN)
         socket.send(JSON.stringify({ type: 'CHANGED' }));
   };
+  // A seat taken away (or the whole game) also takes away its live connections.
+  // A seat a bot plays keeps them: its person still watches and may get it back.
+  const disconnect = (gameId: string, reason: string, viewer?: string) => {
+    for (const [socket, owner] of live.get(gameId) ?? [])
+      if (viewer === undefined || owner === viewer) socket.close(1008, reason);
+  };
   // A burst of selections (arrow keys) reaches the other screens as one announcement.
   const focusTimers = new Map<string, NodeJS.Timeout>();
   const announceFocus = (gameId: string) => {
@@ -515,17 +528,19 @@ export async function registerReconquista(
         return reply.code(403).send({ code: 'UNAUTHORIZED' });
       void reply.header('Cache-Control', 'no-store');
     });
-    app.setErrorHandler((error, _request, reply) => {
+    app.setErrorHandler((error, request, reply) => {
       if (
         error instanceof PersistenceIndeterminateError ||
         error instanceof PersistenceFailedError
-      )
+      ) {
+        request.log.error(error, 'Reconquista request failed');
         return reply.code(503).send({
           code:
             error instanceof PersistenceIndeterminateError
               ? 'UNAVAILABLE_UNTIL_RESTART'
               : 'PERSISTENCE_FAILURE',
         });
+      }
       if (error instanceof ReconquistaOperationError)
         return reply
           .code(
@@ -547,6 +562,24 @@ export async function registerReconquista(
         return reply
           .code(400)
           .send({ code: 'INCOMPATIBLE_RECONQUISTA_CONTRACT' });
+      // Fastify's own rejections (broken JSON, oversized or unsupported bodies).
+      const status = (error as { statusCode?: unknown }).statusCode;
+      if (typeof status === 'number' && status >= 400 && status < 500)
+        return reply
+          .code(status)
+          .send({ code: 'INCOMPATIBLE_RECONQUISTA_CONTRACT' });
+      // The rules reject moves with plain errors; a runtime or system error is
+      // a server bug and must reach the log instead of passing as a bad move.
+      if (
+        error instanceof TypeError ||
+        error instanceof RangeError ||
+        error instanceof ReferenceError ||
+        error instanceof SyntaxError ||
+        (error instanceof Error && 'errno' in error)
+      ) {
+        request.log.error(error, 'Reconquista request failed');
+        return reply.code(500).send({ code: 'SERVER_ERROR' });
+      }
       return reply.code(409).send({ code: 'INVALID_RECONQUISTA_ACTION' });
     });
     app.get(prefix + '/board', (request, reply) =>
@@ -573,7 +606,7 @@ export async function registerReconquista(
       };
     });
     app.get(prefix + '/games/:gameId/entry', async (request) => {
-      limit(request, 'game-read', params(request));
+      await limit(request, 'game-read', params(request));
       const current = await store.load(params(request));
       return {
         playerCount: current.playerCount,
@@ -587,7 +620,7 @@ export async function registerReconquista(
     });
     app.post(prefix + '/games/:gameId/join', async (request, reply) => {
       const id = params(request);
-      if (!limiter.consume('join', request.ip, id))
+      if (!limiter.consume('join', addressKey(request.ip), id))
         return reply.code(429).send({ code: 'RATE_LIMITED' });
       const current = await store.load(id);
       const existing = store.authenticate(current, playerToken(request, id));
@@ -605,7 +638,7 @@ export async function registerReconquista(
     });
     app.post(prefix + '/games/:gameId/take-seat', async (request, reply) => {
       const id = params(request);
-      if (!limiter.consume('join', request.ip, id))
+      if (!limiter.consume('join', addressKey(request.ip), id))
         return reply.code(429).send({ code: 'RATE_LIMITED' });
       const current = await store.load(id);
       const existing = store.authenticate(current, playerToken(request, id));
@@ -624,7 +657,7 @@ export async function registerReconquista(
     app.post(prefix + '/games/:gameId/ready', async (request) => {
       z.strictObject({}).parse(request.body ?? {});
       const id = params(request);
-      limit(request, 'game-command', id);
+      await limit(request, 'game-command', id);
       const current = await store.ready(id, playerToken(request, id));
       notify(id);
       return view(
@@ -642,7 +675,7 @@ export async function registerReconquista(
       await requireAdmin(request);
       await store.remove(params(request));
       focuses.delete(params(request));
-      notify(params(request));
+      disconnect(params(request), 'GAME_DELETED');
       return { deleted: true };
     });
     app.delete(prefix + '/games/:gameId/players/:playerId', async (request) => {
@@ -654,6 +687,7 @@ export async function registerReconquista(
         })
         .parse(request.params);
       await store.removePlayer(gameId, playerId);
+      disconnect(gameId, 'SESSION_REVOKED', playerId);
       notify(gameId);
       return { removed: true };
     });
@@ -687,7 +721,7 @@ export async function registerReconquista(
       return view(current, null);
     });
     app.get(prefix + '/games/:gameId/state', async (request) => {
-      limit(request, 'game-read', params(request));
+      await limit(request, 'game-read', params(request));
       const current = await store.load(params(request));
       const actor = store.authenticate(
         current,
@@ -702,7 +736,7 @@ export async function registerReconquista(
     });
     app.post(prefix + '/games/:gameId/commands', async (request) => {
       const id = params(request);
-      limit(request, 'game-command', id);
+      await limit(request, 'game-command', id);
       const command = reconquistaCommandSchema.parse(request.body);
       const result = await store.command(id, playerToken(request, id), command);
       if (!result.duplicate) notify(id);
@@ -718,7 +752,7 @@ export async function registerReconquista(
     });
     app.post(prefix + '/games/:gameId/focus', async (request) => {
       const id = params(request);
-      limit(request, 'game-command', id);
+      await limit(request, 'game-command', id);
       const { originId, targetId } = reconquistaFocusSchema.parse(request.body);
       const current = await store.load(id);
       const playerId = store.authenticate(current, playerToken(request, id));
@@ -761,7 +795,8 @@ export async function registerReconquista(
           : (store.authenticate(
               current,
               playerToken(request, current.gameId),
-            ) ?? ((await isAdmin(request)) ? 'host' : undefined));
+            ) ??
+            ((await isAdmin(request).catch(() => false)) ? 'host' : undefined));
         if (!current || !viewer) {
           socket.close(1008, 'UNAUTHORIZED');
           return;

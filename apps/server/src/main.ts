@@ -32,6 +32,19 @@ async function main(): Promise<void> {
     process.stdout.write(`${APPLICATION_NAME} ${APPLICATION_VERSION}\n`);
     process.exit(0);
   }
+  // Behind a proxy every name reaches the server, so only the public origin
+  // tells real pages apart from someone else's.
+  if (
+    command.kind === 'serve' &&
+    process.env['GAME_TRUSTED_PROXY'] &&
+    !process.env['GAME_PUBLIC_ORIGIN']
+  )
+    throw new Error(
+      tr(
+        'GAME_TRUSTED_PROXY necesita también GAME_PUBLIC_ORIGIN con la dirección pública exacta del juego, por ejemplo GAME_PUBLIC_ORIGIN=https://juego.example.com',
+        'GAME_TRUSTED_PROXY also needs GAME_PUBLIC_ORIGIN with the exact public address of the game, for example GAME_PUBLIC_ORIGIN=https://game.example.com',
+      ),
+    );
   const packagedWebRoot = process.env['GAME_WEB_ROOT'];
   if (packagedWebRoot && !existsSync(packagedWebRoot))
     throw new Error(

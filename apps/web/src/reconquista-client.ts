@@ -119,6 +119,11 @@ export function reconquistaErrorMessage(caught: unknown): string {
         'Otro jugador actuó antes. Se actualizó la partida.',
         'Another player acted first. The game was updated.',
       );
+    case 'SERVER_ERROR':
+      return tr(
+        'El servidor tuvo un error. Probá de nuevo.',
+        'The server ran into an error. Try again.',
+      );
     default:
       return code
         ? tr(

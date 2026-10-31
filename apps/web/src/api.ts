@@ -64,7 +64,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ recoveryCode }),
     }),
-  adminGames: () => request<{ games: AdminGameView[] }>('/api/admin/games'),
+  adminLogout: () =>
+    request<undefined>('/api/admin/logout', { method: 'POST' }),
+  adminGames: () =>
+    request<{ games: AdminGameView[]; version?: string }>('/api/admin/games'),
   createGame: (
     configuredPlayerCount: number,
     mode: 'classic' | 'competitive' = 'classic',

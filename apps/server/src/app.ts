@@ -29,6 +29,7 @@ import Fastify, {
 import { randomUUID } from 'node:crypto';
 import { AdminLaunch, isLoopback } from './admin-launch.js';
 import { connectionOptions } from './connection-options.js';
+import { APPLICATION_VERSION } from './version.js';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { RawData } from 'ws';
@@ -63,11 +64,17 @@ import {
   PersistenceIndeterminateError,
 } from './persistence/atomic-file.js';
 import {
+  addressKey,
   LayeredRateLimiter,
+  LoginBackoff,
   type RateLimitPolicy,
   type RateLimitSurface,
 } from './security/rate-limiter.js';
 import { hasValidOrigin, isAllowedHost } from './security/origin.js';
+
+/** A host name or address with an optional port, and nothing a policy could misread. */
+const SOCKET_HOST =
+  /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*|\[[0-9a-f:.]+\])(?::\d{1,5})?$/i;
 
 interface ServerOptions {
   readonly connectionBind?: string;
@@ -92,6 +99,9 @@ type RequestSecurityContext = Pick<
   FastifyRequest,
   'protocol' | 'headers' | 'hostname' | 'cookies'
 >;
+/** Too many host checks from one address; answered with 429. */
+class HostCheckLimitedError extends Error {}
+
 const transportClass = (request: RequestSecurityContext): TransportClass =>
   request.protocol === 'https' ? 'HTTPS' : 'HTTP';
 export function buildServer(options: ServerOptions = {}): FastifyInstance {
@@ -140,6 +150,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
     options.rateLimitPolicies,
     options.rateLimitNow,
   );
+  const loginBackoff = new LoginBackoff(options.rateLimitNow);
   if (!store) server.addHook('preClose', () => connections.closeAll());
   // Behind a trusted proxy, the proxy already decides which names reach us.
   if (options.trustedProxy === undefined)
@@ -147,17 +158,40 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
       if (!isAllowedHost(request.hostname, options.publicOrigin))
         return reply.code(421).send({ code: 'HOST_NOT_ALLOWED' });
     });
-  server.addHook('onSend', async (_request, reply) => {
+  const publicHost = options.publicOrigin
+    ? new URL(options.publicOrigin).host
+    : undefined;
+  server.addHook('onSend', async (request, reply) => {
+    // Live connections go only to this server. Current browsers already read
+    // 'self' that way; the names spelled out cover older Safari.
+    const sockets = [...new Set([request.headers.host, publicHost])]
+      .filter((host) => host !== undefined && SOCKET_HOST.test(host))
+      .flatMap((host) => [`ws://${host}`, `wss://${host}`])
+      .join(' ');
     void reply
       .header('X-Content-Type-Options', 'nosniff')
       .header('Referrer-Policy', 'same-origin')
       .header('X-Frame-Options', 'DENY')
       .header(
         'Content-Security-Policy',
-        "default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+        `default-src 'self'; connect-src 'self'${sockets ? ` ${sockets}` : ''}; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`,
       );
   });
   server.setErrorHandler((error, request, reply) => {
+    if (error instanceof HostCheckLimitedError)
+      return reply.code(429).send({
+        code: 'RATE_LIMITED',
+        message: 'Too many attempts; try again later',
+      });
+    // Fastify's own rejections (broken JSON, oversized or unsupported bodies)
+    // are the client's mistake: keep their status and stay out of the error log.
+    const status = (error as { statusCode?: unknown }).statusCode;
+    if (typeof status === 'number' && status >= 400 && status < 500) {
+      request.log.info({ err: error }, 'Request rejected');
+      return reply
+        .code(status)
+        .send({ code: 'MALFORMED_MESSAGE', message: 'MALFORMED_MESSAGE' });
+    }
     request.log.error(error, 'Request failed');
     if (error instanceof AuthenticationOperationError) {
       const status =
@@ -254,24 +288,46 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
     };
     const hasAdminAuthority = async (request: FastifyRequest) => {
       const token = adminToken(request);
-      return (
-        token !== undefined &&
-        (await auth.authenticateAdmin(token, transportClass(request)))
+      if (token === undefined) return false;
+      const address = addressKey(request.ip);
+      if (!rateLimiter.consume('host-check', address, address))
+        throw new HostCheckLimitedError();
+      const valid = await auth.authenticateAdmin(
+        token,
+        transportClass(request),
       );
+      if (valid) rateLimiter.refund('host-check', address, address);
+      return valid;
     };
     const consumeHttpLimit = (
       request: FastifyRequest,
       reply: FastifyReply,
-      surface: Exclude<RateLimitSurface, 'protocol-abuse'>,
+      surface: 'join' | 'seat-claim',
       target: string,
     ) => {
-      if (rateLimiter.consume(surface, request.ip, target)) return true;
+      if (rateLimiter.consume(surface, addressKey(request.ip), target))
+        return true;
       void reply.code(429).send({
         code: 'RATE_LIMITED',
         message: 'Too many attempts; try again later',
       });
       return false;
     };
+    // Every login attempt waits out its address's earlier failures first.
+    const loginAllowed = (request: FastifyRequest, reply: FastifyReply) => {
+      const waitMs = loginBackoff.begin(addressKey(request.ip));
+      if (waitMs === 0) return true;
+      void reply
+        .code(429)
+        .header('Retry-After', String(Math.ceil(waitMs / 1000)))
+        .send({
+          code: 'RATE_LIMITED',
+          message: 'Too many attempts; try again later',
+        });
+      return false;
+    };
+    const loggedIn = (request: FastifyRequest) =>
+      loginBackoff.succeed(addressKey(request.ip));
     const broadcastCurrentGame = async (gameId: string) => {
       try {
         await coordinator.run(gameId, async () => {
@@ -550,12 +606,12 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
           return reply.code(403).send({ code: 'UNAUTHORIZED' });
         if (!parsed.success)
           return reply.code(400).send({ code: 'MALFORMED_MESSAGE' });
-        if (!consumeHttpLimit(request, reply, 'admin-login', 'administrator'))
-          return;
+        if (!loginAllowed(request, reply)) return;
         const code = launch.consume(parsed.data.token);
         if (!code) return reply.code(401).send({ code: 'UNAUTHENTICATED' });
         const token = await auth.loginAdmin(code, transportClass(request));
         if (!token) return reply.code(401).send({ code: 'UNAUTHENTICATED' });
+        loggedIn(request);
         setSession(reply, { kind: 'admin' }, token, request);
         return { authenticated: true };
       },
@@ -568,15 +624,30 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         const parsed = adminLoginBodySchema.safeParse(request.body);
         if (!parsed.success)
           return reply.code(400).send({ code: 'MALFORMED_MESSAGE' });
-        if (!consumeHttpLimit(request, reply, 'admin-login', 'administrator'))
-          return;
+        if (!loginAllowed(request, reply)) return;
         const token = await auth.loginAdmin(
           parsed.data.recoveryCode,
           transportClass(request),
         );
         if (!token) return reply.code(401).send({ code: 'UNAUTHENTICATED' });
+        loggedIn(request);
         setSession(reply, { kind: 'admin' }, token, request);
         return { authenticated: true };
+      },
+    );
+
+    server.post(
+      '/api/admin/logout',
+      { preHandler: requireOrigin },
+      async (request, reply) => {
+        const token = adminToken(request);
+        if (token) await auth.logoutAdmin(token, transportClass(request));
+        const cleared = clearSessionCookie(
+          { kind: 'admin' },
+          transportClass(request),
+        );
+        reply.setCookie(cleared.name, cleared.value, cleared.options);
+        return reply.code(204).send();
       },
     );
 
@@ -623,6 +694,8 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         games: [...discovery.games.values()].map((game) =>
           projectGameForAdmin(game.state, game.revision),
         ),
+        // Only the host sees it; no page or header names the version.
+        version: APPLICATION_VERSION,
       });
     });
 
@@ -1021,6 +1094,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
                 'game-command',
                 `${params.data.gameId}:${playerId}`,
                 params.data.gameId,
+                'session',
               )
             ) {
               connections.send(params.data.gameId, connection, {
@@ -1057,8 +1131,9 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
                 decoded.protocolVersion !== PROTOCOL_VERSION;
               const withinLimit = rateLimiter.consume(
                 'protocol-abuse',
-                request.ip,
+                `${params.data.gameId}:${playerId}`,
                 params.data.gameId,
+                'session',
               );
               connections.send(params.data.gameId, connection, {
                 type: 'ERROR',

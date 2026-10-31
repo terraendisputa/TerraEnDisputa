@@ -20,6 +20,7 @@ import { AdminBoxes } from './AdminBoxes.js';
 import { LanguageSelect } from './LanguageSelect.js';
 import { TextSizeToggle } from './TextSizeToggle.js';
 import { ThemeToggle } from './ThemeToggle.js';
+import { UiIcon } from './UiIcon.js';
 import { clockText } from './TurnSummary.js';
 import { clockState, durationText } from './admin-clock.js';
 import { ReconquistaAdminDetail } from './ReconquistaAdmin.js';
@@ -99,6 +100,7 @@ export function AdminScreen() {
   const [authenticated, setAuthenticated] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState('');
   const [games, setGames] = useState<AdminGameView[]>([]);
+  const [version, setVersion] = useState<string>();
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedReconquista, setSelectedReconquista] = useState<string>();
   const [playerCount, setPlayerCount] = useState(4);
@@ -116,6 +118,7 @@ export function AdminScreen() {
     try {
       const result = await api.adminGames();
       setGames(result.games);
+      setVersion(result.version);
       const listed = (await reconquistaRequest('/games').catch(() => ({
         games: [],
       }))) as { games: ReconquistaGameSummary[] };
@@ -332,6 +335,21 @@ export function AdminScreen() {
         <div className="admin-tools">
           <TextSizeToggle />
           <ThemeToggle />
+          <button
+            type="button"
+            className="theme-toggle secondary"
+            title={tr('Cerrar sesión', 'Sign out')}
+            aria-label={tr('Cerrar sesión', 'Sign out')}
+            disabled={busy}
+            onClick={() =>
+              void run(async () => {
+                await api.adminLogout();
+                setAuthenticated(false);
+              })
+            }
+          >
+            <UiIcon name="leave" />
+          </button>
         </div>
       </header>
       <aside className="panel admin-sidebar">
@@ -503,6 +521,19 @@ export function AdminScreen() {
             ))}
           </nav>
         </details>
+        {/* Nothing checks for updates by itself; the link is there to look. */}
+        {version && (
+          <p className="admin-version">
+            {GAME_NAME} {version} ·{' '}
+            <a
+              href="https://github.com/terraendisputa/TerraEnDisputa/releases"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {tr('Ver versiones', 'See releases')}
+            </a>
+          </p>
+        )}
       </aside>
       <section className="panel admin-detail">
         {visibleError && (

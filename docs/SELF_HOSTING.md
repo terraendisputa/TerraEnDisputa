@@ -48,7 +48,7 @@ Armá la red privada por tu cuenta, con Tailscale, WireGuard, ZeroTier u otro pr
 
 ## Publicar en Internet
 
-Para alojarlo públicamente hacen falta un dominio, HTTPS y un proxy inverso o túnel administrados por vos. Hacé que Terra en disputa escuche en `127.0.0.1` o en una dirección privada concreta, configurá `GAME_PUBLIC_ORIGIN` con el origen público exacto (`https://…`) y `GAME_TRUSTED_PROXY` solo con la dirección o red CIDR del proxy, nunca con un comodín. El proxy tiene que reenviar HTTP y WebSocket al mismo puerto.
+Para alojarlo públicamente hacen falta un dominio, HTTPS y un proxy inverso o túnel administrados por vos. Hacé que Terra en disputa escuche en `127.0.0.1` o en una dirección privada concreta, configurá `GAME_PUBLIC_ORIGIN` con el origen público exacto (`https://…`) y `GAME_TRUSTED_PROXY` solo con la dirección o red CIDR del proxy, nunca con un comodín. Con `GAME_TRUSTED_PROXY` y sin `GAME_PUBLIC_ORIGIN`, el servidor no arranca. El proxy tiene que reenviar HTTP y WebSocket al mismo puerto.
 
 Terra en disputa no emite certificados ni configura DNS, router, firewall, proxy o túnel. Los WebSocket seguros funcionan a través de un proxy HTTPS bien configurado, porque el navegador y el servidor usan el mismo origen público.
 
