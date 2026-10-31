@@ -64,6 +64,8 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ recoveryCode }),
     }),
+  adminLogout: () =>
+    request<undefined>('/api/admin/logout', { method: 'POST' }),
   adminGames: () => request<{ games: AdminGameView[] }>('/api/admin/games'),
   createGame: (
     configuredPlayerCount: number,

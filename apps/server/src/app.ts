@@ -158,6 +158,15 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
       );
   });
   server.setErrorHandler((error, request, reply) => {
+    // Fastify's own rejections (broken JSON, oversized or unsupported bodies)
+    // are the client's mistake: keep their status and stay out of the error log.
+    const status = (error as { statusCode?: unknown }).statusCode;
+    if (typeof status === 'number' && status >= 400 && status < 500) {
+      request.log.info({ err: error }, 'Request rejected');
+      return reply
+        .code(status)
+        .send({ code: 'MALFORMED_MESSAGE', message: 'MALFORMED_MESSAGE' });
+    }
     request.log.error(error, 'Request failed');
     if (error instanceof AuthenticationOperationError) {
       const status =
@@ -577,6 +586,21 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
         if (!token) return reply.code(401).send({ code: 'UNAUTHENTICATED' });
         setSession(reply, { kind: 'admin' }, token, request);
         return { authenticated: true };
+      },
+    );
+
+    server.post(
+      '/api/admin/logout',
+      { preHandler: requireOrigin },
+      async (request, reply) => {
+        const token = adminToken(request);
+        if (token) await auth.logoutAdmin(token, transportClass(request));
+        const cleared = clearSessionCookie(
+          { kind: 'admin' },
+          transportClass(request),
+        );
+        reply.setCookie(cleared.name, cleared.value, cleared.options);
+        return reply.code(204).send();
       },
     );
 

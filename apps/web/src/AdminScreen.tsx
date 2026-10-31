@@ -20,6 +20,7 @@ import { AdminBoxes } from './AdminBoxes.js';
 import { LanguageSelect } from './LanguageSelect.js';
 import { TextSizeToggle } from './TextSizeToggle.js';
 import { ThemeToggle } from './ThemeToggle.js';
+import { UiIcon } from './UiIcon.js';
 import { clockText } from './TurnSummary.js';
 import { clockState, durationText } from './admin-clock.js';
 import { ReconquistaAdminDetail } from './ReconquistaAdmin.js';
@@ -332,6 +333,21 @@ export function AdminScreen() {
         <div className="admin-tools">
           <TextSizeToggle />
           <ThemeToggle />
+          <button
+            type="button"
+            className="theme-toggle secondary"
+            title={tr('Cerrar sesión', 'Sign out')}
+            aria-label={tr('Cerrar sesión', 'Sign out')}
+            disabled={busy}
+            onClick={() =>
+              void run(async () => {
+                await api.adminLogout();
+                setAuthenticated(false);
+              })
+            }
+          >
+            <UiIcon name="leave" />
+          </button>
         </div>
       </header>
       <aside className="panel admin-sidebar">

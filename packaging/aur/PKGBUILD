@@ -12,13 +12,15 @@ provides=('terra-en-disputa')
 conflicts=('terra-en-disputa')
 options=('!strip' '!debug')
 source=("https://github.com/terraendisputa/TerraEnDisputa/releases/download/v${pkgver}/terra-en-disputa-${pkgver}-linux-x64.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('8d6da6baa2079620a2c48aa5f7a79c33b0d8227c3fb018be56af9fc2cac17c74')
 
 package() {
   cd "terra-en-disputa-${pkgver}-linux-x64"
   install -d "${pkgdir}/opt/terra-en-disputa" "${pkgdir}/usr/bin"
   cp -a . "${pkgdir}/opt/terra-en-disputa/"
-  chmod 4755 "${pkgdir}/opt/terra-en-disputa/chrome-sandbox"
+  # Arch kernels allow unprivileged user namespaces, so Chromium sandboxes
+  # without a setuid root helper.
+  chmod 0755 "${pkgdir}/opt/terra-en-disputa/chrome-sandbox"
   ln -s /opt/terra-en-disputa/terra-en-disputa "${pkgdir}/usr/bin/terra-en-disputa"
   install -Dm644 "resources/linux/${_appid}.desktop" "${pkgdir}/usr/share/applications/${_appid}.desktop"
   install -Dm644 "resources/linux/${_appid}.metainfo.xml" "${pkgdir}/usr/share/metainfo/${_appid}.metainfo.xml"

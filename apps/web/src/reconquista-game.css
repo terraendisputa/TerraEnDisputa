@@ -50,6 +50,15 @@ html[data-theme='dark'] .reconquista-light {
 html[data-theme='dark'] .reconquista-art .reconquista-missile-target {
   stroke: #f5b777 !important;
 }
+/* Keyboard focus follows the country's shape instead of the browser's rectangle. */
+.reconquista-art [id^='country-']:focus-visible {
+  outline: none;
+}
+.reconquista-art
+  [id^='country-']:focus-visible:not(.reconquista-missile-target) {
+  stroke: var(--focus) !important;
+  stroke-width: 3 !important;
+}
 .reconquista-campaign fieldset {
   margin: 0.8rem 0;
   min-width: 0;

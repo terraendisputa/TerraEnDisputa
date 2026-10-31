@@ -111,11 +111,28 @@
     outline: 3px solid var(--focus);
     outline-offset: 3px;
   }
+  /* Countries show focus with their own border (see the territory-fill rules),
+     not a rectangle around the shape. */
+  .territory:focus-visible {
+    outline: none;
+  }
   .panel {
     background: var(--surface);
     color: var(--ink);
     border-color: var(--line);
     box-shadow: none;
+  }
+  /* Waiting room seats: the legacy translucent white only suits the light theme. */
+  :root[data-theme='dark'] .player-list li {
+    background: var(--soft);
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  :root[data-theme='dark'] .player-list .ready {
+    color: #8fd3a5;
+  }
+  :root[data-theme='dark'] .player-list .waiting {
+    color: var(--muted);
   }
   .game-shell {
     color: var(--ink);
