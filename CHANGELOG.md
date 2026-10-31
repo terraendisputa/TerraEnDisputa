@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.1 — 2026-10-31
+
+- Security review fixes. Request limits now count each seat or the host on its own and everyone else by address, so a flood without a valid session (made-up cookies included) never blocks the people playing. Failed host logins wait longer after each try, only for the address that sent them.
+- Hardened desktop app: no DevTools, no running as Node, permission requests refused except copying and full screen, and no spell-check dictionary download.
+- Stricter content security policy, a sandbox for the system service installed by the script, and the server refuses to start with a trusted proxy but no public address.
+- Sign out for the host. Retake live connections close when a seat is removed.
+- The host panel shows the installed version with a link to the releases.
+- Waiting room readable in the dark theme, and keyboard focus follows each country's shape on the maps.
+- Node 24.22.2 and Electron 44.10.0; CI actions pinned and release files with signed provenance.
+
 ## 1.1.0 — 2026-10-30
 
 - Desktop app for Windows and Linux: the server runs in its own window with the host panel already signed in and keeps running in the system tray. Windows installer (with a firewall rule for private networks), AppImage, deb and tar.gz.

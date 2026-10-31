@@ -1,6 +1,6 @@
 {
   "name": "ted",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Self-hosted browser strategy game for 2\u20136 human players",
   "license": "AGPL-3.0-only",
