@@ -17,7 +17,7 @@ import {
   type UtilityProcess,
   type WebContents,
 } from 'electron';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 /** What the server sends once it is listening (see apps/server/src/main.ts). */
@@ -38,6 +38,44 @@ const icon = nativeImage.createFromPath(join(resources, 'icon.png'));
 
 let spanish = false;
 const tr = (es: string, en: string): string => (spanish ? es : en);
+// The language picked on the start page; without one, the system's.
+const settingsFile = (): string =>
+  join(app.getPath('userData'), 'settings.json');
+const systemSpanish = (): boolean => /^es(?:$|-)/i.test(app.getLocale());
+
+async function readLanguage(): Promise<boolean> {
+  try {
+    const saved = (
+      JSON.parse(await readFile(settingsFile(), 'utf8')) as {
+        language?: unknown;
+      }
+    ).language;
+    if (saved === 'es' || saved === 'en') return saved === 'es';
+  } catch {
+    /* No choice saved yet. */
+  }
+  return systemSpanish();
+}
+
+/**
+ * Game pages pick their language on their own (each server remembers it).
+ * Until a page has a choice, give it the app's, so a game opened from the
+ * app speaks the same language as the start page.
+ */
+function shareLanguage(contents: WebContents): void {
+  if (spanish === systemSpanish()) return;
+  const lang = spanish ? 'es' : 'en';
+  void contents
+    .executeJavaScriptInIsolatedWorld(1000, [
+      {
+        code: `(() => { try { if (localStorage.getItem('ted-language')) return false; localStorage.setItem('ted-language', '${lang}'); return true; } catch { return false; } })()`,
+      },
+    ])
+    .then((changed) => {
+      if (changed === true) contents.reload();
+    })
+    .catch(() => undefined);
+}
 
 let server: UtilityProcess | undefined;
 let ready: ServerReady | undefined;
@@ -149,6 +187,9 @@ function guard(window: BrowserWindow, origin?: string): void {
     if (allowedFor(contents, url)) return;
     event.preventDefault();
     openExternal(url);
+  });
+  contents.on('did-finish-load', () => {
+    if (allowedOrigins.has(contents.id)) shareLanguage(contents);
   });
   contents.on('did-create-window', (child) =>
     guard(child, allowedOrigins.get(contents.id)),
@@ -426,6 +467,15 @@ else {
     void show(url.href, url.origin).catch(() => showStart('unreachable'));
     return '';
   });
+  ipcMain.handle('start:language', async (event, value: unknown) => {
+    if (!fromStartPage(event) || (value !== 'es' && value !== 'en')) return;
+    spanish = value === 'es';
+    await writeFile(settingsFile(), JSON.stringify({ language: value })).catch(
+      () => undefined,
+    );
+    buildMenus();
+    showStart();
+  });
   ipcMain.handle('start:help', (event) => {
     if (fromStartPage(event))
       void shell.openExternal(
@@ -438,7 +488,7 @@ else {
   ipcMain.handle('start:server', (event) => {
     if (fromStartPage(event)) startServer();
   });
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
     protocol.handle('ted', async (request) => {
       const { host, pathname } = new URL(request.url);
       const type = host === 'app' ? startFiles[pathname] : undefined;
@@ -465,7 +515,7 @@ else {
     // No languages also means no dictionary to fetch at startup.
     session.defaultSession.setSpellCheckerLanguages([]);
     session.defaultSession.setSpellCheckerEnabled(false);
-    spanish = /^es(?:$|-)/i.test(app.getLocale());
+    spanish = await readLanguage();
     buildMenus();
     showStart();
   });

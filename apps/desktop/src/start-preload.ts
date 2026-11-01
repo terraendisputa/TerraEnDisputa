@@ -54,6 +54,12 @@ if (location.origin === 'ted://app' && location.pathname === '/start.html')
           server.textContent = state.spanish ? 'Iniciando…' : 'Starting…';
         void ipcRenderer.invoke('start:server');
       });
+      const language = document.getElementById('language') as HTMLSelectElement;
+      language.value = lang;
+      language.addEventListener(
+        'change',
+        () => void ipcRenderer.invoke('start:language', language.value),
+      );
       link.focus();
     })();
   });
