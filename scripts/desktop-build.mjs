@@ -3,6 +3,7 @@
 // installer and a zip on Windows. Output goes to release/desktop.
 import { createHash } from 'node:crypto';
 import {
+  copyFile,
   mkdir,
   readdir,
   readFile,
@@ -46,6 +47,24 @@ await bundle({
   target: 'node24',
   external: ['electron'],
 });
+// The start page and its preload, which only acts on that page.
+await bundle({
+  entryPoints: [join(desktop, 'src/start-preload.ts')],
+  outfile: join(desktop, 'dist/start-preload.cjs'),
+  bundle: true,
+  platform: 'node',
+  format: 'cjs',
+  target: 'node24',
+  external: ['electron'],
+});
+await copyFile(
+  join(desktop, 'src/start.html'),
+  join(desktop, 'dist/start.html'),
+);
+await copyFile(
+  join(desktop, 'build/icon.png'),
+  join(desktop, 'dist/start-icon.png'),
+);
 
 // Linux launcher entry and AppStream data for the AUR and Flathub packages,
 // with the release being built listed first.
@@ -95,7 +114,13 @@ await build({
       output: join(root, 'release/desktop'),
       buildResources: 'build',
     },
-    files: ['dist/main.cjs', 'package.json'],
+    files: [
+      'dist/main.cjs',
+      'dist/start-preload.cjs',
+      'dist/start.html',
+      'dist/start-icon.png',
+      'package.json',
+    ],
     extraMetadata: {
       name: 'terra-en-disputa',
       version,

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terra en disputa</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --ink: #29261f;
+        --muted: #5f584a;
+        --paper: #f4eedc;
+        --line: #c9bc9c;
+        --green: #315e4c;
+        --green-ink: #fffaf0;
+        --danger: #8b302d;
+        --focus: #1d6fc2;
+        --bg: linear-gradient(135deg, #d3c7aa, #b9ad91);
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #ece4d0;
+          --muted: #b8ae98;
+          --paper: #26241f;
+          --line: #4a4538;
+          --green: #4f8a72;
+          --green-ink: #10140f;
+          --danger: #e2847f;
+          --focus: #7ab3ee;
+          --bg: linear-gradient(135deg, #1b1a17, #2a2720);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px 16px;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      main {
+        width: min(100%, 880px);
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      header img {
+        width: 64px;
+        height: 64px;
+      }
+      h1 {
+        margin: 0;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 34px;
+      }
+      header p {
+        margin: 4px 0 0;
+        color: var(--muted);
+      }
+      .options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--paper);
+      }
+      h2 {
+        margin: 0;
+        font-size: 20px;
+      }
+      section p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: auto;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-weight: 600;
+      }
+      input,
+      button {
+        font: inherit;
+      }
+      input {
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--ink);
+        background: transparent;
+      }
+      button {
+        min-height: 42px;
+        padding: 8px 16px;
+        border: 0;
+        border-radius: 8px;
+        font-weight: 700;
+        color: var(--green-ink);
+        background: var(--green);
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: progress;
+      }
+      .server {
+        margin-top: auto;
+      }
+      :is(input, button):focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 2px;
+      }
+      .error {
+        margin: 0;
+        color: var(--danger);
+        font-weight: 600;
+      }
+      .error:empty {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <img src="start-icon.png" alt="" />
+        <div>
+          <h1>Terra en disputa</h1>
+          <p data-es="¿Qué querés hacer?" data-en="What do you want to do?"></p>
+        </div>
+      </header>
+      <div class="options">
+        <section>
+          <h2 data-es="Unirse a una partida" data-en="Join a game"></h2>
+          <p
+            data-es="Pegá el enlace de invitación que te compartió el anfitrión. La partida se abre en esta ventana."
+            data-en="Paste the invitation link the host shared with you. The game opens in this window."
+          ></p>
+          <form id="join">
+            <label>
+              <span
+                data-es="Enlace de invitación"
+                data-en="Invitation link"
+              ></span>
+              <input
+                id="link"
+                required
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="http://192.168.0.10:3000/game/…"
+              />
+            </label>
+            <p id="join-error" class="error" role="alert"></p>
+            <button
+              id="join-button"
+              type="submit"
+              data-es="Entrar"
+              data-en="Join"
+            ></button>
+          </form>
+        </section>
+        <section>
+          <h2 data-es="Iniciar servidor" data-en="Start the server"></h2>
+          <p
+            data-es="Para ser anfitrión: arranca el servidor en esta computadora y abre el panel para crear partidas e invitar a tus amigos."
+            data-en="To host: starts the server on this computer and opens the panel to create games and invite your friends."
+          ></p>
+          <button
+            id="server"
+            class="server"
+            type="button"
+            data-es="Iniciar"
+            data-en="Start"
+            data-running-es="Abrir panel del anfitrión"
+            data-running-en="Open the host panel"
+          ></button>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
