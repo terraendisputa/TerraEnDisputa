@@ -1,6 +1,6 @@
 pkgbase = terra-en-disputa-bin
 	pkgdesc = Turn-based strategy game for 2 to 6 players, hosted on your own computer
-	pkgver = 1.1.0
+	pkgver = 1.1.2
 	pkgrel = 1
 	url = https://terraendisputa.github.io/TerraEnDisputa/
 	arch = x86_64
@@ -17,7 +17,7 @@ pkgbase = terra-en-disputa-bin
 	conflicts = terra-en-disputa
 	options = !strip
 	options = !debug
-	source = https://github.com/terraendisputa/TerraEnDisputa/releases/download/v1.1.0/terra-en-disputa-1.1.0-linux-x64.tar.gz
-	sha256sums = 8d6da6baa2079620a2c48aa5f7a79c33b0d8227c3fb018be56af9fc2cac17c74
+	source = https://github.com/terraendisputa/TerraEnDisputa/releases/download/v1.1.2/terra-en-disputa-1.1.2-linux-x64.tar.gz
+	sha256sums = fb6fc2c9bad2292b7843cfa04460d62ebd63c76ffb3404d13cd19affbaac44e3
 
 pkgname = terra-en-disputa-bin
