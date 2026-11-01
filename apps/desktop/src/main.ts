@@ -52,7 +52,7 @@ let launched = false;
 const startUrl = 'ted://app/start.html';
 const startFiles: Readonly<Record<string, string>> = {
   '/start.html': 'text/html; charset=utf-8',
-  '/start-icon.png': 'image/png',
+  '/landing-atlas.webp': 'image/webp',
 };
 protocol.registerSchemesAsPrivileged([
   { scheme: 'ted', privileges: { standard: true, secure: true } },
@@ -425,6 +425,15 @@ else {
       );
     void show(url.href, url.origin).catch(() => showStart('unreachable'));
     return '';
+  });
+  ipcMain.handle('start:help', (event) => {
+    if (fromStartPage(event))
+      void shell.openExternal(
+        tr(
+          'https://terraendisputa.github.io/TerraEnDisputa/wiki/',
+          'https://terraendisputa.github.io/TerraEnDisputa/en/wiki/',
+        ),
+      );
   });
   ipcMain.handle('start:server', (event) => {
     if (fromStartPage(event)) startServer();

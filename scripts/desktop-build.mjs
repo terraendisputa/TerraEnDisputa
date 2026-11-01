@@ -61,9 +61,10 @@ await copyFile(
   join(desktop, 'src/start.html'),
   join(desktop, 'dist/start.html'),
 );
+// The same map as the game's home page.
 await copyFile(
-  join(desktop, 'build/icon.png'),
-  join(desktop, 'dist/start-icon.png'),
+  join(root, 'apps/web/src/assets/landing-atlas.webp'),
+  join(desktop, 'dist/landing-atlas.webp'),
 );
 
 // Linux launcher entry and AppStream data for the AUR and Flathub packages,
@@ -118,7 +119,7 @@ await build({
       'dist/main.cjs',
       'dist/start-preload.cjs',
       'dist/start.html',
-      'dist/start-icon.png',
+      'dist/landing-atlas.webp',
       'package.json',
     ],
     extraMetadata: {

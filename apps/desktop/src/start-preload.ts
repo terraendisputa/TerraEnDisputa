@@ -42,6 +42,12 @@ if (location.origin === 'ted://app' && location.pathname === '/start.html')
           if (problem) link.focus();
         });
       });
+      document
+        .getElementById('how-to-play')
+        ?.addEventListener(
+          'click',
+          () => void ipcRenderer.invoke('start:help'),
+        );
       server.addEventListener('click', () => {
         server.disabled = true;
         if (!state.serverRunning)
