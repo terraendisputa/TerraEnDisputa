@@ -53,9 +53,14 @@ Las partidas se guardan aparte de la aplicación: `~/.local/share/ted` en Linux 
 
 ### Aplicación de escritorio
 
-La aplicación trae el mismo servidor y lo abre en su propia ventana, con el panel del anfitrión ya iniciado. Descargá de [Releases](https://github.com/terraendisputa/TerraEnDisputa/releases) el instalador de Windows (`.exe`), o en Linux el `.AppImage`, el `.deb` o el `.tar.gz`.
+La aplicación trae el mismo servidor. Descargá de [Releases](https://github.com/terraendisputa/TerraEnDisputa/releases) el instalador de Windows (`.exe`), o en Linux el `.AppImage`, el `.deb` o el `.tar.gz`. Al abrirla elegís qué hacer:
 
-- Cerrar la ventana **no** apaga el servidor: sigue en la bandeja del sistema para que la partida continúe. Para apagarlo, elegí **Apagar servidor y salir** en el ícono de la bandeja o en el menú **Terra en disputa** de la ventana.
+- **Unirse a una partida:** pegá el enlace de invitación que te pasó el anfitrión y la partida se abre en la ventana de la aplicación. El servidor no arranca, así que no hace falta tocar el firewall. Esa ventana solo muestra el servidor del enlace; cualquier otro enlace se abre en el navegador.
+- **Iniciar servidor:** arranca el servidor y abre el panel del anfitrión ya iniciado.
+
+**Volver al inicio**, en el menú **Terra en disputa** de la ventana, regresa a esa pantalla. Si solo estabas jugando, cerrar la ventana cierra la aplicación.
+
+- Con el servidor funcionando, cerrar la ventana **no** lo apaga: sigue en la bandeja del sistema para que la partida continúe. Para apagarlo, elegí **Apagar servidor y salir** en el ícono de la bandeja o en el menú **Terra en disputa** de la ventana.
 - Desde ese mismo menú podés abrir el panel en el navegador, copiar el código de administración y abrir la carpeta de partidas.
 - Usa el puerto `3000` y la misma carpeta de partidas que el paquete portable, así que no los abras a la vez. Para otro puerto, iniciala con la variable `GAME_PORT`.
 - En GNOME la bandeja necesita la extensión AppIndicator. Sin ella, volvé a abrir la aplicación desde el menú de aplicaciones para recuperar la ventana.

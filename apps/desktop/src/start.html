@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terra en disputa</title>
+    <!-- Same look as the game's home page (apps/web/src/App.tsx, Landing). -->
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        color: #ece9df;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        font-size: 14px;
+        line-height: 1.45;
+        background: #426765;
+      }
+      main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 330px);
+        gap: 64px;
+        align-items: center;
+        min-height: 100vh;
+        padding: 102px 102px 72px;
+        background-color: #426765;
+        background-image:
+          linear-gradient(90deg, rgb(13 36 35 / 68%), rgb(13 36 35 / 12%)),
+          url('landing-atlas.webp');
+        background-size: cover;
+        background-position: center;
+      }
+      header {
+        max-width: 832px;
+        color: #faf1d9;
+        text-shadow: 0 2px 12px rgb(5 22 22 / 50%);
+      }
+      .eyebrow {
+        margin: 0 0 8px;
+        color: #f0e4c8;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0 0 24px;
+        color: #fff5de;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: clamp(3rem, 7vw, 6.8rem);
+        line-height: 1.08;
+        letter-spacing: -0.045em;
+      }
+      header > p:last-child {
+        margin: 0;
+        color: #f0e4c8;
+        font-size: 1.15rem;
+      }
+      section {
+        min-width: 0;
+        padding: 32px;
+        border: 1px solid rgb(196 161 101 / 65%);
+        border-radius: 11px;
+        background: #232b27;
+        box-shadow: 0 18px 60px rgb(8 28 27 / 30%);
+        overflow-wrap: anywhere;
+      }
+      h2 {
+        margin: 0 0 17px;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 21px;
+        line-height: 1.08;
+      }
+      form {
+        display: grid;
+        gap: 12px;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 14.4px;
+        font-weight: 700;
+      }
+      input,
+      button {
+        font: inherit;
+      }
+      input {
+        min-width: 0;
+        min-height: 44px;
+        padding: 11px 12px;
+        border: 1px solid #46534a;
+        border-radius: 6.4px;
+        color: #ece9df;
+        background: #232b27;
+        font-weight: 700;
+      }
+      input::placeholder {
+        color: #8d978e;
+        font-weight: 400;
+      }
+      button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 8px 14px;
+        border: 1px solid #48633f;
+        border-radius: 8px;
+        color: #fff;
+        background: #48633f;
+        cursor: pointer;
+      }
+      button.secondary {
+        border-color: #46534a;
+        color: #ece9df;
+        background: #232b27;
+        font-weight: 700;
+      }
+      button:hover {
+        filter: brightness(1.12);
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: progress;
+      }
+      :is(input, button):focus-visible {
+        outline: 3px solid #7ab3ee;
+        outline-offset: 2px;
+      }
+      hr {
+        margin: 24px 0;
+        border: 0;
+        border-top: 1px solid #c2b79d;
+      }
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .error {
+        margin: 0;
+        padding: 0.7rem 0.8rem;
+        border: 1px solid #b96a5e;
+        border-radius: 0.4rem;
+        color: #6d211f;
+        background: #f9ded8;
+      }
+      .error:empty {
+        display: none;
+      }
+      @media (max-width: 900px) {
+        main {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 24px;
+          align-content: center;
+          padding: 24px 16px;
+          background-image:
+            linear-gradient(rgb(13 36 35 / 62%), rgb(13 36 35 / 28%)),
+            url('landing-atlas.webp');
+        }
+        h1 {
+          font-size: clamp(30px, 8vw, 44px);
+          margin-bottom: 12px;
+        }
+        header > p:last-child {
+          font-size: 15px;
+        }
+        section {
+          padding: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p
+          class="eyebrow"
+          data-es="Aplicación de escritorio · 2 a 6 jugadores"
+          data-en="Desktop app · 2 to 6 players"
+        ></p>
+        <h1>Terra en disputa</h1>
+        <p
+          data-es="Entrá con el enlace que compartió el anfitrión o iniciá tu propio servidor."
+          data-en="Join with the link the host shared or start your own server."
+        ></p>
+      </header>
+      <section>
+        <h2 data-es="Unirse a una partida" data-en="Join a game"></h2>
+        <form id="join">
+          <label>
+            <span
+              data-es="Enlace de invitación"
+              data-en="Invitation link"
+            ></span>
+            <input
+              id="link"
+              required
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="http://192.168.0.10:3000/game/…"
+            />
+          </label>
+          <p id="join-error" class="error" role="alert"></p>
+          <button
+            id="join-button"
+            type="submit"
+            data-es="Entrar"
+            data-en="Join"
+          ></button>
+        </form>
+        <hr />
+        <div class="links">
+          <button
+            id="how-to-play"
+            class="secondary"
+            type="button"
+            data-es="Cómo jugar"
+            data-en="How to play"
+          ></button>
+          <button
+            id="server"
+            class="secondary"
+            type="button"
+            data-es="Iniciar servidor"
+            data-en="Start the server"
+            data-running-es="Abrir panel del anfitrión"
+            data-running-en="Open the host panel"
+          ></button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
