@@ -3,6 +3,7 @@
 // installer and a zip on Windows. Output goes to release/desktop.
 import { createHash } from 'node:crypto';
 import {
+  copyFile,
   mkdir,
   readdir,
   readFile,
@@ -46,6 +47,25 @@ await bundle({
   target: 'node24',
   external: ['electron'],
 });
+// The start page and its preload, which only acts on that page.
+await bundle({
+  entryPoints: [join(desktop, 'src/start-preload.ts')],
+  outfile: join(desktop, 'dist/start-preload.cjs'),
+  bundle: true,
+  platform: 'node',
+  format: 'cjs',
+  target: 'node24',
+  external: ['electron'],
+});
+await copyFile(
+  join(desktop, 'src/start.html'),
+  join(desktop, 'dist/start.html'),
+);
+// The same map as the game's home page.
+await copyFile(
+  join(root, 'apps/web/src/assets/landing-atlas.webp'),
+  join(desktop, 'dist/landing-atlas.webp'),
+);
 
 // Linux launcher entry and AppStream data for the AUR and Flathub packages,
 // with the release being built listed first.
@@ -95,7 +115,13 @@ await build({
       output: join(root, 'release/desktop'),
       buildResources: 'build',
     },
-    files: ['dist/main.cjs', 'package.json'],
+    files: [
+      'dist/main.cjs',
+      'dist/start-preload.cjs',
+      'dist/start.html',
+      'dist/landing-atlas.webp',
+      'package.json',
+    ],
     extraMetadata: {
       name: 'terra-en-disputa',
       version,
