@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.3 — 2026-11-01
+
+- Language selector on the desktop app's start page, like the one on the game's home page. The choice is saved and also changes the app's menus; a game or host panel opened from the app uses the same language unless that server already has one chosen.
+
 ## 1.1.2 — 2026-11-01
 
 - The desktop app opens on a start page styled like the game's home page: paste an invitation link to join a game in the app window, or start the server to host. The server only runs once someone chooses to host, so joining needs no open port or firewall rule.
