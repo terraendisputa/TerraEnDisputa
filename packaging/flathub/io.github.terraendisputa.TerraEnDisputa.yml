@@ -25,8 +25,8 @@ modules:
     buildsystem: simple
     sources:
       - type: archive
-        url: https://github.com/terraendisputa/TerraEnDisputa/releases/download/v1.1.0/terra-en-disputa-1.1.0-linux-x64.tar.gz
-        sha256: '8d6da6baa2079620a2c48aa5f7a79c33b0d8227c3fb018be56af9fc2cac17c74'
+        url: https://github.com/terraendisputa/TerraEnDisputa/releases/download/v1.1.2/terra-en-disputa-1.1.2-linux-x64.tar.gz
+        sha256: 'fb6fc2c9bad2292b7843cfa04460d62ebd63c76ffb3404d13cd19affbaac44e3'
         only-arches: [x86_64]
         dest: app
       - type: script
