@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.2 — 2026-11-01
+
+- The desktop app opens on a start page styled like the game's home page: paste an invitation link to join a game in the app window, or start the server to host. The server only runs once someone chooses to host, so joining needs no open port or firewall rule.
+- A joined game stays on its own server: any other link opens in the browser, and only copying and full screen are allowed.
+- Without the server running, closing the window quits the app. «Back to start» in the app menu returns to the start page, and a server that can't start shows why and goes back there instead of quitting.
+
 ## 1.1.1 — 2026-10-31
 
 - Security review fixes. Request limits now count each seat or the host on its own and everyone else by address, so a flood without a valid session (made-up cookies included) never blocks the people playing. Failed host logins wait longer after each try, only for the address that sent them.
