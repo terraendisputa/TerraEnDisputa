@@ -196,8 +196,9 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
     if (!presentation?.mine)
       setPanel((current) => (current === 'actions' ? null : current));
   }, [turnKey]);
-  // As in Classic, a new pact or condominio proposal opens Pactos for everyone
-  // except its author and the player acting on their turn.
+  // A new pact or condominio proposal opens Pactos for everyone except its
+  // author. The player on turn sees it only while placing armies or closing the
+  // turn, never in the middle of an attack, a move or a regroup.
   const proposalIds = [
     ...(view?.campaign?.pacts ?? [])
       .filter((x) => x.status === 'proposed')
@@ -221,7 +222,11 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
     const fresh = proposalIds.some(
       (x) => !seen.ids.has(x.id) && x.by !== view.self?.playerId,
     );
-    if (fresh && !presentation?.mine) {
+    if (
+      fresh &&
+      (!presentation?.mine ||
+        ['placement', 'closing'].includes(presentation.mode))
+    ) {
       setPanel('pacts');
       setMobileActionsOpen(false);
     }
