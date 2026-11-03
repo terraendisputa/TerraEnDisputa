@@ -644,6 +644,13 @@ export function classicInvariantViolations(
     errors.push('Only games with a clock can have absent players');
   if (state.classicExpress && state.mode !== 'classic')
     errors.push('Express is a Classic option');
+  if (state.classicOccupationOnly && state.mode !== 'classic')
+    errors.push('Occupation-only objectives are a Classic option');
+  if (
+    state.classicOccupationOnly &&
+    state.players.some((p) => p.secretObjectiveId?.startsWith('destroy_'))
+  )
+    errors.push('destruction objectives disabled');
   if (state.mode !== 'competitive' && state.competitiveDurationMinutes)
     errors.push('Only Competitive can choose its duration');
   if (state.mode === 'classic' && state.players.some((p) => p.disqualified))

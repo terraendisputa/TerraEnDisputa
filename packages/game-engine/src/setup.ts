@@ -150,6 +150,7 @@ export function createClassicSetup(
   rng: SetupRandomness,
   mode: GameMode = 'classic',
   botSeats?: number,
+  occupationOnly = false,
 ): SetupGameState {
   if (
     !validPlayerCount(mode, players.length) ||
@@ -236,7 +237,8 @@ export function createClassicSetup(
   const assignedPlayers = assignObjectives(
     players,
     rng,
-    mode === 'competitive' && players.length - (botSeats ?? 0) === 4,
+    occupationOnly ||
+      (mode === 'competitive' && players.length - (botSeats ?? 0) === 4),
   );
   const start = rollWinner(players, rng);
   return {

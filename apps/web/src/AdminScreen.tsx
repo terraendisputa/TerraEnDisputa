@@ -698,6 +698,41 @@ export function AdminScreen() {
                     <label
                       className="inline-control"
                       title={tr(
+                        'Solo de conquista: se reparte sin las cartas «Destruir al color». Con 2 o 3 jugadores no hay objetivos secretos.',
+                        'Occupation only: dealt without the «Destroy a color» cards. With 2 or 3 players there are no secret objectives.',
+                      )}
+                    >
+                      {tr('Objetivos', 'Objectives')}
+                      <select
+                        disabled={busy || selected.status !== 'LOBBY'}
+                        value={
+                          selected.classicOccupationOnly ? 'occupation' : 'all'
+                        }
+                        onChange={(event) =>
+                          void run(() =>
+                            api.configureGame(
+                              selected.gameId,
+                              selected.configuredPlayerCount,
+                              undefined,
+                              undefined,
+                              undefined,
+                              undefined,
+                              event.target.value === 'occupation',
+                            ),
+                          )
+                        }
+                      >
+                        <option value="all">{tr('Todos', 'All')}</option>
+                        <option value="occupation">
+                          {tr('Solo de conquista', 'Occupation only')}
+                        </option>
+                      </select>
+                    </label>
+                  )}
+                  {selected.mode === 'classic' && (
+                    <label
+                      className="inline-control"
+                      title={tr(
                         'Express: turnos de 2 minutos y tiempo máximo de juego, después dos rondas finales. Sin puntaje.',
                         'Express: 2-minute turns and a maximum game time, then two final rounds. No scoring.',
                       )}

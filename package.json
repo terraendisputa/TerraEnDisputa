@@ -29,9 +29,10 @@
     "test:zone-withdrawal": "node --test tests/international-zone-withdrawal.test.mjs",
     "test:pact-notifications": "node --test tests/pact-notifications.test.mjs",
     "test:shortcuts": "node --test tests/shortcuts.test.mjs",
+    "test:occupation-objectives": "node --test tests/occupation-objectives.test.mjs",
     "test:security": "node --test tests/security.test.mjs",
     "test:reconquista": "node --test --test-isolation=none tests/reconquista-*.test.mjs",
-    "test:integration": "pnpm test:classic && pnpm test:competitive && pnpm test:reconquista && pnpm test:zone-withdrawal && pnpm test:pact-notifications && pnpm test:shortcuts && pnpm test:security && pnpm test:identity",
+    "test:integration": "pnpm test:classic && pnpm test:competitive && pnpm test:reconquista && pnpm test:zone-withdrawal && pnpm test:pact-notifications && pnpm test:shortcuts && pnpm test:occupation-objectives && pnpm test:security && pnpm test:identity",
     "test:identity": "node --test tests/identity.test.mjs",
     "simulate:bots": "node scripts/simulate-bots.mjs"
   },

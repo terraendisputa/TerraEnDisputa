@@ -731,6 +731,7 @@ export function buildServer(options: ServerOptions = {}): FastifyInstance {
           body.data.competitiveBotSeats,
           body.data.competitiveDeciding,
           body.data.classicExpress,
+          body.data.classicOccupationOnly,
         );
         await broadcastCurrentGame(params.data.gameId);
         return { gameId: params.data.gameId, revision };
