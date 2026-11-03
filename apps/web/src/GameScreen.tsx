@@ -355,14 +355,15 @@ function GameView({
     submit({ type: 'end_turn' });
   }, [endingTurn, snapshot, state.inFlight, state.error, turnMine]);
   useEffect(() => {
+    // Tabs use the short name and the mode: «TED: Clásico», «TED: Competitivo».
     document.title =
       snapshot?.mode === 'competitive'
-        ? COMPETITIVE_NAME
+        ? `${GAME_SHORT_NAME}: ${tr('Competitivo', 'Competitive')}`
         : snapshot?.mode === 'classic'
-          ? `${GAME_NAME} — ${tr('Clásico', 'Classic')}`
-          : GAME_NAME;
+          ? `${GAME_SHORT_NAME}: ${tr('Clásico', 'Classic')}`
+          : GAME_SHORT_NAME;
     return () => {
-      document.title = GAME_NAME;
+      document.title = GAME_SHORT_NAME;
     };
   }, [snapshot?.mode]);
   // Phone menus use type under 16px, as in Reconquista; without a scale limit

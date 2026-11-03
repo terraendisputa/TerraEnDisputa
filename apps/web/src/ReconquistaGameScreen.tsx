@@ -81,7 +81,7 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
   const seenSituation = useRef<string | null | undefined>(undefined);
   useModeFavicon('reconquista');
   useEffect(() => {
-    document.title = `${GAME_SHORT_NAME} · ${RECONQUISTA_NAME}`;
+    document.title = `${GAME_SHORT_NAME}: ${RECONQUISTA_NAME}`;
   }, []);
   // Phone menus use type under 16px; without a scale limit iPhones zoom the page
   // when a list opens. The map zooms by itself, so the page needs no pinch zoom.

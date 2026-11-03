@@ -273,7 +273,7 @@ try {
   if (
     !shell.ok ||
     !html.includes('<div id="root"></div>') ||
-    !html.includes('<title>Terra en disputa</title>')
+    !html.includes('<title>TED</title>')
   )
     throw new Error('Packaged browser shell or public identity was not served');
   const stylesheet = html.match(/href="([^" ]+\.css)"/);

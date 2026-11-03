@@ -83,6 +83,13 @@ async function deleteGameAfterConfirmation(
 }
 
 export function AdminScreen() {
+  // The host panel keeps the full name in its tab.
+  useEffect(() => {
+    document.title = GAME_NAME;
+    return () => {
+      document.title = GAME_SHORT_NAME;
+    };
+  }, []);
   const [wideAdmin, setWideAdmin] = useState(
     () => window.matchMedia('(min-width:600px)').matches,
   );
