@@ -494,6 +494,16 @@ export function ReconquistaPacts({
     busy ||
     campaign.phase === 'finished' ||
     !!(me && campaign.eliminations[me]);
+  // The engine takes no pact action while a conquest is being occupied, but the
+  // proposal form stays in place so it can be prepared meanwhile.
+  const occupying = !!campaign.occupation;
+  const locked = disabled || occupying;
+  const occupyingHint = occupying
+    ? tr(
+        'Disponible cuando termine la ocupación en curso',
+        'Available once the current occupation ends',
+      )
+    : undefined;
   const armiesOf = (countryId: string, playerId: string | undefined) =>
     view.territories
       .find((t) => t.id === countryId)
@@ -742,15 +752,21 @@ export function ReconquistaPacts({
     (a) => a.status === 'proposed',
   );
   const offer = condominiumOffer(view);
-  const answer = (onAccept: () => void, onReject: () => void) => (
+  const answer = (
+    onAccept: () => void,
+    onReject: () => void,
+    off = locked,
+    hint = occupyingHint,
+  ) => (
     <>
-      <button type="button" disabled={disabled} onClick={onAccept}>
+      <button type="button" disabled={off} title={hint} onClick={onAccept}>
         {tr('Aceptar', 'Accept')}
       </button>
       <button
         type="button"
         className="secondary"
-        disabled={disabled}
+        disabled={off}
+        title={hint}
         onClick={onReject}
       >
         {tr('Rechazar', 'Reject')}
@@ -799,7 +815,8 @@ export function ReconquistaPacts({
                 <button
                   type="button"
                   className="danger-quiet"
-                  disabled={disabled}
+                  disabled={locked}
+                  title={occupyingHint}
                   onClick={() =>
                     window.confirm(
                       tr(
@@ -834,7 +851,8 @@ export function ReconquistaPacts({
               campaign.phase === 'attack' && (
                 <button
                   type="button"
-                  disabled={disabled}
+                  disabled={locked}
+                  title={occupyingHint}
                   onClick={() =>
                     void act({ kind: 'start-alliance', allianceId: a.id })
                   }
@@ -850,7 +868,8 @@ export function ReconquistaPacts({
                 <button
                   type="button"
                   className="secondary"
-                  disabled={disabled}
+                  disabled={locked}
+                  title={occupyingHint}
                   onClick={() => void act({ kind: 'stop-alliance' })}
                 >
                   {tr('Detener', 'Stop')}
@@ -928,200 +947,196 @@ export function ReconquistaPacts({
               answer(
                 () => void act({ kind: 'respond-condominium', accept: true }),
                 () => void act({ kind: 'respond-condominium', accept: false }),
+                disabled,
+                undefined,
               )}
           </div>
         )}
-        {view.self &&
-          campaign.phase !== 'finished' &&
-          !campaign.occupation &&
-          kinds.length > 0 && (
-            <div className="pact-proposal-form">
+        {view.self && campaign.phase !== 'finished' && kinds.length > 0 && (
+          <div className="pact-proposal-form">
+            <label>
+              {tr('Tipo de pacto', 'Pact type')}
+              <select
+                value={kind ?? ''}
+                disabled={disabled}
+                onChange={(e) => {
+                  setKindChoice(e.target.value);
+                  setFirstContinent('');
+                  setSecondContinent('');
+                }}
+              >
+                <option value="">{tr('Elegí tipo', 'Choose type')}</option>
+                {kinds.map((k) => (
+                  <option key={k} value={k}>
+                    {pactKindNames[k]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {kind && (
               <label>
-                {tr('Tipo de pacto', 'Pact type')}
+                {tr('Jugador', 'Player')}
                 <select
-                  value={kind ?? ''}
+                  value={partner}
                   disabled={disabled}
                   onChange={(e) => {
-                    setKindChoice(e.target.value);
+                    setPartnerChoice(e.target.value);
                     setFirstContinent('');
                     setSecondContinent('');
+                    setDestination('');
+                    setPartnerOrigin('');
                   }}
                 >
-                  <option value="">{tr('Elegí tipo', 'Choose type')}</option>
-                  {kinds.map((k) => (
-                    <option key={k} value={k}>
-                      {pactKindNames[k]}
+                  <option value="">
+                    {tr('Elegí jugador', 'Choose player')}
+                  </option>
+                  {kindPartners.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nickname} ({playerColorNames[p.color] ?? p.color})
                     </option>
                   ))}
                 </select>
               </label>
-              {kind && (
-                <label>
-                  {tr('Jugador', 'Player')}
-                  <select
-                    value={partner}
-                    disabled={disabled}
-                    onChange={(e) => {
-                      setPartnerChoice(e.target.value);
-                      setFirstContinent('');
-                      setSecondContinent('');
-                      setDestination('');
-                      setPartnerOrigin('');
-                    }}
-                  >
-                    <option value="">
-                      {tr('Elegí jugador', 'Choose player')}
-                    </option>
-                    {kindPartners.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.nickname} ({playerColorNames[p.color] ?? p.color})
-                      </option>
-                    ))}
-                  </select>
-                </label>
+            )}
+            {choice &&
+              kind === 'continent' &&
+              continentSelect(
+                tr('Continente', 'Continent'),
+                sharedContinents.includes(firstContinent) ? firstContinent : '',
+                setFirstContinent,
+                sharedContinents,
               )}
-              {choice &&
-                kind === 'continent' &&
-                continentSelect(
-                  tr('Continente', 'Continent'),
-                  sharedContinents.includes(firstContinent)
-                    ? firstContinent
-                    : '',
-                  setFirstContinent,
-                  sharedContinents,
-                )}
-              {choice &&
-                kind === 'intercontinental' &&
-                continentSelect(
-                  tr('Tu continente', 'Your continent'),
-                  firstOptions.includes(firstContinent) ? firstContinent : '',
-                  (value) => {
-                    setFirstContinent(value);
-                    setSecondContinent('');
-                  },
-                  firstOptions,
-                )}
-              {choice &&
-                kind === 'intercontinental' &&
-                continentSelect(
-                  tr(
-                    `Continente de ${choice.partner.nickname}`,
-                    `${choice.partner.nickname}'s continent`,
-                  ),
-                  secondOptions.includes(secondContinent)
-                    ? secondContinent
-                    : '',
-                  setSecondContinent,
-                  secondOptions,
-                )}
-              {choice &&
-                (kind === 'countries' ||
-                  kind === 'zone' ||
-                  kind === 'condominium') &&
-                countrySelect(
-                  kind === 'zone'
-                    ? tr('Tu país débil', 'Your weak country')
-                    : tr('Tu país', 'Your country'),
-                  originId,
-                  (value) => {
-                    setOrigin(value);
+            {choice &&
+              kind === 'intercontinental' &&
+              continentSelect(
+                tr('Tu continente', 'Your continent'),
+                firstOptions.includes(firstContinent) ? firstContinent : '',
+                (value) => {
+                  setFirstContinent(value);
+                  setSecondContinent('');
+                },
+                firstOptions,
+              )}
+            {choice &&
+              kind === 'intercontinental' &&
+              continentSelect(
+                tr(
+                  `Continente de ${choice.partner.nickname}`,
+                  `${choice.partner.nickname}'s continent`,
+                ),
+                secondOptions.includes(secondContinent) ? secondContinent : '',
+                setSecondContinent,
+                secondOptions,
+              )}
+            {choice &&
+              (kind === 'countries' ||
+                kind === 'zone' ||
+                kind === 'condominium') &&
+              countrySelect(
+                kind === 'zone'
+                  ? tr('Tu país débil', 'Your weak country')
+                  : tr('Tu país', 'Your country'),
+                originId,
+                (value) => {
+                  setOrigin(value);
+                  setPartnerOrigin('');
+                  setDestination('');
+                },
+                only(originIds),
+              )}
+            {choice &&
+              kind === 'countries' &&
+              countrySelect(
+                tr(
+                  `País de ${choice.partner.nickname}`,
+                  `${choice.partner.nickname}'s country`,
+                ),
+                targetId,
+                setDestination,
+                only(targetIds),
+              )}
+            {choice &&
+              kind === 'condominium' &&
+              countrySelect(
+                tr(
+                  `País de ${choice.partner.nickname}`,
+                  `${choice.partner.nickname}'s country`,
+                ),
+                allyOriginId,
+                (value) => {
+                  setPartnerOrigin(value);
+                  setDestination('');
+                },
+                only(allyOrigins),
+              )}
+            {choice &&
+              kind === 'condominium' &&
+              countrySelect(
+                tr('País a conquistar', 'Country to conquer'),
+                targetId,
+                setDestination,
+                only(targetIds),
+              )}
+            {choice && (
+              <p className="pact-summary">
+                <small>
+                  {tr(
+                    'Vista previa · todavía no enviada',
+                    'Preview · not sent yet',
+                  )}
+                </small>
+                <strong>
+                  {!proposal
+                    ? pactKindNames[choice.kind]
+                    : proposal.kind === 'propose-alliance'
+                      ? tr(
+                          `Condominio: ${name(proposal.originId)} y ${name(proposal.allyOriginId)} → ${name(proposal.targetId)}`,
+                          `Condominium: ${name(proposal.originId)} and ${name(proposal.allyOriginId)} → ${name(proposal.targetId)}`,
+                        )
+                      : proposal.kind === 'propose-pact'
+                        ? [
+                            pactKindNames[proposal.pactKind],
+                            ...(proposal.countryIds.length
+                              ? [proposal.countryIds.map(name).join(' / ')]
+                              : []),
+                            ...(proposal.continentIds.length
+                              ? [
+                                  proposal.continentIds
+                                    .map((id) => continentNames[id])
+                                    .join(' / '),
+                                ]
+                              : []),
+                          ].join(': ')
+                        : ''}
+                </strong>
+                <span>
+                  {tr('con', 'with')} {participant(choice.partner.id)}
+                </span>
+              </p>
+            )}
+            <button
+              type="button"
+              disabled={locked || !proposal}
+              title={occupyingHint}
+              onClick={() => {
+                if (!proposal) return;
+                void act(proposal).then((ok) => {
+                  if (ok) {
+                    setKindChoice('');
+                    setPartnerChoice('');
+                    setOrigin('');
+                    setDestination('');
                     setPartnerOrigin('');
-                    setDestination('');
-                  },
-                  only(originIds),
-                )}
-              {choice &&
-                kind === 'countries' &&
-                countrySelect(
-                  tr(
-                    `País de ${choice.partner.nickname}`,
-                    `${choice.partner.nickname}'s country`,
-                  ),
-                  targetId,
-                  setDestination,
-                  only(targetIds),
-                )}
-              {choice &&
-                kind === 'condominium' &&
-                countrySelect(
-                  tr(
-                    `País de ${choice.partner.nickname}`,
-                    `${choice.partner.nickname}'s country`,
-                  ),
-                  allyOriginId,
-                  (value) => {
-                    setPartnerOrigin(value);
-                    setDestination('');
-                  },
-                  only(allyOrigins),
-                )}
-              {choice &&
-                kind === 'condominium' &&
-                countrySelect(
-                  tr('País a conquistar', 'Country to conquer'),
-                  targetId,
-                  setDestination,
-                  only(targetIds),
-                )}
-              {choice && (
-                <p className="pact-summary">
-                  <small>
-                    {tr(
-                      'Vista previa · todavía no enviada',
-                      'Preview · not sent yet',
-                    )}
-                  </small>
-                  <strong>
-                    {!proposal
-                      ? pactKindNames[choice.kind]
-                      : proposal.kind === 'propose-alliance'
-                        ? tr(
-                            `Condominio: ${name(proposal.originId)} y ${name(proposal.allyOriginId)} → ${name(proposal.targetId)}`,
-                            `Condominium: ${name(proposal.originId)} and ${name(proposal.allyOriginId)} → ${name(proposal.targetId)}`,
-                          )
-                        : proposal.kind === 'propose-pact'
-                          ? [
-                              pactKindNames[proposal.pactKind],
-                              ...(proposal.countryIds.length
-                                ? [proposal.countryIds.map(name).join(' / ')]
-                                : []),
-                              ...(proposal.continentIds.length
-                                ? [
-                                    proposal.continentIds
-                                      .map((id) => continentNames[id])
-                                      .join(' / '),
-                                  ]
-                                : []),
-                            ].join(': ')
-                          : ''}
-                  </strong>
-                  <span>
-                    {tr('con', 'with')} {participant(choice.partner.id)}
-                  </span>
-                </p>
-              )}
-              <button
-                type="button"
-                disabled={disabled || !proposal}
-                onClick={() => {
-                  if (!proposal) return;
-                  void act(proposal).then((ok) => {
-                    if (ok) {
-                      setKindChoice('');
-                      setPartnerChoice('');
-                      setOrigin('');
-                      setDestination('');
-                      setPartnerOrigin('');
-                      setFirstContinent('');
-                      setSecondContinent('');
-                    }
-                  });
-                }}
-              >
-                {tr('Proponer pacto', 'Propose pact')}
-              </button>
-            </div>
-          )}
+                    setFirstContinent('');
+                    setSecondContinent('');
+                  }
+                });
+              }}
+            >
+              {tr('Proponer pacto', 'Propose pact')}
+            </button>
+          </div>
+        )}
       </details>
     </section>
   );
