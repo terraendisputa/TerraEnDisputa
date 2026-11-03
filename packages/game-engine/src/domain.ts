@@ -322,6 +322,8 @@ interface GameStateBase {
   readonly competitiveDeciding?: true;
   /** Classic with a game clock: two-minute turns and a time limit, no score. */
   readonly classicExpress?: true;
+  /** Classic without «destroy a color» cards: only occupation objectives. */
+  readonly classicOccupationOnly?: true;
   readonly players: readonly PlayerState[];
 }
 export interface LobbyGameState extends GameStateBase {

@@ -90,6 +90,7 @@ export function createReconquistaSession(
   catalog: unknown,
   players: readonly ObjectivePlayer[],
   random: PreparationRandom,
+  occupationOnly = false,
 ): ReconquistaSession {
   const board = preparationBoard(catalog);
   const preparation = createPreparation(
@@ -102,6 +103,7 @@ export function createReconquistaSession(
     players,
     preparation.circle,
     random,
+    occupationOnly,
   );
   return {
     kind: 'reconquista-session',
@@ -476,6 +478,8 @@ export interface SetupJournal {
   readonly kind: 'reconquista-journal';
   readonly version: 1;
   readonly catalogContract: string;
+  /** Dealt without destruction objectives (host option). */
+  readonly occupationOnly?: true;
   readonly players: readonly ObjectivePlayer[];
   readonly initialDraws: readonly number[];
   readonly commands: readonly SetupRecord[];
@@ -518,13 +522,20 @@ export function newSetupJournal(
   catalog: unknown,
   players: readonly ObjectivePlayer[],
   random: PreparationRandom,
+  occupationOnly = false,
 ) {
   const tape = recordedRandom(random);
-  const state = createReconquistaSession(catalog, players, tape.random);
+  const state = createReconquistaSession(
+    catalog,
+    players,
+    tape.random,
+    occupationOnly,
+  );
   const journal: SetupJournal = {
     kind: 'reconquista-journal',
     version: 1,
     catalogContract: JSON.stringify(catalog),
+    ...(occupationOnly ? { occupationOnly: true as const } : {}),
     players: players.map((p) => ({ ...p })),
     initialDraws: tape.draws,
     commands: [],
@@ -624,8 +635,10 @@ export function loadSetupJournal(catalog: unknown, value: unknown) {
     'initialDraws',
     'commands',
     'catalogContract',
+    'occupationOnly',
   ]);
   if (
+    (raw.occupationOnly !== undefined && raw.occupationOnly !== true) ||
     raw.kind !== 'reconquista-journal' ||
     raw.version !== 1 ||
     raw.catalogContract !== JSON.stringify(catalog) ||
@@ -640,7 +653,13 @@ export function loadSetupJournal(catalog: unknown, value: unknown) {
   });
   const initialDraws = raw.initialDraws as readonly number[];
   const tape = replayRandom(initialDraws);
-  let state = createReconquistaSession(catalog, players, tape.random);
+  const occupationOnly = raw.occupationOnly === true;
+  let state = createReconquistaSession(
+    catalog,
+    players,
+    tape.random,
+    occupationOnly,
+  );
   tape.finish();
   const board = preparationBoard(catalog);
   const ids: string[] = [];
@@ -686,6 +705,7 @@ export function loadSetupJournal(catalog: unknown, value: unknown) {
       kind: 'reconquista-journal' as const,
       version: 1 as const,
       catalogContract: JSON.stringify(catalog),
+      ...(occupationOnly ? { occupationOnly: true as const } : {}),
       players,
       initialDraws: [...initialDraws],
       commands,

@@ -245,6 +245,7 @@ const base = {
   competitiveBotSeats: z.number().int().min(1).max(5).optional(),
   competitiveDeciding: z.literal(true).optional(),
   classicExpress: z.literal(true).optional(),
+  classicOccupationOnly: z.literal(true).optional(),
   players: z.array(player),
 };
 const competitiveHistory = z.strictObject({

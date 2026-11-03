@@ -56,6 +56,9 @@ export function projectGameForAdmin(
       ? { competitiveDeciding: true as const }
       : {}),
     ...(state.classicExpress ? { classicExpress: true as const } : {}),
+    ...(state.classicOccupationOnly
+      ? { classicOccupationOnly: true as const }
+      : {}),
     players: publicPlayers(state),
     ...(state.pendingInheritance
       ? {
@@ -136,6 +139,9 @@ export function projectGameFor(
       ? { competitiveDeciding: true as const }
       : {}),
     ...(state.classicExpress ? { classicExpress: true as const } : {}),
+    ...(state.classicOccupationOnly
+      ? { classicOccupationOnly: true as const }
+      : {}),
     selfPlayerId: playerId,
     ...(canRequestCompetitiveBot(state, playerId)
       ? { botRequestAvailable: true as const }

@@ -19,6 +19,8 @@ export function dealInitialObjectives(
   players: readonly ObjectivePlayer[],
   circle: readonly string[],
   random: PreparationRandom,
+  /** Host option: no destruction cards, only occupation objectives. */
+  occupationOnly = false,
 ) {
   validateReconquistaCatalog(catalog);
   if (players.length < 2 || players.length > 6)
@@ -54,8 +56,8 @@ export function dealInitialObjectives(
       (players.length > 3 ||
         (o.kind !== 'destruction' && o.minTerritories !== 35)) &&
       (o.kind !== 'destruction' ||
-        o.target === 'left_neighbor' ||
-        colors.has(o.target ?? '')),
+        (!occupationOnly &&
+          (o.target === 'left_neighbor' || colors.has(o.target ?? '')))),
   );
   const shuffled = [...eligible];
   for (let i = shuffled.length - 1; i > 0; i--) {

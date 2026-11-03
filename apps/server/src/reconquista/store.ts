@@ -81,6 +81,8 @@ const envelopeSchema = z.strictObject({
   players: z.array(playerSchema).max(6),
   /** Express: the game runs on a clock, as Classic Express does. */
   express: z.literal(true).optional(),
+  /** Objectives dealt without destruction cards. */
+  occupationOnly: z.literal(true).optional(),
   clock: z
     .strictObject({
       updatedAtMs: z.number().int().nonnegative(),
@@ -475,6 +477,8 @@ export class ReconquistaStore {
       if (current.journal) throw new ReconquistaOperationError('LOBBY_CLOSED');
       const playerCount = body.playerCount ?? current.playerCount;
       const express = body.express ?? current.express === true;
+      const occupationOnly =
+        body.occupationOnly ?? current.occupationOnly === true;
       const bots = body.bots ?? current.botSeats ?? 0;
       if (bots >= playerCount)
         throw new ReconquistaOperationError('TOO_MANY_BOTS');
@@ -483,17 +487,25 @@ export class ReconquistaStore {
       if (
         playerCount === current.playerCount &&
         express === (current.express === true) &&
+        occupationOnly === (current.occupationOnly === true) &&
         bots === (current.botSeats ?? 0)
       )
         return current;
-      const { express: _express, botSeats: _bots, ...rest } = current;
+      const {
+        express: _express,
+        botSeats: _bots,
+        occupationOnly: _occupationOnly,
+        ...rest
+      } = current;
       void _express;
       void _bots;
+      void _occupationOnly;
       const candidate = {
         ...rest,
         revision: current.revision + 1,
         playerCount,
         ...(express ? { express: true as const } : {}),
+        ...(occupationOnly ? { occupationOnly: true as const } : {}),
         ...(bots ? { botSeats: bots } : {}),
       };
       await this.persist(candidate);
@@ -561,6 +573,7 @@ export class ReconquistaStore {
         this.catalog,
         players.map(({ id, color }) => ({ id, color })),
         this.randomness,
+        current.occupationOnly === true,
       );
       const candidate = {
         ...current,

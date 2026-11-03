@@ -74,6 +74,7 @@ export function ReconquistaAdminDetail({
   const configure = (settings: {
     readonly playerCount?: number;
     readonly express?: boolean;
+    readonly occupationOnly?: boolean;
     readonly bots?: number;
   }) => reconquistaRequest(`/games/${gameId}`, settings, 'PATCH');
   const setBots = (settings: object) =>
@@ -144,6 +145,32 @@ export function ReconquistaAdminDetail({
                   {n === 0 ? tr('Sin bots', 'No bots') : n}
                 </option>
               ))}
+            </select>
+          </label>
+          <label
+            className="inline-control"
+            title={tr(
+              'Solo de conquista: se reparte sin las cartas de destrucción. Con 2 o 3 jugadores el reglamento ya las saca.',
+              'Occupation only: dealt without the destruction cards. With 2 or 3 players the rules already leave them out.',
+            )}
+          >
+            {tr('Objetivos', 'Objectives')}
+            <select
+              disabled={busy || !lobby}
+              value={entry.occupationOnly ? 'occupation' : 'all'}
+              onChange={(event) =>
+                void run(async () => {
+                  await configure({
+                    occupationOnly: event.target.value === 'occupation',
+                  });
+                  reload();
+                })
+              }
+            >
+              <option value="all">{tr('Todos', 'All')}</option>
+              <option value="occupation">
+                {tr('Solo de conquista', 'Occupation only')}
+              </option>
             </select>
           </label>
           <label

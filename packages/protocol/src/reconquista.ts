@@ -83,6 +83,8 @@ export const reconquistaCreateSchema = z.strictObject({
 export const reconquistaConfigureSchema = z.strictObject({
   playerCount: reconquistaCreateSchema.shape.playerCount.optional(),
   express: z.boolean().optional(),
+  /** Objectives without destruction cards. */
+  occupationOnly: z.boolean().optional(),
   /** Seats bots take at the start; at least one stays for a person. */
   bots: z.number().int().min(0).max(5).optional(),
 });
@@ -290,6 +292,7 @@ export type ReconquistaBoard = z.infer<typeof reconquistaBoardSchema>;
 export const reconquistaEntrySchema = z.strictObject({
   playerCount: reconquistaCreateSchema.shape.playerCount,
   express: z.literal(true).optional(),
+  occupationOnly: z.literal(true).optional(),
   stage: z.enum(['lobby', 'started']),
   players: z.array(player).max(6),
   botSeats: z.number().int().min(1).max(5).optional(),

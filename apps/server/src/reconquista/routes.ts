@@ -611,6 +611,7 @@ export async function registerReconquista(
       return {
         playerCount: current.playerCount,
         ...(current.express ? { express: true } : {}),
+        ...(current.occupationOnly ? { occupationOnly: true } : {}),
         stage: current.journal ? 'started' : 'lobby',
         players: seats(current),
         ...(current.botSeats ? { botSeats: current.botSeats } : {}),
