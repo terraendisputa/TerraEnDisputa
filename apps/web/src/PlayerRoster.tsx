@@ -109,9 +109,6 @@ export function PlayerRoster({
                 {p.nickname}
                 {p.bot && p.bot !== 'table' ? ' (bot)' : ''}
               </span>
-              <span className="turn-alert" aria-hidden="true">
-                !
-              </span>
             </button>
           ))}
         </div>

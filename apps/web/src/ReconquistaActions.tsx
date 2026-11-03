@@ -406,6 +406,20 @@ function Placement({
     onPlan({ ...next, conversions });
   };
   const allPlaced = pools.every((p) => p.left === 0);
+  // An own country the engine leaves out of the legal list is in a zone pact
+  // or blocked (manual p. 18); say why instead of ignoring the choice.
+  const refused =
+    !!view.campaign &&
+    existing(selected) > 0 &&
+    !view.self?.campaign?.legal.placementCountryIds.includes(selected);
+  const inZone =
+    refused &&
+    !!view.campaign?.pacts.some(
+      (p) =>
+        p.status === 'active' &&
+        p.kind === 'zone' &&
+        p.countryIds.includes(selected),
+    );
   return (
     <div className="action-card action-layout primary-action-card reinforcement-card">
       {/* Like Classic's reinforcement card; the initial incorporation has no inner title. */}
@@ -420,6 +434,19 @@ function Placement({
         labelOf={name}
         disabled={busy}
       />
+      {refused && (
+        <p className="muted-copy" role="status">
+          {inZone
+            ? tr(
+                `${name(selected)} está en una zona de pacto y no recibe ejércitos.`,
+                `${name(selected)} is in a pact zone and cannot take armies.`,
+              )
+            : tr(
+                `${name(selected)} está bloqueado: todos sus limítrofes son de un mismo rival con 2 o más ejércitos.`,
+                `${name(selected)} is blocked: all its neighbors belong to one rival with 2 or more armies.`,
+              )}
+        </p>
+      )}
       {canPlaceHere && maximum > 0 && (
         <Amount
           value={placed}

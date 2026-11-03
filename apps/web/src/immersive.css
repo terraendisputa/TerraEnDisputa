@@ -320,22 +320,6 @@
   height: 2px;
   background: currentColor;
 }
-.game-shell.playing-shell .turn-alert {
-  display: none;
-  position: absolute;
-  right: -3px;
-  top: -4px;
-  border-radius: 50%;
-  width: 15px;
-  height: 15px;
-  background: #9a4033;
-  color: #fff2dc;
-  font: 800 11px/15px system-ui;
-  text-align: center;
-}
-.game-shell.playing-shell .roster-player[aria-current='true'] .turn-alert {
-  display: block;
-}
 .game-shell.playing-shell .roster-player.is-eliminated {
   opacity: 0.55;
 }
