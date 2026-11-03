@@ -83,6 +83,13 @@ async function deleteGameAfterConfirmation(
 }
 
 export function AdminScreen() {
+  // The host panel keeps the full name in its tab.
+  useEffect(() => {
+    document.title = GAME_NAME;
+    return () => {
+      document.title = GAME_SHORT_NAME;
+    };
+  }, []);
   const [wideAdmin, setWideAdmin] = useState(
     () => window.matchMedia('(min-width:600px)').matches,
   );
@@ -251,12 +258,15 @@ export function AdminScreen() {
             {tr('Administración local', 'Local administration')}
           </p>
           <h1>{tr('Acceso del administrador', 'Administrator access')}</h1>
-          <p className="warning">
-            {tr(
-              'La credencial se enviará sin cifrar si usás HTTP. Hacelo solamente en una red confiable.',
-              'The credential is sent unencrypted over HTTP. Do it only on a trusted network.',
-            )}
-          </p>
+          {/* Only plain HTTP sends the code unencrypted. */}
+          {window.location.protocol !== 'https:' && (
+            <p className="warning">
+              {tr(
+                'La credencial se enviará sin cifrar si usás HTTP. Hacelo solamente en una red confiable.',
+                'The credential is sent unencrypted over HTTP. Do it only on a trusted network.',
+              )}
+            </p>
+          )}
           <form
             onSubmit={(event: FormEvent) => {
               event.preventDefault();

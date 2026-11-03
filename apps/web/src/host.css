@@ -685,3 +685,9 @@ body:has(.landing) {
 .admin-layout .game-list {
   max-height: min(60vh, 520px);
 }
+/* The final result takes the panel's theme colors, readable in light and dark. */
+.admin-layout .admin-result {
+  background: var(--soft);
+  border-left-color: var(--accent);
+  color: var(--ink);
+}

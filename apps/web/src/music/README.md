@@ -10,7 +10,7 @@ Each track belongs to a moment of the game (set in `MusicToggle.tsx`):
 - **Final**, repeated once someone wins: c18 and r17.
 - **Intense**, during attacks: every other track.
 
-A change of moment starts a track only when none is playing, and one to three minutes of silence follow each track. Only the final track replaces the one playing, with a short fade.
+A change of moment starts a track only when none is playing, and one to three minutes of silence follow each track. The final track always replaces the one playing, right away.
 
 ## Classic and Competitive (`classic/`)
 

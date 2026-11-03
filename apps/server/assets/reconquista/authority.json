@@ -2,8 +2,8 @@
   "id": "ted-reconquista-board-visual-3",
   "approvedOn": "2026-10-22",
   "approvedFilesSha256": {
-    "reconquista-map-v8.svg": "39134fd2c32b6a1afa280f2b1ef5f90b6ec01dc749405cfdcbf8d3249e0fc009",
-    "reconquista-map-v8-dark.svg": "966c9e0a0897dad468e2db3966f1c062f7dc37c3a9906b6c823ea78b40722db7",
+    "reconquista-map-v8.svg": "c44edd8db0156ec1f81d4eb73dc672841f196924f06346e035de5c0984522675",
+    "reconquista-map-v8-dark.svg": "5d439155a23a49d9fe279e11a0aeb23bda1db1980ffaaf728643f9d7d76dad6d",
     "labels.json": "cf5227bc3cfce0f40938facc17cc7bea4b4219469d144ef74a7f616868478500",
     "missile-spots.json": "767911a0b63f24fca51f7c0a5df371ffbe7ab8b3e1c7462644cec946d657bbe7"
   }

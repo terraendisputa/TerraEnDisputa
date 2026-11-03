@@ -81,7 +81,7 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
   const seenSituation = useRef<string | null | undefined>(undefined);
   useModeFavicon('reconquista');
   useEffect(() => {
-    document.title = `${GAME_SHORT_NAME} · ${RECONQUISTA_NAME}`;
+    document.title = `${GAME_SHORT_NAME}: ${RECONQUISTA_NAME}`;
   }, []);
   // Phone menus use type under 16px; without a scale limit iPhones zoom the page
   // when a list opens. The map zooms by itself, so the page needs no pinch zoom.
@@ -196,6 +196,41 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
     if (!presentation?.mine)
       setPanel((current) => (current === 'actions' ? null : current));
   }, [turnKey]);
+  // A new pact or condominio proposal opens Pactos for everyone except its
+  // author. The player on turn sees it only while placing armies or closing the
+  // turn, never in the middle of an attack, a move or a regroup.
+  const proposalIds = [
+    ...(view?.campaign?.pacts ?? [])
+      .filter((x) => x.status === 'proposed')
+      .map((x) => ({ id: x.id, by: x.proposerId })),
+    ...(view?.campaign?.alliances ?? [])
+      .filter((x) => x.status === 'proposed')
+      .map((x) => ({ id: x.id, by: x.proposerId })),
+  ];
+  const proposalKey = `${view?.gameId}:${proposalIds.map((x) => x.id).join(',')}`;
+  const seenProposals = useRef<
+    { gameId: string; ids: Set<string> } | undefined
+  >(undefined);
+  useEffect(() => {
+    if (!view) return;
+    const seen = seenProposals.current;
+    seenProposals.current = {
+      gameId: view.gameId,
+      ids: new Set(proposalIds.map((x) => x.id)),
+    };
+    if (seen?.gameId !== view.gameId) return;
+    const fresh = proposalIds.some(
+      (x) => !seen.ids.has(x.id) && x.by !== view.self?.playerId,
+    );
+    if (
+      fresh &&
+      (!presentation?.mine ||
+        ['placement', 'closing'].includes(presentation.mode))
+    ) {
+      setPanel('pacts');
+      setMobileActionsOpen(false);
+    }
+  }, [proposalKey]);
   // Every step the player must act on opens its menu by itself once the
   // dice stop, replacing whatever panel was open:
   // incorporation (initial, extra and ordinary), conquest, attack, regroup.

@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.1.4 — 2026-11-03
+
+- A new pact proposal opens the Pacts menu for every other player. In Retake the player on turn sees it only while placing armies or closing the turn, never while attacking, moving or regrouping.
+- Retake: the pact proposal form stays open while a conquest is being occupied, so a proposal can be prepared meanwhile; sending and answering wait until the occupation ends.
+- The final track starts as soon as someone wins, replacing the one playing.
+- The host panel's final result is readable in the dark theme.
+- The host sign-in warns about the unencrypted code only over plain HTTP.
+- Browser tabs read «TED: Classic», «TED: Competitive» or «TED: Retake»; the host panel keeps the full name. The Retake map no longer shows a hover title.
+
+## 1.1.3 — 2026-11-01
+
+- Language selector on the desktop app's start page, like the one on the game's home page. The choice is saved and also changes the app's menus; a game or host panel opened from the app uses the same language unless that server already has one chosen.
+
+## 1.1.2 — 2026-11-01
+
+- The desktop app opens on a start page styled like the game's home page: paste an invitation link to join a game in the app window, or start the server to host. The server only runs once someone chooses to host, so joining needs no open port or firewall rule.
+- A joined game stays on its own server: any other link opens in the browser, and only copying and full screen are allowed.
+- Without the server running, closing the window quits the app. «Back to start» in the app menu returns to the start page, and a server that can't start shows why and goes back there instead of quitting.
+
+## 1.1.1 — 2026-10-31
+
+- Security review fixes. Request limits now count each seat or the host on its own and everyone else by address, so a flood without a valid session (made-up cookies included) never blocks the people playing. Failed host logins wait longer after each try, only for the address that sent them.
+- Hardened desktop app: no DevTools, no running as Node, permission requests refused except copying and full screen, and no spell-check dictionary download.
+- Stricter content security policy, a sandbox for the system service installed by the script, and the server refuses to start with a trusted proxy but no public address.
+- Sign out for the host. Retake live connections close when a seat is removed.
+- The host panel shows the installed version with a link to the releases.
+- Waiting room readable in the dark theme, and keyboard focus follows each country's shape on the maps.
+- Node 24.22.2 and Electron 44.10.0; CI actions pinned and release files with signed provenance.
+
 ## 1.1.0 — 2026-10-30
 
 - Desktop app for Windows and Linux: the server runs in its own window with the host panel already signed in and keeps running in the system tray. Windows installer (with a firewall rule for private networks), AppImage, deb and tar.gz.

@@ -7,8 +7,8 @@ import { tr } from './language.js';
 // moment of the game has its own tracks: calm while armies are placed, intense
 // during attacks, and a final track repeated once someone wins. A change of
 // moment never cuts a track; it only starts one when nothing is playing, and a
-// silence of one to three minutes follows each track. Only the final track
-// replaces the one playing, with a short fade. On by default, starting with the
+// silence of one to three minutes follows each track. The final track always
+// replaces the one playing, right away. On by default, starting with the
 // first click or key press (browsers block audio before that); turning it off
 // only pauses the music, the turn chime keeps its own button. The choice is
 // remembered per browser. Track list and moments: music/README.md.
@@ -57,7 +57,6 @@ const CLASSIC = byMoment(CLASSIC_TRACKS);
 const RECONQUISTA = byMoment(RECONQUISTA_TRACKS);
 const STORAGE_KEY = 'ted-music';
 const VOLUME = 0.18;
-const FADE_MS = 1500;
 const silence = () => 60_000 + Math.random() * 120_000;
 
 function shuffled(tracks: readonly string[], avoidFirst?: string): string[] {
@@ -161,27 +160,27 @@ export function MusicToggle({
   useEffect(() => {
     if (current.current === moment) return;
     current.current = moment;
-    // The final track never waits for a silence.
-    if (moment === 'final') quietUntil.current = 0;
     const audio = player.current;
-    if (moment !== 'final' || !audio || audio.paused) {
+    if (moment !== 'final' || !audio) {
       start.current();
       return;
     }
-    // The final track replaces the one playing after a short fade.
-    const from = audio.volume;
-    const began = Date.now();
-    const fade = setInterval(() => {
-      const left = 1 - (Date.now() - began) / FADE_MS;
-      if (left > 0) {
-        audio.volume = from * left;
-        return;
-      }
-      clearInterval(fade);
-      audio.pause();
-      start.current();
-    }, 50);
-    return () => clearInterval(fade);
+    // The final track always plays at once, replacing whatever is playing or
+    // the silence after a track.
+    quietUntil.current = 0;
+    if (!audio.paused) audio.pause();
+    start.current();
+    // If the browser refuses to play it now, the next click or key press does.
+    const retry = () => {
+      if (current.current === 'final' && audio.paused)
+        void audio.play().catch(() => {});
+    };
+    document.addEventListener('pointerdown', retry, { once: true });
+    document.addEventListener('keydown', retry, { once: true });
+    return () => {
+      document.removeEventListener('pointerdown', retry);
+      document.removeEventListener('keydown', retry);
+    };
   }, [moment]);
   useEffect(
     () => () => {
