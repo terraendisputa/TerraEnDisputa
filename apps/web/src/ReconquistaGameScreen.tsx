@@ -693,9 +693,6 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
                 }}
               >
                 <span className="roster-name">{x.nickname}</span>
-                <span className="turn-alert" aria-hidden="true">
-                  !
-                </span>
               </button>
             );
           })}
