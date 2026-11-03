@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.4 — 2026-11-03
+
+- A new pact proposal opens the Pacts menu for every other player. In Retake the player on turn sees it only while placing armies or closing the turn, never while attacking, moving or regrouping.
+- Retake: the pact proposal form stays open while a conquest is being occupied, so a proposal can be prepared meanwhile; sending and answering wait until the occupation ends.
+- The final track starts as soon as someone wins, replacing the one playing.
+- The host panel's final result is readable in the dark theme.
+- The host sign-in warns about the unencrypted code only over plain HTTP.
+- Browser tabs read «TED: Classic», «TED: Competitive» or «TED: Retake»; the host panel keeps the full name. The Retake map no longer shows a hover title.
+
 ## 1.1.3 — 2026-11-01
 
 - Language selector on the desktop app's start page, like the one on the game's home page. The choice is saved and also changes the app's menus; a game or host panel opened from the app uses the same language unless that server already has one chosen.
