@@ -431,6 +431,23 @@ function GameView({
     setMobileActionsOpen(false);
     markRead('cards');
   }, [snapshot, queuedCards]);
+  // A new pact proposal opens Pactos for everyone except its author and the
+  // player acting on their turn, who keeps the menu in use and gets the «!».
+  const seenProposals = useRef<
+    { gameId: string; ids: Set<string> } | undefined
+  >(undefined);
+  useEffect(() => {
+    if (!snapshot) return;
+    const ids = new Set((snapshot.pacts?.proposals ?? []).map((p) => p.id));
+    const seen = seenProposals.current;
+    seenProposals.current = { gameId: snapshot.gameId, ids };
+    if (seen?.gameId !== snapshot.gameId) return;
+    const fresh = (snapshot.pacts?.proposals ?? []).some(
+      (p) => !seen.ids.has(p.id) && p.proposerId !== snapshot.selfPlayerId,
+    );
+    if (fresh && !gamePresentation(snapshot).mine)
+      selectInformationPanel('pacts');
+  }, [snapshot]);
   function selectInformationPanel(id: string | null) {
     setInformationPanel(id);
     if (id) {

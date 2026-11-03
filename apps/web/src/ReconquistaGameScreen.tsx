@@ -196,6 +196,36 @@ export function ReconquistaGameScreen({ gameId }: { readonly gameId: string }) {
     if (!presentation?.mine)
       setPanel((current) => (current === 'actions' ? null : current));
   }, [turnKey]);
+  // As in Classic, a new pact or condominio proposal opens Pactos for everyone
+  // except its author and the player acting on their turn.
+  const proposalIds = [
+    ...(view?.campaign?.pacts ?? [])
+      .filter((x) => x.status === 'proposed')
+      .map((x) => ({ id: x.id, by: x.proposerId })),
+    ...(view?.campaign?.alliances ?? [])
+      .filter((x) => x.status === 'proposed')
+      .map((x) => ({ id: x.id, by: x.proposerId })),
+  ];
+  const proposalKey = `${view?.gameId}:${proposalIds.map((x) => x.id).join(',')}`;
+  const seenProposals = useRef<
+    { gameId: string; ids: Set<string> } | undefined
+  >(undefined);
+  useEffect(() => {
+    if (!view) return;
+    const seen = seenProposals.current;
+    seenProposals.current = {
+      gameId: view.gameId,
+      ids: new Set(proposalIds.map((x) => x.id)),
+    };
+    if (seen?.gameId !== view.gameId) return;
+    const fresh = proposalIds.some(
+      (x) => !seen.ids.has(x.id) && x.by !== view.self?.playerId,
+    );
+    if (fresh && !presentation?.mine) {
+      setPanel('pacts');
+      setMobileActionsOpen(false);
+    }
+  }, [proposalKey]);
   // Every step the player must act on opens its menu by itself once the
   // dice stop, replacing whatever panel was open:
   // incorporation (initial, extra and ordinary), conquest, attack, regroup.
